@@ -1,0 +1,175 @@
+/*
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+.xmlatreeview {
+  overflow: hidden;
+}
+
+.xmlatreeview .cube .leaf .label {
+  cursor: grab;
+}
+
+.cube-contents {
+  padding-top: 2px;
+}
+
+div.current-catalog {
+  background-image: url('../images/schema.png');
+  background-repeat: no-repeat;
+  text-indent: 20px;
+  white-space: nowrap;
+  padding: 1px;
+}
+
+div.current-cube {
+  background-image: url('../images/cube.png');
+  background-repeat: no-repeat;
+  text-indent: 20px;
+  white-space: nowrap;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #cbdde8;
+  padding: 1px;
+}
+
+.tree .datasource > .head > .toggle {
+  background-image: url('../images/datasource.png');
+}
+
+.tree .catalog > .head > .toggle {
+  background-image: url('../images/schema.png');
+}
+
+.tree .cube > .head > .toggle {
+  background-image: url('../images/cube.png');
+}
+
+.tree .dimension > .head > .toggle {
+  background-image: url('../images/dimension.png');
+}
+
+.tree .hierarchy > .head > .toggle {
+  background-image: url('../images/hierarchy.png');
+}
+
+/**
+ * dimension type 2 (MD_DIMTYPE_MEASURE)
+**/
+.tree .dimensiontype2 > .head > .toggle {
+  background-image: url('../images/measures.png');
+}
+
+.tree .dimensiontype2 > .body > .node > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_UNKNOWN */
+.tree .dimensiontype2 > .body > .aggregator0 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_SUM */
+.tree .dimensiontype2 > .body > .aggregator1 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_COUNT */
+.tree .dimensiontype2 > .body > .aggregator2 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_MIN */
+.tree .dimensiontype2 > .body > .aggregator3 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_MAX */
+.tree .dimensiontype2 > .body > .aggregator4 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_AVG */
+.tree .dimensiontype2 > .body > .aggregator5 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_VAR */
+.tree .dimensiontype2 > .body > .aggregator6 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_STD */
+.tree .dimensiontype2 > .body > .aggregator7 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_DST (distinct count) */
+.tree .dimensiontype2 > .body > .aggregator8 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_NONE */
+.tree .dimensiontype2 > .body > .aggregator9 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_AVGCHILDREN  */
+.tree .dimensiontype2 > .body > .aggregator10 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_FIRSTCHILD */
+.tree .dimensiontype2 > .body > .aggregator11 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_LASTCHILD */
+.tree .dimensiontype2 > .body > .aggregator12 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_FIRSTNONEMPTY */
+.tree .dimensiontype2 > .body > .aggregator13 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_LASTNONEMPTY */
+.tree .dimensiontype2 > .body > .aggregator14 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_BYACCOUNT */
+.tree .dimensiontype2 > .body > .aggregator15 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_CALCULATED */
+.tree .dimensiontype2 > .body > .aggregator127 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_UNKNOWN */
+.tree .dimensiontype2 > .body > .aggregator0 > .head > .toggle {
+  background-image: url('../images/measure.png');
+}
+/* end of measures */
+
+/**
+ * dimension type 1 (MD_DIMTYPE_TIME)
+**/
+.tree .dimensiontype1 > .head > .toggle {
+  background-image: url('../mui/images/calendar_16x16.png');
+}
+/* end of time dimension */
+
+.tree .level > .head > .toggle {
+  background-image: url('../images/level.png');
+}
+
+.tree .property > .head > .toggle {
+  background-image: url('../images/property.png');
+}
+
+.tree .members > .head > .toggle {
+  background-image: url('../mui/images/folder16x16.png');
+}
+
+.tree .member > .head > .toggle {
+  background-image: url('../images/member.png');
+}

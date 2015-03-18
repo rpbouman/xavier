@@ -1,0 +1,170 @@
+/*
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+table.pivot-table tr.new-hierarchy > td.MDSCHEMA_MEMBERS, table.pivot-table tr.new-hierarchy > td.thh{
+/* border-top-width: 2px; */
+  border-top-style: solid;
+}
+
+table.pivot-table tr > td.new-hierarchy {
+  /*border-left-width: 2px;*/
+}
+
+.pivot-table-widget {
+    position: relative;
+    left: 0px;
+    right: 0px;
+    margin: 0px 5px 5px 10px;
+}
+
+.pivot-table-axis, .pivot-table-axis-rows-headers {
+    position: absolute;
+    overflow: hidden;
+    border-style: solid;
+    border-width:1px;
+    border-color: darkgray;
+}
+
+.pivot-table-axis-pages {
+    overflow-x: auto;
+}
+
+.pivot-table-cells {
+    overflow: auto;
+}
+
+table.pivot-table tr.positioning-row {
+    font-size:0px;
+    height:0px;
+}
+
+table.pivot-table tr.positioning-row td {
+    padding: 0px !important;
+    border-style:none !important;
+}
+
+table.pivot-table tr.positioning-row div {
+    position:relative;
+}
+
+table.pivot-table {
+    /*border-collapse: collapse;*/
+    font-family: sans-serif;
+    font-size: 10pt;
+    position: absolute;
+    border-style: none;
+}
+
+table.pivot-table td {
+    vertical-align: top;
+    white-space: nowrap;
+    border-width: 1px;
+    padding: 2px;
+    background-repeat: repeat-y;
+    overflow: hidden;
+}
+
+table.pivot-table td.td {
+    border-style: solid;
+    border-color: lightblue;
+    text-align: right;
+}
+
+table.pivot-table td.th {
+    padding: 2px 4px 2px 2px;
+}
+
+table.pivot-table-axis-vertical td.th,
+table.pivot-table-axis-horizontal td.no-child {
+    border-left-style: solid;
+}
+
+table.pivot-table-axis-horizontal td.th,
+table.pivot-table-axis-vertical td.no-child {
+    border-top-style: solid;
+}
+
+
+table.pivot-table td.th, table.pivot-table td.measures-header, table.pivot-table td.hierarchy-header, table.pivot-table td.thh {
+    border-color: darkgray;
+}
+
+table.pivot-table td.th, table.pivot-table td.thh, table.pivot-table td.MDSCHEMA_MEMBERS {
+    background-color: #EBF4FA;
+}
+
+table.pivot-table td.measures-header, table.pivot-table td.hierarchy-header {
+  padding: 1px 2px 2px 20px;
+  background-repeat: no-repeat;
+  background-position: 2px 2px;
+  margin: 0px 2px 2px 0px;
+  font-weight: bold;
+  color: white;
+  background-color: lightblue;
+  border-style: solid;
+  border-width: 1px;
+}
+
+div.pivot-table-axis-rows-headers {
+  border-style: solid none none solid;
+}
+
+table.pivot-table td.hierarchy-header {
+  background-image: url('../images/hierarchy.png');
+}
+
+table.pivot-table td.measures-header {
+  background-image: url('../images/measures.png');
+}
+
+table.pivot-table td.thh {
+    border-width: 1px 1px 1px 1px;
+}
+
+table.pivot-table td.MDSCHEMA_MEMBERS {
+    border-style: solid none none solid;
+}
+
+table.pivot-table td.ancestor {
+  padding: 0px 2px 0px 16px;
+}
+
+.pivot-table-cells {
+  border-collapse: collapse;
+}
+
+span.toggle {
+  margin-right: 2px;
+  cursor: pointer;
+}
+
+span.toggle:before {
+  font-family: monospace
+}
+
+table.pivot-table td.not-drilled-down-has-children span.toggle:before {
+  content: "+";
+}
+
+table.pivot-table td.drilled-down-has-children span.toggle:before {
+  content: "-";
+}
+
+table.pivot-table td.no-children span.toggle:before {
+  content: "\0000a0";
+}
+

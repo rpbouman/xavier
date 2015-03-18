@@ -1,0 +1,166 @@
+<project name="xavier" default="launch" basedir=".">
+  <description>
+    XML/A Analyzer
+  </description>
+
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="lib" location="lib"/>
+  <property name="mui.src.dir" location="../mui/src"/>
+  <property name="xmla4js.src.dir" location="../xmla4js/src"/>
+  <property name="dist" location="dist"/>
+  <property name="dist.all" location="${dist}/${ant.project.name}"/>
+  <property name="mui.dst.dir" location="${dist.all}/resources/mui"/>
+  <property name="xmla4js.dst.dir" location="${dist.all}/resources/xmla4js"/>
+  <property name="src.plugin" location="${src}/plugin"/>
+  <property name="dist.plugin" location="${dist}/plugin"/>
+  <property name="resources"  location="resources"/>
+  <property name="dist.resources" location="${dist}/resources"/>
+  <property name="dist.lib" location="${dist}/lib"/>
+
+  <property name="webapps.dir"  location="/home/roland/apache-tomcat-7.0.56/webapps"/>
+  <property name="tomcat-deploy.dir"  location="${webapps.dir}/${ant.project.name}"/>
+
+  <property name="icCube.dir"  location="/home/roland/icCube-4.8.2"/>
+  <property name="icCube.web.dir"  location="${icCube.dir}/web"/>
+<!--
+  <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.1.0.0-752/biserver-ce"/>
+  <property name="bi-server.dir"  location="/home/roland/pentaho-ee/biserver-ee-TRUNK-b2246/biserver-ee"/>
+  <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.2/biserver-ce"/>
+  <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.3.0.0-213/biserver-ce"/>
+-->
+  <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.2-GA-209/biserver-ce"/>
+
+  <property name="bi-server-system.dir"  location="${bi-server.dir}/pentaho-solutions/system"/>
+  <property name="tomcat.dir"  location="${bi-server.dir}/tomcat"/>
+  <property name="tomcat.lib.dir"  location="${tomcat.dir}/lib"/>
+  <property name="bi-server.lib.dir"  location="${tomcat.dir}/webapps/pentaho/WEB-INF/lib"/>
+  <property name="deploy.dir"  location="${bi-server-system.dir}/${ant.project.name}"/>
+
+  <property name="nowarn" value="on"/>
+  <property name="deprecation" value="off"/>
+  <property name="debug" value="on"/>
+  <property name="browser"          value="chrome"/>
+  <property name="sleep"          value="4"/>
+
+  <property name="bihost"           value="localhost"/>
+  <property name="biport"           value="8080"/>
+  <property name="biuser"           value="admin"/>
+  <property name="bipasswd"         value="password"/>
+  <property name="bihome"           value="http://${bihost}:${biport}/pentaho?userid=${biuser}&amp;password=${bipasswd}"/>
+
+  <target name="init">
+    <tstamp/>
+  </target>
+
+  <target name="mui">
+    <delete dir="${mui.dst.dir}"/>
+    <mkdir dir="${mui.dst.dir}"/>
+    <copy todir="${mui.dst.dir}" >
+      <fileset dir="${mui.src.dir}" includes="**"/>
+    </copy>
+  </target>
+
+<!--
+  <target name="xmla4js">
+    <delete dir="${xmla4js.dst.dir}"/>
+    <mkdir dir="${xmla4js.dst.dir}"/>
+    <get verbose="true" src="https://raw.githubusercontent.com/rpbouman/xmla4js/master/src/Xmla.js" dest="${xmla4js.dst.dir}"/>
+  </target>
+-->
+  <target name="xmla4js">
+    <delete dir="${xmla4js.dst.dir}"/>
+    <mkdir dir="${xmla4js.dst.dir}"/>
+    <copy todir="${xmla4js.dst.dir}" >
+      <fileset dir="${xmla4js.src.dir}" includes="**"/>
+    </copy>
+  </target>
+
+  <target name="dist" depends="clean,init,mui,xmla4js" description="generate the distribution" >
+    <mkdir dir="${dist}"/>
+    <mkdir dir="${dist.all}"/>
+
+    <copy todir="${dist.all}">
+      <fileset dir="${src}/plugin"/>
+    </copy>
+
+    <mkdir dir="${dist.all}/lib"/>
+    <copy todir="${dist.all}/lib">
+      <fileset dir="${lib}"/>
+    </copy>
+
+    <mkdir dir="${dist.all}/resources"/>
+
+    <mkdir dir="${dist.all}/resources/doc"/>
+    <copy todir="${dist.all}/resources/doc">
+      <fileset dir="${src}/doc"/>
+    </copy>
+
+    <mkdir dir="${dist.all}/resources/html"/>
+    <copy todir="${dist.all}/resources/html">
+      <fileset dir="${src}/html"/>
+    </copy>
+
+    <mkdir dir="${dist.all}/resources/js"/>
+    <copy todir="${dist.all}/resources/js">
+      <fileset dir="${src}/js"/>
+    </copy>
+
+    <mkdir dir="${dist.all}/resources/css"/>
+    <copy todir="${dist.all}/resources/css">
+      <fileset dir="${src}/css"/>
+    </copy>
+
+    <mkdir dir="${dist.all}/resources/images"/>
+    <copy todir="${dist.all}/resources/images">
+      <fileset dir="${src}/images"/>
+    </copy>
+
+    <delete file="${dist}/${ant.project.name}.zip"/>
+    <zip destfile="${dist}/${ant.project.name}.zip">
+      <zipfileset dir="${dist}/${ant.project.name}" prefix="${ant.project.name}"/>
+    </zip>
+  </target>
+
+  <target name="undeploy" description="undeploy distribution">
+    <delete dir="${deploy.dir}"/>
+  </target>
+
+  <target name="deploy" depends="dist,undeploy" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${bi-server-system.dir}"/>
+  </target>
+
+  <target name="deploy-iccube" depends="dist" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${icCube.web.dir}"/>
+  </target>
+
+  <target name="undeploy-tomcat" description="undeploy distribution">
+    <delete dir="${tomcat-deploy.dir}"/>
+  </target>
+
+  <target name="deploy-tomcat" depends="dist" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${webapps.dir}"/>
+  </target>
+
+  <target name="startup" depends="shutdown">
+    <echo message="Sleeping for ${sleep} seconds to allow the server to shutdown."/>
+    <sleep seconds="${sleep}"/>
+    <exec executable="${bi-server.dir}/start-pentaho.sh" spawn="true"/>
+  </target>
+
+  <target name="shutdown">
+    <exec executable="${bi-server.dir}/stop-pentaho.sh" spawn="true"/>
+  </target>
+
+  <target name="launch" depends="deploy,startup">
+    <echo message="Sleeping for ${sleep} seconds to allow the server to startup."/>
+    <sleep seconds="${sleep}"/>
+    <exec executable="${browser}" spawn="true">
+      <arg value="${bihome}"/>
+    </exec>
+  </target>
+
+  <target name="clean" description="clean up" >
+    <delete dir="${dist}"/>
+  </target>
+</project>

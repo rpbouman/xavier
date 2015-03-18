@@ -1,0 +1,179 @@
+/*
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+.query-designer {
+  margin: 4px 4px 4px 4px;
+  /* background-color: lightyellow;*/
+}
+
+td.query-designer-axis {
+  vertical-align: top;
+}
+
+td.query-designer-axis1 {
+  padding-top: 27px;
+}
+
+table.query-designer-axis {
+  border-style: solid;
+  border-width: 1px;
+}
+
+.query-designer-axis td {
+  padding: 2px;
+}
+
+.query-designer-axis td span.query-designer-axis-item {
+/*
+  border-style: solid;
+  border-color: lightblue;
+  border-width: 1px;
+*/
+  padding: 1px 2px 2px 20px;
+  background-repeat: no-repeat;
+  background-position: 2px 2px;
+  margin: 0px 2px 2px 0px;
+  white-space: nowrap;
+}
+
+.query-designer-axis td span.measure {
+  background-image: url('../images/measure.png');
+}
+
+.query-designer-axis td span.level {
+  background-image: url('../images/level.png');
+}
+
+.query-designer-axis td span.member {
+  background-image: url('../images/member.png');
+}
+
+.query-designer-axis td span.member-drilldown {
+  background-image: url('../images/member-drilldown.png');
+}
+
+.query-designer-axis-header {
+  background-color: lightblue;
+  color: white;
+  font-weight: bold;
+}
+
+.query-designer-axis-header, .query-designer-axis .hierarchy, .query-designer-axis .measures{
+  background-repeat: no-repeat;
+  background-position: 2px 2px;
+  text-indent: 20px;
+}
+
+.query-designer-axis .hierarchy:after, .query-designer-axis .measures:after {
+  content: ":"
+}
+
+.query-designer-axis .hierarchy {
+  background-image: url('../images/hierarchy.png');
+}
+
+.query-designer-axis1 .hierarchy {
+  padding-left: 2px;
+  background-position: 4px 2px;
+}
+
+.query-designer-axis .measures {
+  background-image: url('../images/measures.png');
+}
+
+.query-designer-axis0 .query-designer-axis-header {
+  background-image: url('../images/column-axis.png');
+}
+.query-designer-axis0 .query-designer-axis-header:before {
+  content: "Columns"
+}
+
+.query-designer-axis1 .query-designer-axis-header {
+  background-image: url('../images/row-axis.png');
+}
+.query-designer-axis1 .query-designer-axis-header:before {
+  content: "Rows"
+}
+
+.query-designer-axis2 .query-designer-axis-header {
+  background-image: url('../images/pages-axis.png');
+}
+.query-designer-axis2 .query-designer-axis-header:before {
+  content: "Pages"
+}
+
+.query-designer-axisSlicerAxis .query-designer-axis-header {
+  background-image: url('../images/slicer-axis.png');
+}
+
+.query-designer-axisSlicerAxis .query-designer-axis-header:before {
+  content: "Slicer"
+}
+
+table.valid-drop-axis {
+  -moz-box-shadow: 0 0 20px lightgreen;
+  -webkit-box-shadow: 0 0 20px lightgreen;
+  box-shadow: 0px 0px 20px lightgreen;
+  cursor: copy;
+}
+
+table.invalid-drop-axis {
+  -moz-box-shadow: 0 0 10px red;
+  -webkit-box-shadow: 0 0 10px red;
+  box-shadow: 0px 0px 10px red;
+  cursor: no-drop;
+}
+
+.query-designer-axis-drop-target {
+  position: absolute;
+  display: block;
+  z-index: 10000;
+  background-color: #FFBF00;
+  -moz-box-shadow: 0 0 10px lightgreen;
+  -webkit-box-shadow: 0 0 10px lightgreen;
+  box-shadow: 0px 0px 10px lightgreen;
+}
+
+.query-designer-axis-drop-target-horizontal {
+  height: 4px;
+}
+
+.query-designer-axis-drop-target-vertical {
+  width: 4px;
+}
+
+.query-designer-axis-horizontal td {
+  border-top-style: solid;
+  border-width: 1px;
+  border-color: lightgray;
+}
+
+.query-designer-axis-vertical td {
+  border-right-style: solid;
+  border-width: 1px;
+  border-color: lightgray;
+}
+
+input.show-empty {
+  margin-left: 10px;
+  float: right;
+}
+
+input.show-empty:before {
+  margin-left: 10px;
+  white-space: nowrap;
+}
