@@ -93,9 +93,14 @@ table.pivot-table-axis-horizontal td.no-child {
     border-left-style: solid;
 }
 
-table.pivot-table-axis-horizontal td.th,
 table.pivot-table-axis-vertical td.no-child {
     border-top-style: solid;
+}
+
+table.pivot-table-axis-horizontal td.thhh {
+    border-style: none none none solid;
+    background-color: #EBF4FA;
+    border-color: darkgray;
 }
 
 

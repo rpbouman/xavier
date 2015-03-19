@@ -606,137 +606,6 @@ var PivotTable;
     var tbody = table.tBodies[0] || cEl("TBODY", null, null, table),
         rows = tbody.rows, row, cells,
         tuples = axis.tuples, tuple, i, n = tuples.length, members,
-        tupleName, tupleNames = [], tupleNameIndex, headerCells = [],
-        positionCells, positionCellsLast, span1, span2, horizontal, vertical,
-        dimensionNameIncluded
-    ;
-    switch (direction) {
-      case "horizontal":
-        horizontal = true;
-        vertical = false;
-        span1 = "colSpan";
-        span2 = "rowSpan";
-        positionCells = n;
-        positionCellsLast = false;
-        break;
-      case "vertical":
-        vertical = true;
-        horizontal = false;
-        span1 = "rowSpan";
-        span2 = "colSpan";
-        positionCellsLast = true;
-        break;
-      default:
-        throw "Unsupported direction: " + direction;
-    }
-    table.className += " " + PivotTable.prefix + "-axis-" + direction;
-    for (i = 0; i < n; i++) {
-      tupleNameIndex = 0;
-      tuple = tuples[i];
-      tupleName = "";
-      members = tuple.members;
-      if (vertical) {
-        //one row for each tuple
-        row = tbody.insertRow(rows.length);
-        cells = row.cells;
-      }
-      axis.eachHierarchy(function(hierarchy){
-        if (tupleName) {
-          tupleName += "|";
-        }
-        var j,
-            minLevel = hierarchy.minLevel,
-            maxLevel = hierarchy.maxLevel,
-            member = members[hierarchy.index],
-            memberParts, memberPart, k,
-            uName, lNum, prefixParts, displayInfo, caption, sameParentAsPrev, c
-        ;
-        if (minLevel > 1) {
-          minLevel = 1;
-        }
-        uName = member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
-        //TODO: protect against dot inside identifiers.
-        memberParts = uName.split(".");
-        lNum = member[Xmla.Dataset.Axis.MEMBER_LEVEL_NUMBER];
-        prefixParts = memberParts.length - (lNum === 0 ? 1 : lNum);
-        for (j = minLevel; j <= maxLevel; j++) {
-          if (horizontal) {
-            if (i === 0) {
-              row = tbody.insertRow(rows.length);
-              if (j === minLevel) {
-                row.className = "new-hierarchy";
-              }
-            }
-            else {
-              row = rows[tupleNameIndex];
-            }
-            cells = row.cells;
-          }
-          //get the memberpart.
-          memberPart = memberParts[prefixParts + j];
-          if (memberPart){
-            //add a separator if necessary
-            if (j !== minLevel && tupleName) {
-              tupleName += ".";
-            }
-            tupleName += memberPart;
-            console.log(tupleName);
-          }
-
-          if (lNum === j) {
-            if (tupleNames[tupleNameIndex] === tupleName) {
-              c = headerCells[tupleNameIndex];
-              c[span1]++;
-            }
-            else {
-              c = this.renderMemberCell(row, member, j === 0);
-              headerCells[tupleNameIndex] = c;
-            }
-            c[span2] = 1 + (maxLevel - j);
-          }
-          else
-          if (lNum > j) {
-            displayInfo = member[Xmla.Dataset.Axis.MEMBER_DISPLAY_INFO];
-            sameParentAsPrev = displayInfo & Xmla.Dataset.Axis.MDDISPINFO_SAME_PARENT_AS_PREV;
-            if (sameParentAsPrev) {
-              c = headerCells[tupleNameIndex];
-              c[span1]++;
-            }
-            else {
-              c = row.insertCell(cells.length);
-              headerCells[tupleNameIndex] = c;
-              var label, className;
-              if (j && tupleName.indexOf(tupleNames[tupleNameIndex]) !== 0) {
-                label = memberParts[j];
-                if (label.charAt(0) === "[" && label.charAt(label.length - 1) === "]") {
-                  label = label.substr(1, label.length -2);
-                }
-                className = "th MDSCHEMA_MEMBERS ancestor";
-              }
-              else {
-                label = "&#160;";
-                className = "th";
-              }
-              if (j === 0) {
-                className += " new-hierarchy";
-              }
-              c.className = className;
-              c.innerHTML = label;
-            }
-          }
-          tupleNames[tupleNameIndex++] = tupleName;
-        }
-      }, this);
-    }
-    if (!positionCells) {
-      positionCells = tupleNameIndex;
-    }
-    this.addPositionableRow(table, positionCells, positionCellsLast);
-  },
-  renderAxis: function(axis, table, direction) {
-    var tbody = table.tBodies[0] || cEl("TBODY", null, null, table),
-        rows = tbody.rows, row, cells,
-        tuples = axis.tuples, tuple, i, n = tuples.length, members,
         prevMembers = [], prevMember,
         tupleName, tupleNameIndex, headerCells = [],
         positionCells, positionCellsLast, span1, span2, horizontal, vertical,
@@ -810,7 +679,29 @@ var PivotTable;
             else {
               c = this.renderMemberCell(row, member, isNewHierarchy);
               headerCells[tupleNameIndex] = c;
+              if (vertical) {
+                c[span2] = 1 + (maxLevel - j);
+              }
+            }
+          }
+          else
+          if (lNum === (j - 1) && horizontal) {
+            if (
+              (sameParentAsPrev || hierarchy.index === 0  ) &&
+              prevMembers[hierarchy.index] &&
+              prevMembers[hierarchy.index].UName === uName
+            ) {
+              c = headerCells[tupleNameIndex];
+              c[span1]++;
+            }
+            else {
+              c = row.insertCell(cells.length);
               c[span2] = 1 + (maxLevel - j);
+              headerCells[tupleNameIndex] = c;
+              label = "&#160;";
+              className = "thhh";
+              c.className = className;
+              c.innerHTML = label;
             }
           }
           else
@@ -820,24 +711,32 @@ var PivotTable;
               c[span1]++;
             }
             else {
-              c = row.insertCell(cells.length);
-              headerCells[tupleNameIndex] = c;
-              label = "&#160;";
-              className = "th";
-              if (isNewHierarchy) {
-                className += " new-hierarchy";
+              if (horizontal) {
+                c = headerCells[tupleNameIndex];
+                c[span1]++;
               }
-              if (lNum === (j+1)) {
-                prevMember = prevMembers[hierarchy.index];
-                if (prevMember && prevMember[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME] === member.PARENT_UNIQUE_NAME) {
-                  className += " child";
+              else
+              if (vertical) {
+                c = row.insertCell(cells.length);
+                headerCells[tupleNameIndex] = c;
+                className = "th";
+                if (isNewHierarchy) {
+                  className += " new-hierarchy";
                 }
-                else {
-                  className += " no-child";
+                if (lNum === (j+1)) {
+                  prevMember = prevMembers[hierarchy.index];
+                  if (prevMember && prevMember[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME] === member.PARENT_UNIQUE_NAME) {
+                    className += " child";
+                  }
+                  else {
+                    className += " no-child";
+                  }
                 }
+
+                label = "&#160;";
+                c.className = className;
+                c.innerHTML = label;
               }
-              c.className = className;
-              c.innerHTML = label;
             }
           }
         }
