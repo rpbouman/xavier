@@ -282,10 +282,8 @@ var PivotTable;
     var tr = td.parentNode;
     var thead = tr.parentNode;
     var table = thead.parentNode;
-    var hierarchyName = gAtt(td, "data-Hierarchy");
     this.fireEvent(eventName, {
       axis: gAtt(table, "data-axis-id"),
-      hierarchy: hierarchyName,
       member: uName
     });
   },
@@ -548,14 +546,8 @@ var PivotTable;
     var hasChildren = displayInfo & Xmla.Dataset.Axis.MDDISPINFO_CHILDREN_CARDINALITY;
     var sameParentAsPrev = displayInfo & Xmla.Dataset.Axis.MDDISPINFO_SAME_PARENT_AS_PREV;
 
-    var lNum = member[Xmla.Dataset.Axis.MEMBER_LEVEL_NUMBER];
-    sAtt(memberCell, "data-LNum", lNum);
-    var lName = member[Xmla.Dataset.Axis.MEMBER_LEVEL_NAME];
-    sAtt(memberCell, "data-LName", lName);
     var uName = member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
     sAtt(memberCell, "data-UName", uName);
-    var hierarchy = member.hierarchy;
-    sAtt(memberCell, "data-Hierarchy", hierarchy);
 
     var className = "th MDSCHEMA_MEMBERS";
     if (newHierarchy) {

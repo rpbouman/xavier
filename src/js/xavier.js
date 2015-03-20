@@ -42,7 +42,7 @@ var mainToolbar = new Toolbar({
   container: body
 });
 mainToolbar.addButton([
-  {"class": "refresh", tooltip: "Refresh"},
+  {"class": "refresh", tooltip: "Refresh metadata"},
   {"class": "separator"},
   {"class": "new", tooltip: "New Query"},
   {"class": "open", tooltip: "Open Query"},
@@ -50,10 +50,10 @@ mainToolbar.addButton([
   {"class": "save", tooltip: "Save Query"},
   {"class": "save-as", tooltip: "Save Query As..."},
   {"class": "separator"},
-  {"class": "edit", tooltip: "Edit Query", toggleGroup: "edit", depressed: true},
+  {"class": "edit", tooltip: "Toggle edit mode", toggleGroup: "edit", depressed: true},
   {"class": "separator"},
   {"class": "run", tooltip: "Run Query"},
-  {"class": "auto-run", tooltip: "Autorun Query", toggleGroup: "auto-run", depressed: true},
+  {"class": "auto-run", tooltip: "Toggle Autorun Query", toggleGroup: "auto-run", depressed: true},
   {"class": "separator"},
   {"class": "show-column-hierarchy-headers", tooltip: "Show column hierarchy headers", toggleGroup: "show-column-hierarchy-headers", depressed: false},
   {"class": "show-row-hierarchy-headers", tooltip: "Show row hierarchy headers", toggleGroup: "show-row-hierarchy-headers", depressed: false},
@@ -238,10 +238,7 @@ function drillMember(drillEventData, drillDirection){
       throw "Expected exactly 1 result row, not " + rows.length;
     }
     var metadata = rows[0];
-    var hierarchy = drillEventData.hierarchy;
-    if (hierarchy.charAt(0) !== "[" && hierarchy.charAt(hierarchy.length-1) !== "]") {
-      hierarchy = "[" + hierarchy + "]";
-    }
+    var hierarchy = metadata.HIERARCHY_UNIQUE_NAME;
     var setDefs = axis.getSetDefs(hierarchy);
     if (!setDefs) {
       throw "Cant find set definitions for " + setDefs;
