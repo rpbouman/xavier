@@ -159,16 +159,22 @@ var QueryDesigner;
   createAxis: function(conf) {
     conf = merge(conf, {
       queryDesigner: this,
-      layout: (conf.id === Xmla.Dataset.AXIS_ROWS ? QueryDesignerAxis.layouts.vertical : QueryDesignerAxis.layouts.horizontal)
+      layout: QueryDesignerAxis.layouts.horizontal
     });
     var axis = new QueryDesignerAxis(conf);
     this.axes[conf.id] = axis;
     axis.listen("changed", this.axisChanged, this);
   },
   createAxes: function() {
-    this.createAxis({id: Xmla.Dataset.AXIS_COLUMNS});
-    this.createAxis({id: Xmla.Dataset.AXIS_ROWS});
-    this.createAxis({id: Xmla.Dataset.AXIS_SLICER});
+    this.createAxis({
+      id: Xmla.Dataset.AXIS_COLUMNS
+    });
+    this.createAxis({
+      id: Xmla.Dataset.AXIS_ROWS
+    });
+    this.createAxis({
+      id: Xmla.Dataset.AXIS_SLICER
+    });
   },
   getAxis: function(id) {
     return this.axes[id];
@@ -198,23 +204,28 @@ var QueryDesigner;
         }),
         r, c
     ;
+    //colums axis
+    r = dom.insertRow(dom.rows.length);
+    c = r.insertCell(r.cells.length);
+    c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_COLUMNS;
+    c.setAttribute("colspan", "100%");
+    c.appendChild(this.getAxis(Xmla.Dataset.AXIS_COLUMNS).getDom());
+
+    //rows axis
+    r = dom.insertRow(dom.rows.length);
+    c = r.insertCell(r.cells.length);
+    c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_ROWS;
+    c.setAttribute("colspan", "100%");
+    c.appendChild(this.getAxis(Xmla.Dataset.AXIS_ROWS).getDom());
+
+    //slicer axis
     r = dom.insertRow(dom.rows.length);
     c = r.insertCell(r.cells.length);
     c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_SLICER;
     c.setAttribute("colspan", "100%");
     c.appendChild(this.getAxis(Xmla.Dataset.AXIS_SLICER).getDom());
 
-    r = dom.insertRow(dom.rows.length);
-    c = r.insertCell(r.cells.length);
-    c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_ROWS;
-    c.appendChild(this.getAxis(Xmla.Dataset.AXIS_ROWS).getDom());
-    c.rowSpan = 2;
-
-    c = r.insertCell(r.cells.length);
-    c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_COLUMNS;
-    c.appendChild(this.getAxis(Xmla.Dataset.AXIS_COLUMNS).getDom());
-
-    r = dom.insertRow(dom.rows.length);
+    //r = dom.insertRow(dom.rows.length);
     return dom;
   },
   busy: function(busy) {
