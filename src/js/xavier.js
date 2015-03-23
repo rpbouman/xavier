@@ -22,6 +22,9 @@ if (!xmlaUrl) {
   return;
 }
 
+var title = gEls(head, "title", 0);
+title.innerHTML = gMsg("XML/A Visualizer");
+
 linkCss("../css/xavier.css");
 
 var xmla = new Xmla({
@@ -42,23 +45,23 @@ var mainToolbar = new Toolbar({
   container: body
 });
 mainToolbar.addButton([
-  {"class": "refresh", tooltip: "Refresh metadata"},
+  {"class": "refresh", tooltip: gMsg("Refresh metadata")},
   {"class": "separator"},
-  {"class": "new", tooltip: "New Query"},
-  {"class": "open", tooltip: "Open Query"},
+  {"class": "new", tooltip: gMsg("New Query")},
+  {"class": "open", tooltip: gMsg("Open Query")},
   {"class": "separator"},
-  {"class": "save", tooltip: "Save Query"},
-  {"class": "save-as", tooltip: "Save Query As..."},
+  {"class": "save", tooltip: gMsg("Save Query")},
+  {"class": "save-as", tooltip: gMsg("Save Query As...")},
   {"class": "separator"},
-  {"class": "edit", tooltip: "Toggle edit mode", toggleGroup: "edit", depressed: true},
+  {"class": "edit", tooltip: gMsg("Toggle edit mode"), toggleGroup: "edit", depressed: true},
   {"class": "separator"},
-  {"class": "run", tooltip: "Run Query"},
-  {"class": "auto-run", tooltip: "Toggle Autorun Query", toggleGroup: "auto-run", depressed: true},
+  {"class": "run", tooltip: gMsg("Run Query")},
+  {"class": "auto-run", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
   {"class": "separator"},
-  {"class": "show-column-hierarchy-headers", tooltip: "Show column hierarchy headers", toggleGroup: "show-column-hierarchy-headers", depressed: false},
-  {"class": "show-row-hierarchy-headers", tooltip: "Show row hierarchy headers", toggleGroup: "show-row-hierarchy-headers", depressed: false},
+  {"class": "show-column-hierarchy-headers", tooltip: gMsg("Show column hierarchy headers"), toggleGroup: "show-column-hierarchy-headers", depressed: false},
+  {"class": "show-row-hierarchy-headers", tooltip: gMsg("Show row hierarchy headers"), toggleGroup: "show-row-hierarchy-headers", depressed: false},
   {"class": "separator"},
-  {"class": "excel", tooltip: "Export to Microsoft Excel"},
+  {"class": "excel", tooltip: gMsg("Export to Microsoft Excel")},
 ]);
 mainToolbar.listen({
   buttonPressed: function(toolbar, event, button){
