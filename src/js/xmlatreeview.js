@@ -620,11 +620,15 @@ var XmlaTreeView;
     var dataSourceInfo = metadata.DataSourceInfo;
 
     cEl("DIV", {
-      "class": "current-catalog"
-    }, catalog, cubeTreePane.getDom());
-    cEl("DIV", {
-      "class": "current-cube"
-    }, cube, cubeTreePane.getDom());
+      "class": "current-catalog-and-cube"
+    }, [
+      cEl("SPAN", {
+        "class": "current-catalog"
+      }, catalog),
+      cEl("SPAN", {
+        "class": "current-cube"
+      }, cube)
+    ], cubeTreePane.getDom());
 
     this.renderMeasuresNode({
       url: url,

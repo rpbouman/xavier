@@ -27,33 +27,35 @@ limitations under the License.
   padding-top: 2px;
 }
 
-div.current-catalog {
-  background-image: url('../images/schema.png');
-  background-repeat: no-repeat;
-  text-indent: 20px;
-  white-space: nowrap;
-  padding: 1px;
-}
-
-div.current-cube {
-  background-image: url('../images/cube.png');
-  background-repeat: no-repeat;
-  text-indent: 20px;
-  white-space: nowrap;
+div.current-catalog-and-cube {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #cbdde8;
-  padding: 1px;
+  padding: 2px;
+}
+
+span.current-catalog,
+span.current-cube {
+  background-repeat: no-repeat;
+  white-space: nowrap;
+  padding-left: 20px;
+  margin: 2px;
+}
+
+ {
+  background-image: url('../images/schema.png');
 }
 
 .tree .datasource > .head > .toggle {
   background-image: url('../images/datasource.png');
 }
 
+span.current-catalog,
 .tree .catalog > .head > .toggle {
   background-image: url('../images/schema.png');
 }
 
+span.current-cube,
 .tree .cube > .head > .toggle {
   background-image: url('../images/cube.png');
 }
