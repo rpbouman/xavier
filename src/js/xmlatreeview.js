@@ -351,7 +351,8 @@ var XmlaTreeView;
       parentTreeNode: TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix),
       classes: "members",
       id: id + ":members",
-      title: "Members",
+      title: gMsg("Members"),
+      tooltip: gMsg("Members"),
       metadata: row,
       state: TreeNode.states.collapsed,
       loadChildren: function(callback){
@@ -597,8 +598,8 @@ var XmlaTreeView;
       parentElement: this.cubeTreePane.getDom(),
       classes: ["hierarchy", "dimensiontype" + Xmla.Rowset.MD_DIMTYPE_MEASURE],
       id: "measures",
-      title: "Measures",
-      tooltip: "Measures"
+      title: gMsg("Measures"),
+      tooltip: gMsg("Measures")
     });
     this.renderMeasureNodes(conf);
   },
