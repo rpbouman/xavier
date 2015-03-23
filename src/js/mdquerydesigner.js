@@ -370,7 +370,23 @@ var QueryDesignerAxis;
         dom.insertRow(2);
         break;
     }
-    if (this.conf.id !== Xmla.Dataset.AXIS_SLICER) {
+
+    var canBeEmpty = true, label;
+    switch (this.conf.id) {
+      case Xmla.Dataset.AXIS_COLUMNS:
+        label = gMsg("Columns");
+        break;
+      case Xmla.Dataset.AXIS_ROWS:
+        label = gMsg("Rows");
+        break;
+      case Xmla.Dataset.AXIS_SLICER:
+        label = gMsg("Slicer");
+        canBeEmpty = false;
+        break;
+    }
+    c.innerHTML = label;
+
+    if (canBeEmpty) {
       var nonEmptyCheckbox = cEl("INPUT", {
         id: id + "-empty-checkbox",
         "class": "show-empty",

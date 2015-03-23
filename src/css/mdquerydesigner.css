@@ -98,30 +98,17 @@ table.query-designer-axis {
 .query-designer-axis0 .query-designer-axis-header {
   background-image: url('../images/column-axis.png');
 }
-.query-designer-axis0 .query-designer-axis-header:before {
-  content: "Columns"
-}
 
 .query-designer-axis1 .query-designer-axis-header {
   background-image: url('../images/row-axis.png');
-}
-.query-designer-axis1 .query-designer-axis-header:before {
-  content: "Rows"
 }
 
 .query-designer-axis2 .query-designer-axis-header {
   background-image: url('../images/pages-axis.png');
 }
-.query-designer-axis2 .query-designer-axis-header:before {
-  content: "Pages"
-}
 
 .query-designer-axisSlicerAxis .query-designer-axis-header {
   background-image: url('../images/slicer-axis.png');
-}
-
-.query-designer-axisSlicerAxis .query-designer-axis-header:before {
-  content: "Slicer"
 }
 
 table.valid-drop-axis {
