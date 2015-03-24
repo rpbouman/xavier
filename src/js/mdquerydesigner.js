@@ -347,6 +347,9 @@ var QueryDesignerAxis;
   getId: function(){
     return this.conf.queryDesigner.getId() + "-axis" + this.conf.id;
   },
+  isSlicerAxis: function(){
+    return this.conf.id === Xmla.Dataset.AXIS_SLICER;
+  },
   createDom: function() {
     var layout = this.getLayout();
     var id = this.getId();
@@ -550,6 +553,9 @@ var QueryDesignerAxis;
     var requestType = dragInfo.className,
         metadata = dragInfo.metadata
     ;
+    if (this.isSlicerAxis() && requestType !== "member") {
+      return false;
+    }
     //the item is an entire axis.
     if (metadata === "query-designer-axis-header") {
       //dropping an axis unto an axis means: swap the two axes.
@@ -585,6 +591,8 @@ var QueryDesignerAxis;
       case "measure":
         axis = queryDesigner.getAxisForHierarchy(hierarchyName);
         if (axis && axis !== this) {
+          //if the item has a hierarchy and the hierarchy is already present on another axis
+          //then disallow drop.
           return false;
         }
         break;
