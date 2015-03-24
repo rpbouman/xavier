@@ -17,6 +17,8 @@ limitations under the License.
 */
 function showAlert(title, text){
   var parent = win.top, fun;
+  title = gMsg(title);
+  text = gMsg(text);
   if (parent) {
     fun = parent.mantle_showAlert || parent.mantle_showMessage;
   }
@@ -32,6 +34,7 @@ function showConfirm(message, title, onOk, onCancel, scope, acceptLabel, cancelL
   if (!(message)) {
     message = "Please confirm";
   }
+  message = gMsg(message);
   if (!(scope)) {
     scope = null;
   }
@@ -39,12 +42,15 @@ function showConfirm(message, title, onOk, onCancel, scope, acceptLabel, cancelL
     if (!(title)) {
       title = "Confirm";
     }
+    title = gMsg(title);
     if (!(cancelLabel)) {
       cancelLabel = "Cancel";
     }
+    cancelLabel = gMsg(cancelLabel);
     if (!(acceptLabel)) {
       acceptLabel = "Ok";
     }
+    acceptLabel = gMsg(acceptLabel);
     window.top.gwtConfirm(message, {
       onOk: function(){
         if (onOk) {

@@ -313,7 +313,9 @@ function executeQuery(queryDesigner){
     }
     pivotTable.clear();
     var mdx = queryDesigner.getMdx();
-    if (!mdx) throw "Not a valid query";
+    if (!mdx) {
+      throw "Not a valid query";
+    }
     console.time("executeQuery");
     xmla.execute({
       url: queryDesigner.datasouce.URL,
@@ -327,9 +329,10 @@ function executeQuery(queryDesigner){
         pivotTable.renderDataset(dataset);
         busy(false);
       },
-      error: function(){
+      error: function(xmla, options, exception){
         console.timeEnd("executeQuery");
         busy(false);
+        showAlert("Error executing query", exception);
       }
     });
   }
@@ -350,7 +353,6 @@ function exportToExcel(){
     xlsxExporter = new XlsxExporter();
   }
   try {
-    //TODO: generate name of the form: measure1, measure2 and measure3 BY hierarchy1, hierarchy2 and hierarchy3 VERSUS hierarchy4, hierarchy5 and hierarchy6 FOR A SELECTION OF hierarchy7, hierarchy8 and hierarchy9
     var name = queryDesigner.getCatalogName() + " " + queryDesigner.getCubeCaption() + " - ";
     var i, hierarchyCount, hierarchies, hierarchy, measures, measure, measureNames = [];
     var measureAxis, axes = {};
@@ -373,6 +375,7 @@ function exportToExcel(){
       }
     });
 
+    //TODO: localize file name for export.
     var last;
     if (measureNames.length) {
       last = measureNames.pop();

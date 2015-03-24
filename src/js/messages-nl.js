@@ -1,4 +1,9 @@
 aMsg({
+  //messageboxes
+  "Please confirm": "Bevestigen aub",
+  "Confirm": "Bevestigen",
+  "Cancel": "Annuleren",
+  "Ok": "Ok",
   //title:
   "XML/A Visualizer": "XML/A Analyse en Visualizatie",
   //toolbar
@@ -13,6 +18,12 @@ aMsg({
   "Show column hierarchy headers": "Toon kolomkoppen",
   "Show row hierarchy headers": "Toon rijlabels",
   "Export to Microsoft Excel": "Naar Microsoft Excel uitvoeren",
+  //excel
+  "Nothing to export": "Niets om te exporteren",
+  "There is nothing to export. Please enter a query first": "Er kan niets geexporteerd worden. Stel eerst een zoekopdracht samen.",
+  "Export Error": "Fout bij exporteren",
+  //query
+  "Error executing query": "Fout bij uitvoering zoekopdracht",
   //treeview
   "Members": "Leden",
   "Measures": "Meetwaarden",
