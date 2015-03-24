@@ -462,12 +462,33 @@ var PivotTable;
     );
     container.style.height = height + "px";
     rows.style.height = (height - (cols.offsetHeight + pagesTableHeight)) + "px";
+
+    var cellsWidth, cellsHeight;
     if (cellsTable) {
-      cellsStyle.width = (cols.clientWidth + (cellsTable.clientHeight + colsTable.clientHeight > (height + 5) ? 16 : 0)) + "px";
-      cellsStyle.height = ((rowsTable ? rows.clientHeight: cellsTable.clientHeight) + (cellsTable.clientWidth + cellsTable.clientLeft > (width + 5) ? 16 : 0)) + "px";
+      cellsWidth = cols.clientWidth;
+      cellsHeight = rowsTable ? rows.clientHeight: cellsTable.clientHeight;
     }
-    cellsStyle.overflowX = (rowsTableWidth + colsTable.offsetWidth < containerParentWidth) ? "hidden" : "auto";
-    cellsStyle.overflowY = (rowsTableHeight + colsTable.clientHeight < (containerParentHeight - (container.offsetTop + container.clientTop))) ? "hidden" : "auto";
+
+    var overflow;
+    if (rowsTableWidth + colsTable.offsetWidth < containerParentWidth) {
+      overflow = "hidden";
+    }
+    else {
+      overflow = "auto";
+      cellsHeight += scrollbarHeight;
+    }
+    cellsStyle.overflowX = overflow;
+    cellsStyle.height = cellsHeight + "px";
+
+    if (rowsTableHeight + colsTable.clientHeight < (containerParentHeight - (container.offsetTop + container.clientTop))) {
+      overflow = "hidden";
+    }
+    else {
+      overflow = "auto";
+      cellsWidth += scrollbarWidth;
+    }
+    cellsStyle.overflowY = overflow;
+    cellsStyle.width = cellsWidth + "px";
 
     return;
   },
