@@ -16,6 +16,9 @@ aMsg({
   //treeview
   "Members": "Leden",
   "Measures": "Meetwaarden",
+  "Show catalog nodes": "Schema's tonen",
+  "Show dimension nodes": "Dimensies tonen",
+  "Check to show multi-hierarchy dimension nodes. Uncheck to hide all dimension nodes.": "Toon de dimensie indien deze meer dan 1 hierarchy heeft.",
   //query designer
   "Columns": "Kolommen",
   "Rows": "Rijen",

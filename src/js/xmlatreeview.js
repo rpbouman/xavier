@@ -32,16 +32,41 @@ var XmlaTreeView;
     secondComponent: this.cubeTreePane,
     orientation: SplitPane.orientations.horizontal
   });
-
+  if (iDef(conf.catalogNodesInitiallyFlattened)) {
+    this.catalogNodesInitiallyFlattened = conf.catalogNodesInitiallyFlattened;
+  }
+  if (iDef(conf.dimensionNodesInitiallyFlattened)) {
+    this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
+  }
 }).prototype = {
+  //whether catalog nodes should initially be hidden
+  catalogNodesInitiallyFlattened: true,
+  //whether dimension nodes should initially be hidden
+  dimensionNodesInitiallyFlattened: true,
+  clearTreePane: function(treePane){
+    var treePaneDom = treePane.getDom();
+    var childNodes = treePaneDom.childNodes, n = childNodes.length, i, childNode, treeNode;
+    for (i = 0; i < n; i++){
+      childNode = childNodes[i];
+      if (!hCls(childNode, TreeNode.prefix)){
+        continue;
+      }
+      treeNode = TreeNode.getInstance(childNode.id);
+      treeNode.removeFromParent();
+    }
+    treePane.clearAll();
+  },
   init: function(){
     this.fireEvent("busy");
     var me = this;
     var xmla = me.xmla;
     var schemaTreePane = me.schemaTreePane;
+    this.clearTreePane(schemaTreePane);
+    var schemaTreePaneDom = schemaTreePane.getDom();
 
     var catalogQueueIndex = -1;
     var catalogQueue = [];
+
     function doCatalogQueue(){
       if (!(++catalogQueueIndex < catalogQueue.length)) return false;
       var providerNode = catalogQueue[catalogQueueIndex];
@@ -57,9 +82,10 @@ var XmlaTreeView;
         },
         success: function(xmla, options, rowset){
           rowset.eachRow(function(row){
+            var state = TreeNode.states.expanded;
             var treeNode = new TreeNode({
               classes: "catalog",
-              state: TreeNode.states.expanded,
+              state: state,
               id: conf.id + ":catalog:" + row.CATALOG_NAME,
               parentTreeNode: providerNode,
               title: row.CATALOG_NAME,
@@ -96,20 +122,40 @@ var XmlaTreeView;
         },
         success: function(xmla, options, rowset){
           rowset.eachRow(function(row){
+            var title = row.CUBE_CAPTION || row.CUBE_NAME;
+            var catalogPrefix = "<span class=\"label-prefix\">" + catalog + "</span>";
+            title = catalogPrefix + title;
             var treeNode = new TreeNode({
               classes: "cube",
               state: TreeNode.states.leaf,
               id: conf.id + ":cube:" + row.CUBE_NAME,
               parentTreeNode: catalogNode,
-              title: row.CUBE_CAPTION || row.CUBE_NAME,
+              title: title,
               tooltip: row.DESCRIPTION || row.CUBE_NAME,
               metadata: row
             });
           });
+          if (!showCatalogNodesCheckbox.checked) {
+            catalogNode.setState(TreeNode.states.flattened);
+          }
           doCubeQueue();
         }
       });
     }
+
+    var showCatalogNodesCheckbox = cEl("INPUT", {
+      type: "checkbox"
+    });
+    showCatalogNodesCheckbox.checked = !this.catalogNodesInitiallyFlattened;
+    listen(showCatalogNodesCheckbox, "click", this.showCatalogNodes, this);
+
+    cEl("DIV", {
+      "class": "show-catalog-nodes"
+    }, [
+      showCatalogNodesCheckbox,
+      cEl("SPAN", {
+      }, gMsg("Show catalog nodes"))
+    ], schemaTreePaneDom);
 
     xmla.discoverDataSources({
       error: function(xmla, options, error){
@@ -124,7 +170,9 @@ var XmlaTreeView;
           if (iArr(providerType)) {
             var n = providerType.length;
             for (var i = 0; i < n; i++){
-              if (providerType[i] !== "MDP") continue;
+              if (providerType[i] !== "MDP") {
+                continue;
+              }
               isMDP = true;
               break;
             }
@@ -133,7 +181,9 @@ var XmlaTreeView;
           if (providerType === "MDP") {
             isMDP = true;
           }
-          if (!isMDP) return;
+          if (!isMDP) {
+            return;
+          }
 
           //now, check if we are dealing with a relative URL.
           //if so, then prepend with the url of the preceding XMLA request
@@ -143,7 +193,9 @@ var XmlaTreeView;
             var url = row.URL;
             row.URL = options.url;
             //If the original url does not end with a slash, add it.
-            if (options.url.charAt(options.url.length - 1) !== "/") row.URL += "/";
+            if (options.url.charAt(options.url.length - 1) !== "/") {
+              row.URL += "/";
+            }
             row.URL += url;
           }
 
@@ -157,7 +209,7 @@ var XmlaTreeView;
             classes: "datasource",
             state: TreeNode.states.expanded,
             id: "datasource:" + row.DataSourceName,
-            parentElement: schemaTreePane.getDom(),
+            parentElement: schemaTreePaneDom,
             title: row.DataSourceName,
             tooltip: row.Description || row.DataSourceName,
             metadata: row
@@ -182,6 +234,75 @@ var XmlaTreeView;
       }
     }, this);
     this.cubeTreeListener = new TreeListener({container: this.cubeTreePane.getDom()});
+  },
+  eachDatasourceNode: function(callback, scope){
+    var schemaTreePane = this.schemaTreePane;
+    var schemaTreePaneDom = schemaTreePane.getDom();
+    var childNodes = schemaTreePaneDom.childNodes, n = childNodes.length, childNode, i;
+    for (i = 0; i < n; i++) {
+      childNode = childNodes[i];
+      if (!hCls(childNode, "datasource")) {
+        continue;
+      }
+      if (callback.call(scope, TreeNode.getInstance(childNode.id), i) === false) {
+        return false;
+      }
+    }
+    return true;
+  },
+  eachCatalogNode: function(callback, scope) {
+    if(this.eachDatasourceNode(function(datasourceNode, i){
+      if (datasourceNode.eachChild(callback, scope) === false) {
+        return false;
+      }
+    }, scope) === false){
+      return false;
+    }
+    return true;
+  },
+  showCatalogNodes: function(event){
+    var target = event.getTarget(), state;
+    if (target.checked) {
+      state = TreeNode.states.unflattened;
+    }
+    else {
+      state = TreeNode.states.flattened;
+    }
+    this.eachCatalogNode(function(catalogNode, index){
+      catalogNode.setState(state);
+    }, this)
+  },
+  eachDimensionNode: function(callback, scope) {
+    var cubeTreePane = this.cubeTreePane;
+    var cubeTreePaneDom = cubeTreePane.getDom();
+    var childNodes = cubeTreePaneDom.childNodes, n = childNodes.length, childNode, i;
+    for (i = 0; i < n; i++) {
+      childNode = childNodes[i];
+      if (!hCls(childNode, "dimension")) {
+        continue;
+      }
+      if (callback.call(scope, TreeNode.getInstance(childNode.id), i) === false) {
+        return false;
+      }
+    }
+    return true;
+  },
+  showDimensionNodes: function(event){
+    var target = event.getTarget(), state;
+    if (target.checked) {
+      state = TreeNode.states.unflattened;
+    }
+    else {
+      state = TreeNode.states.flattened;
+    }
+    this.eachDimensionNode(function(dimensionNode, index){
+      if (dimensionNode.getChildNodeCount() <= 1) {
+        //This dimension has only 1 hierarchy;
+        //keep it flattened.
+        return;
+      }
+      dimensionNode.setState(state);
+    }, this)
   },
   checkStartDrag: function(event, ddHandler){
     var target = event.getTarget();
@@ -469,14 +590,73 @@ var XmlaTreeView;
       },
     });
   },
+  renderDimensionTreeNode: function(conf, row){
+    var me = this;
+    var classes = ["dimension", "dimensiontype" + row.DIMENSION_TYPE, TreeNode.states.flattened];
+    new TreeNode({
+      state: TreeNode.states.expanded,
+      parentElement: me.cubeTreePane.getDom(),
+      classes: classes,
+      id: "dimension:" + row.DIMENSION_UNIQUE_NAME,
+      title: row.DIMENSION_CAPTION,
+      tooltip: row.DESCRIPTION || row.DIMENSION_CAPTION || row.DIMENSION_NAME,
+      metadata: row
+    });
+  },
+  renderDimensionTreeNodes: function(conf){
+    var me = this;
+    var url = conf.url;
+    var properties = {
+      DataSourceInfo: conf.dataSourceInfo,
+      Catalog: conf.catalog
+    };
+    var restrictions = {
+      CUBE_NAME: conf.cube
+    };
+    this.xmla.discoverMDDimensions({
+      url: conf.url,
+      properties: properties,
+      restrictions: restrictions,
+      error: function(xmla, options, error){
+        me.fireEvent("error", error);
+      },
+      success: function(xmla, options, rowset) {
+        //for each dimension, add a treenode.
+        rowset.eachRow(function(row){
+          //if this dimension happens to be a measure dimension, don't render it.
+          //We already have measures
+          if (row.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
+            conf.measuresTreeNode.conf.metadata = row;
+            return;
+          }
+          //actually add a treenode for the hierarchy.
+          me.renderDimensionTreeNode(conf, row);
+        });
+        //add hierarchies
+        me.renderHierarchyTreeNodes(conf);
+        //done rendering hierarchy treenodes
+        me.fireEvent("done");
+      }
+    });
+  },
   renderHierarchyTreeNode: function(conf, row){
     var me = this;
+    var dimensionNode = TreeNode.getInstance("node:dimension:" + row.DIMENSION_UNIQUE_NAME);
+    if (this.showDimensionNodesCheckbox.checked && dimensionNode.isFlattened() && dimensionNode.getChildNodeCount() >= 1) {
+      dimensionNode.setState(TreeNode.states.unflattened);
+    }
+    var dimensionTitle = dimensionNode.getTitle();
+    var hierarchyTitle = row.HIERARCHY_CAPTION;
+    if (dimensionTitle !== hierarchyTitle) {
+      hierarchyTitle = "<span class=\"label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
+    }
+
     new TreeNode({
       state: TreeNode.states.collapsed,
-      parentElement: me.cubeTreePane.getDom(),
+      parentTreeNode: dimensionNode,
       classes: ["hierarchy", "dimensiontype" + row.DIMENSION_TYPE],
       id: "hierarchy:" + row.HIERARCHY_UNIQUE_NAME,
-      title: row.HIERARCHY_CAPTION,
+      title: hierarchyTitle,
       tooltip: row.DESCRIPTION || row.HIERARCHY_CAPTION || row.HIERARCHY_NAME,
       metadata: row,
       loadChildren: function(callback) {
@@ -587,8 +767,8 @@ var XmlaTreeView;
           me.renderMeasureNode(conf, measures[i]);
         }
 
-        //All measures are now in the treeview. Let's add hierarchies (beneath the measures level).
-        me.renderHierarchyTreeNodes(conf);
+        //All measures are now in the treeview. Let's add dimensions (beneath the measures level).
+        me.renderDimensionTreeNodes(conf);
       }
     });
   },
@@ -609,7 +789,8 @@ var XmlaTreeView;
     this.fireEvent("busy");
     var xmla = this.xmla;
     var cubeTreePane = this.cubeTreePane;
-    cubeTreePane.clearAll();
+    this.clearTreePane(cubeTreePane);
+    var cubeTreePaneDom = cubeTreePane.getDom();
 
     var cube = cubeTreeNode.conf.metadata.CUBE_NAME;
     me.fireEvent("cubeSelected", cubeTreeNode);
@@ -620,6 +801,25 @@ var XmlaTreeView;
     var url = metadata.URL;
     var dataSourceInfo = metadata.DataSourceInfo;
 
+    //checkbox to show / hide dimension level
+    var showDimensionNodesCheckbox = this.showDimensionNodesCheckbox = cEl("INPUT", {
+      type: "checkbox"
+    });
+    showDimensionNodesCheckbox.checked = !this.dimensionNodesInitiallyFlattened;
+    listen(showDimensionNodesCheckbox, "click", this.showDimensionNodes, this);
+
+    cEl("DIV", {
+      "class": "show-dimension-nodes"
+    }, [
+      cEl("DIV", {
+        "class": "tooltip"
+      }, gMsg("Check to show multi-hierarchy dimension nodes. Uncheck to hide all dimension nodes.")),
+      showDimensionNodesCheckbox,
+      cEl("SPAN", {
+      }, gMsg("Show dimension nodes"))
+    ], cubeTreePaneDom);
+
+    //static indicator of the current catalog and cube
     cEl("DIV", {
       "class": "current-catalog-and-cube"
     }, [
@@ -629,7 +829,7 @@ var XmlaTreeView;
       cEl("SPAN", {
         "class": "current-cube"
       }, cube)
-    ], cubeTreePane.getDom());
+    ], cubeTreePaneDom);
 
     this.renderMeasuresNode({
       url: url,

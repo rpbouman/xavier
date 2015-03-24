@@ -123,7 +123,9 @@ function autoRunEnabled(){
 }
 
 var xmlaTreeView = new XmlaTreeView({
-  xmla: xmla
+  xmla: xmla,
+  catalogNodesInitiallyFlattened: true,
+  dimensionNodesInitiallyFlattened: false
 });
 xmlaTreeView.listen({
   busy: function(){

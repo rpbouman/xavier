@@ -42,10 +42,6 @@ span.current-cube {
   margin: 2px;
 }
 
- {
-  background-image: url('../images/schema.png');
-}
-
 .tree .datasource > .head > .toggle {
   background-image: url('../images/datasource.png');
 }
@@ -174,4 +170,22 @@ span.current-cube,
 
 .tree .member > .head > .toggle {
   background-image: url('../images/member.png');
+}
+
+div.show-catalog-nodes {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #cbdde8;
+  padding: 2px;
+}
+
+div.node > div.head > span.label > span.label-prefix {
+  display: none;
+}
+
+div.node > div.head > span.label > span.label-prefix:after {
+  content: ": "
+}
+div.flattened > div.body > div.node > div.head > span.label > span.label-prefix {
+  display: inline;
 }
