@@ -9,7 +9,7 @@ aMsg({
   "Save Query As...": "Zoekopdracht opslaan als...",
   "Toggle edit mode": "Bewerkingsmodus aan/uitzetten",
   "Run Query": "Zoekopdracht uitvoeren",
-  "Toggle Autorun Query": "Zoekopdracht automatis uitvoeren aan/uitzetten",
+  "Toggle Autorun Query": "Zoekopdracht automatisch uitvoeren aan/uitzetten",
   "Show column hierarchy headers": "Toon kolomkoppen",
   "Show row hierarchy headers": "Toon rijlabels",
   "Export to Microsoft Excel": "Naar Microsoft Excel uitvoeren",
