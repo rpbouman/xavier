@@ -547,7 +547,7 @@ var XmlaTreeView;
     };
     new TreeNode({
       parentTreeNode: hierarchyTreeNode,
-      classes: "level",
+      classes: "level leveltype" + row.LEVEL_TYPE,
       id: id,
       title: row.LEVEL_CAPTION || row.LEVEL_NAME,
       metadata: row,
