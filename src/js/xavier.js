@@ -332,7 +332,7 @@ function executeQuery(queryDesigner){
       error: function(xmla, options, exception){
         console.timeEnd("executeQuery");
         busy(false);
-        showAlert("Error executing query", exception);
+        showAlert("Error executing query", exception.toString());
       }
     });
   }
