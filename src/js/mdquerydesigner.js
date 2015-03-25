@@ -1111,7 +1111,7 @@ var QueryDesignerAxis;
         members += setDef[j].expression;
       }
       setDef = "{" + members + "}";
-      if (hierarchyName !== "Measures") {
+      if (hierarchyName !== "Measures" && !this.isSlicerAxis()) {
         setDef = "Hierarchize(" + setDef + ")";
       }
       mdx = mdx ? "CrossJoin(" + mdx + ", " + setDef + ")" : setDef;
