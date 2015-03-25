@@ -123,7 +123,7 @@ var XmlaTreeView;
         success: function(xmla, options, rowset){
           rowset.eachRow(function(row){
             var title = row.CUBE_CAPTION || row.CUBE_NAME;
-            var catalogPrefix = "<span class=\"label-prefix\">" + catalog + "</span>";
+            var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
             title = catalogPrefix + title;
             var treeNode = new TreeNode({
               classes: "cube",
@@ -306,9 +306,13 @@ var XmlaTreeView;
   },
   checkStartDrag: function(event, ddHandler){
     var target = event.getTarget();
-    if (!hCls(target, "label")) return false;
+    if (!hCls(target, "label")) {
+      return false;
+    }
     var treeNode = TreeNode.lookup(target);
-    if (!treeNode) return false;
+    if (!treeNode) {
+      return false;
+    }
     var classes = confCls(treeNode.conf.classes);
     className = classes[0];
     switch (className) {
@@ -648,7 +652,7 @@ var XmlaTreeView;
     var dimensionTitle = dimensionNode.getTitle();
     var hierarchyTitle = row.HIERARCHY_CAPTION;
     if (dimensionTitle !== hierarchyTitle) {
-      hierarchyTitle = "<span class=\"label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
+      hierarchyTitle = "<span class=\"label label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
     }
 
     new TreeNode({
