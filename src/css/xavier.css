@@ -50,65 +50,6 @@ html, body {
   cursor: grabbing;
 }
 
-.measure-dragging {
-  background-image: url('../images/measure.png');
-}
-
-.measures-dragging {
-  background-image: url('../images/measures.png');
-}
-
-.hierarchy-dragging {
-  background-image: url('../images/hierarchy.png');
-}
-
-.level-dragging {
-  background-image: url('../images/level.png');
-}
-
-.property-dragging {
-  background-image: url('../images/property.png');
-}
-
-.member-dragging {
-  background-image: url('../images/member.png');
-}
-
-.member-drilldown-dragging {
-  background-image: url('../images/member-drilldown.png');
-}
-
-.members-dragging {
-  background-image: url('../mui/images/folder16x16.png');
-}
-
-.query-designer-axis0-dragging {
-  background-image: url('../images/column-axis.png');
-}
-.query-designer-axis0-dragging:after {
-  content: "Columns"
-}
-
-.query-designer-axis1-dragging {
-  background-image: url('../images/row-axis.png');
-}
-.query-designer-axis1-dragging:after {
-  content: "Rows";
-}
-
-.query-designer-axis2-dragging {
-  background-image: url('../images/page-axis.png');
-}
-.query-designer-axis2-dragging:after {
-  content: "Slicer";
-}
-
-.query-designer-axisSlicerAxis-dragging {
-  background-image: url('../images/slicer-axis.png');
-}
-.query-designer-axisSlicerAxis-dragging:after {
-  content: "Slicer";
-}
 
 /**
  *  Toolbar

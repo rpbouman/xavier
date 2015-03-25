@@ -60,17 +60,21 @@ span.current-cube,
   background-image: url('../images/dimension.png');
 }
 
+.hierarchy-dragging,
 .tree .hierarchy > .head > .toggle {
   background-image: url('../images/hierarchy.png');
 }
 
+
 /**
  * dimension type 2 (MD_DIMTYPE_MEASURE)
 **/
+.measures-dragging,
 .tree .dimensiontype2 > .head > .toggle {
   background-image: url('../images/measures.png');
 }
 
+.measure-dragging,
 .tree .dimensiontype2 > .body > .node > .head > .toggle {
   background-image: url('../images/measure.png');
 }
@@ -162,18 +166,22 @@ span.current-cube,
 
 /* end of time dimension */
 
+.level-dragging,
 .tree .level > .head > .toggle {
   background-image: url('../images/level.png');
 }
 
+.property-dragging,
 .tree .property > .head > .toggle {
   background-image: url('../images/property.png');
 }
 
+.members-dragging,
 .tree .members > .head > .toggle {
   background-image: url('../mui/images/folder16x16.png');
 }
 
+.member-dragging,
 .tree .member > .head > .toggle {
   background-image: url('../images/member.png');
 }
@@ -219,6 +227,7 @@ div.node > div.head > span.label > span.label-prefix {
   display: none;
 }
 
+.dragging span.label-prefix:after,
 div.node > div.head > span.label > span.label-prefix:after {
   content: ": "
 }

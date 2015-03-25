@@ -62,6 +62,7 @@ table.query-designer-axis {
   background-image: url('../images/member.png');
 }
 
+.member-drilldown-dragging,
 .query-designer-axis td span.member-drilldown {
   background-image: url('../images/member-drilldown.png');
 }
@@ -95,18 +96,22 @@ table.query-designer-axis {
   background-image: url('../images/measures.png');
 }
 
+.query-designer-axis0-dragging,
 .query-designer-axis0 .query-designer-axis-header {
   background-image: url('../images/column-axis.png');
 }
 
+.query-designer-axis1-dragging,
 .query-designer-axis1 .query-designer-axis-header {
   background-image: url('../images/row-axis.png');
 }
 
+.query-designer-axis2-dragging,
 .query-designer-axis2 .query-designer-axis-header {
   background-image: url('../images/pages-axis.png');
 }
 
+.query-designer-axisSlicerAxis-dragging,
 .query-designer-axisSlicerAxis .query-designer-axis-header {
   background-image: url('../images/slicer-axis.png');
 }
