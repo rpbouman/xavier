@@ -122,27 +122,6 @@ var QueryDesigner;
     }
     this.fireEvent("changed");
   },
-  setDataSource: function(datasource) {
-    this.datasouce = datasource;
-  },
-  setCatalog: function(catalog) {
-    this.catalog = catalog;
-  },
-  getCatalog: function(){
-    return this.catalog;
-  },
-  setCube: function(cube) {
-    this.cube = cube;
-  },
-  getCube: function(){
-    return this.cube;
-  },
-  getCubeCaption: function(){
-    return this.getCube().CUBE_CAPTION;
-  },
-  getCatalogName: function(){
-    return this.getCatalog().CATALOG_NAME;
-  },
   reset: function() {
     for (var p in this.axes) {
         this.axes[p].reset();
@@ -271,7 +250,7 @@ var QueryDesigner;
   getContainer: function() {
     return gEl(this.conf.container);
   },
-  getMdx: function() {
+  getMdx: function(cubeName) {
     var mdx = "";
     var columnsMdx = this.getAxis(Xmla.Dataset.AXIS_COLUMNS).getMdx("{}");
     var rowsMdx = this.getAxis(Xmla.Dataset.AXIS_ROWS).getMdx();
@@ -290,7 +269,7 @@ var QueryDesigner;
 
     if (mdx) {
       mdx = "SELECT" + mdx +
-          "\nFROM   [" + this.cube.CUBE_NAME + "]"
+          "\nFROM   [" + cubeName + "]"
       ;
     }
     if (slicerMdx) {

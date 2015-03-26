@@ -206,92 +206,91 @@ var XlsxExporter;
     return address;
   },
   exportPivotTable: function(pivotTable){
-    var me = this;
-    //TODO: export the pivot table, including merged cells etc.
-    //for now, export a simplified "flattened" version of the dataset.
-    var sharedString = this.sharedStrings = [];
-    var mergedCells = this.mergedCells = [];
     var rowsXml = [];
+    var mergedCells = this.mergedCells = [];
+    var sharedString = this.sharedStrings = [];
     var dataset = pivotTable.getDataset();
-    var columnsOffset = 1, rowOffset = 1;
-    var rowAxis, columnAxis;
-    if (dataset.hasRowAxis()) {
-      rowAxis = dataset.getRowAxis();
-      columnsOffset += rowAxis.hierarchyCount();
-      rowsTable = pivotTable.getRowsTableDom();
-    }
-    var member, caption, ref, type = "s", style = "0";
+    if (dataset) {
+      var me = this;
+      var columnsOffset = 1, rowOffset = 1;
+      var rowAxis, columnAxis;
+      if (dataset.hasRowAxis()) {
+        rowAxis = dataset.getRowAxis();
+        columnsOffset += rowAxis.hierarchyCount();
+        rowsTable = pivotTable.getRowsTableDom();
+      }
+      var member, caption, ref, type = "s", style = "0";
 
-    //render the column axis
-    if (dataset.hasColumnAxis()) {
-      columnAxis = dataset.getColumnAxis();
-      rowOffset += columnAxis.hierarchyCount();
-      columnAxis.eachHierarchy(function(hierarchy){
-        rowsXml.push("<row>");
-        columnAxis.eachTuple(function(tuple){
-          member = tuple.members[hierarchy.index];
-          caption = member[Xmla.Dataset.Axis.MEMBER_CAPTION];
-          ref = me.getColumnAddress(columnsOffset + tuple.index) + String(hierarchy.index + 1);
-          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-          rowsXml.push(me.getSharedString(caption));
-          rowsXml.push("</c>");
-        });
-        rowsXml.push("</row>");
-      });
-    }
-
-    //render the cell set
-    var cellSet = dataset.getCellset();
-    cellSet.reset();
-
-    if (dataset.hasRowAxis()) {
-      var hasMoreCells = true,
-          ordinal = cellSet.cellOrdinal(),
-          minOrdinal, maxOrdinal,
-          n = columnAxis.tupleCount()
-      ;
-      //multiple rows of cells.
-      rowAxis.eachTuple(function(tuple){
-        type = "s";
-        minOrdinal = tuple.index * n;
-        maxOrdinal = minOrdinal + n;
-        rowsXml.push("<row>");
-        rowAxis.eachHierarchy(function(hierarchy){
-          member = tuple.members[hierarchy.index];
-          caption = escXml(member[Xmla.Dataset.Axis.MEMBER_CAPTION]);
-          ref = me.getColumnAddress(hierarchy.index + 1) + String(rowOffset + tuple.index);
-          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-          rowsXml.push(me.getSharedString(caption));
-          rowsXml.push("</c>");
-        });
-        if (hasMoreCells && ordinal >= minOrdinal && ordinal < maxOrdinal) {
-          do {
-            ref = me.getColumnAddress(columnsOffset + (ordinal - minOrdinal));
-            ref += String(rowOffset + tuple.index);
-            type = "n";
+      //render the column axis
+      if (dataset.hasColumnAxis()) {
+        columnAxis = dataset.getColumnAxis();
+        rowOffset += columnAxis.hierarchyCount();
+        columnAxis.eachHierarchy(function(hierarchy){
+          rowsXml.push("<row>");
+          columnAxis.eachTuple(function(tuple){
+            member = tuple.members[hierarchy.index];
+            caption = member[Xmla.Dataset.Axis.MEMBER_CAPTION];
+            ref = me.getColumnAddress(columnsOffset + tuple.index) + String(hierarchy.index + 1);
             rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-            rowsXml.push("<v>" + cellSet.cellValue() + "</v>");
+            rowsXml.push(me.getSharedString(caption));
             rowsXml.push("</c>");
-            ordinal = cellSet.nextCell();
-          } while ((hasMoreCells = (ordinal !== -1)) && ordinal < maxOrdinal);
-        }
-        rowsXml.push("</row>");
-      });
-    }
-    else {
-      //either a column axis, or no column axis.
-      //in both cases, we have one row of cells
-      type = "n";
-      rowsXml.push("<row>");
-      cellSet.eachCell(function(cell){
-        ref = me.getColumnAddress(columnsOffset + cell.ordinal) + String(rowOffset);
-        rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-        rowsXml.push("<v>" + cell.Value + "</v>");
-        rowsXml.push("</c>");
-      });
-      rowsXml.push("</row>");
-    }
+          });
+          rowsXml.push("</row>");
+        });
+      }
 
+      //render the cell set
+      var cellSet = dataset.getCellset();
+      cellSet.reset();
+
+      if (dataset.hasRowAxis()) {
+        var hasMoreCells = true,
+            ordinal = cellSet.cellOrdinal(),
+            minOrdinal, maxOrdinal,
+            n = columnAxis.tupleCount()
+        ;
+        //multiple rows of cells.
+        rowAxis.eachTuple(function(tuple){
+          type = "s";
+          minOrdinal = tuple.index * n;
+          maxOrdinal = minOrdinal + n;
+          rowsXml.push("<row>");
+          rowAxis.eachHierarchy(function(hierarchy){
+            member = tuple.members[hierarchy.index];
+            caption = escXml(member[Xmla.Dataset.Axis.MEMBER_CAPTION]);
+            ref = me.getColumnAddress(hierarchy.index + 1) + String(rowOffset + tuple.index);
+            rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+            rowsXml.push(me.getSharedString(caption));
+            rowsXml.push("</c>");
+          });
+          if (hasMoreCells && ordinal >= minOrdinal && ordinal < maxOrdinal) {
+            do {
+              ref = me.getColumnAddress(columnsOffset + (ordinal - minOrdinal));
+              ref += String(rowOffset + tuple.index);
+              type = "n";
+              rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+              rowsXml.push("<v>" + cellSet.cellValue() + "</v>");
+              rowsXml.push("</c>");
+              ordinal = cellSet.nextCell();
+            } while ((hasMoreCells = (ordinal !== -1)) && ordinal < maxOrdinal);
+          }
+          rowsXml.push("</row>");
+        });
+      }
+      else {
+        //either a column axis, or no column axis.
+        //in both cases, we have one row of cells
+        type = "n";
+        rowsXml.push("<row>");
+        cellSet.eachCell(function(cell){
+          ref = me.getColumnAddress(columnsOffset + cell.ordinal) + String(rowOffset);
+          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+          rowsXml.push("<v>" + cell.Value + "</v>");
+          rowsXml.push("</c>");
+        });
+        rowsXml.push("</row>");
+      }
+    }
     this.rowsXml = rowsXml.join("");
   },
   getContentXml: function(){

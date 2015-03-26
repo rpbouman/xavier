@@ -25,7 +25,8 @@ function gMsg(key, args){
       msgArgs[i] = arguments[i];
     }
   }
-  else {
+  else
+  if (n === 2) {
     msgArgs = args;
     if (!iObj(msgArgs)) {
       msgArgs = {"1": msgArgs}

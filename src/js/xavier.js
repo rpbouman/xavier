@@ -47,42 +47,31 @@ var mainToolbar = new Toolbar({
 mainToolbar.addButton([
   {"class": "refresh", tooltip: gMsg("Refresh metadata")},
   {"class": "separator"},
-  {"class": "new", tooltip: gMsg("New Query")},
-  {"class": "open", tooltip: gMsg("Open Query")},
-  {"class": "separator"},
-  {"class": "save", tooltip: gMsg("Save Query")},
-  {"class": "save-as", tooltip: gMsg("Save Query As...")},
-  {"class": "separator"},
-  {"class": "edit", tooltip: gMsg("Toggle edit mode"), toggleGroup: "edit", depressed: true},
+  {"class": "new-table", tooltip: gMsg("New Table")},
+  {"class": "new-pivot-table", tooltip: gMsg("New Pivot Table")},
   {"class": "separator"},
   {"class": "run", tooltip: gMsg("Run Query")},
   {"class": "auto-run", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
   {"class": "separator"},
-  {"class": "show-column-hierarchy-headers", tooltip: gMsg("Show column hierarchy headers"), toggleGroup: "show-column-hierarchy-headers", depressed: false},
-  {"class": "show-row-hierarchy-headers", tooltip: gMsg("Show row hierarchy headers"), toggleGroup: "show-row-hierarchy-headers", depressed: false},
-  {"class": "separator"},
-  {"class": "excel", tooltip: gMsg("Export to Microsoft Excel")},
+  {"class": "excel", tooltip: gMsg("Export to Microsoft Excel")}
 ]);
 mainToolbar.listen({
   buttonPressed: function(toolbar, event, button){
     var conf = button.conf;
     var className = conf["class"];
     switch (className) {
-      case "new":
-        newQuery();
+      case "new-table":
+        workArea.newTableTab();
         break;
-      case "save":
-        saveModel();
-        break;
-      case "save-as":
-        saveModelAs();
+      case "new-pivot-table":
+        workArea.newPivotTableTab();
         break;
       case "run":
-        executeQuery(queryDesigner);
+        workArea.executeQuery();
         break;
       case "excel":
         exportToExcel();
-        break;
+        break
       default:
         throw "Not implemented";
     }
@@ -90,37 +79,14 @@ mainToolbar.listen({
   afterToggleGroupStateChanged: function(toolbar, event, data){
     var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
     switch (data.group) {
-      case "edit":
-        editMode(depressedButton);
-        break;
-      case "show-empty":
-        emptyCells(depressedButton);
-        break;
-      case "show-column-hierarchy-headers":
-        pivotTable.showHorizontalHierarchyHeaders(depressedButton ? true : false);
-        break;
-      case "show-row-hierarchy-headers":
-        pivotTable.showVerticalHierarchyHeaders(depressedButton ? true : false);
+      case "auto-run":
+        workArea.setAutoRunEnabled(getAutoRunEnabled());
         break;
     }
   }
 });
 
 var oldSplitterPosition = 300;
-function editMode(editMode){
-  if (editMode) {
-    mainSplitPane.uncollapse();
-  }
-  else {
-    mainSplitPane.collapse(xmlaTreeView.getDom());
-  }
-  Displayed.setDisplayed(queryDesigner.getDom(), editMode ? true : false);
-  pivotTable.doLayout();
-}
-
-function autoRunEnabled(){
-  return mainToolbar.getDepressedButtonInToggleGroup("auto-run");
-}
 
 var xmlaTreeView = new XmlaTreeView({
   xmla: xmla,
@@ -140,26 +106,24 @@ xmlaTreeView.listen({
     console.error(error.getStackTrace());
   },
   cubeSelected: function(xmlaTreeView, event, cubeTreeNode){
-    newQuery();
     var catalogTreeNode = cubeTreeNode.getParentTreeNode();
     var datasourceTreeNode = catalogTreeNode.getParentTreeNode();
-    queryDesigner.setCube(cubeTreeNode.conf.metadata);
-    queryDesigner.setCatalog(catalogTreeNode.conf.metadata);
-    queryDesigner.setDataSource(datasourceTreeNode.conf.metadata);
+    workArea.setCube(cubeTreeNode.conf.metadata);
+    workArea.setCatalog(catalogTreeNode.conf.metadata);
+    workArea.setDatasource(datasourceTreeNode.conf.metadata);
   }
 });
 
-function newQuery(){
-  if (iUnd(queryDesigner)) {
-    createQueryDesigner();
-  }
-  queryDesigner.reset();
-  if (pivotTable) {
-    pivotTable.clear();
-  }
+function getAutoRunEnabled(){
+  return mainToolbar.getDepressedButtonInToggleGroup("auto-run");
 }
 
-var workArea = new ContentPane({});
+var workArea = new XavierTabPane({
+  dnd: dnd,
+  xmla: xmla,
+  autorun: getAutoRunEnabled()
+});
+
 var mainSplitPane = new SplitPane({
   container: body,
   classes: ["mainsplitpane"],
@@ -168,192 +132,30 @@ var mainSplitPane = new SplitPane({
   orientation: SplitPane.orientations.vertical
 });
 mainSplitPane.listen("splitterPositionChanged", function(mainSplitPane, event, data){
-  if (pivotTable) {
-    pivotTable.doLayout();
-  }
+  workArea.doLayout();
 });
 
 //force rendering
 mainSplitPane.getDom();
 
-var queryDesigner;
-function createQueryDesigner() {
-  queryDesigner = new QueryDesigner({
-    container: cEl("div", {
-      id: "query-designer",
-      "class": "query-designer"
-    }, null, workArea.getDom()),
-    dnd: dnd
-  });
-  queryDesigner.listen({
-    changed: function(queryDesigner, event, data){
-      if (autoRunEnabled()) {
-        executeQuery(queryDesigner);
-      }
-      else {
-
-      }
-    }
-  });
-  queryDesigner.render();
-}
-
-var pivotTable;
-function createPivotTable(){
-  var pivotTable = new PivotTable({
-    container: cEl("div", {
-      id: "pivot-table",
-      "class": "pivot-table"
-    }, null, workArea.getDom()),
-    showHorizontalHierarchyHeaders: mainToolbar.getDepressedButtonInToggleGroup("show-column-hierarchy-headers") ? true : false,
-    showVerticalHierarchyHeaders: mainToolbar.getDepressedButtonInToggleGroup("show-row-hierarchy-headers") ? true : false
-  });
-  pivotTable.listen({
-    "collapse": function(pivotTable, event, data){
-      collapseMember(data);
-    },
-    "expand": function(pivotTable, event, data){
-      expandMember(data);
-    }
-  });
-  return pivotTable;
-}
-
-function drillMember(drillEventData, drillDirection){
-  var axis = queryDesigner.getAxis(drillEventData.axis);
-  if (!axis) {
-    throw "Invalid axis " + drillEventData.axis;
-  }
-  //first, fetch the metadata for this member
-  var catalogName = queryDesigner.getCatalog().CATALOG_NAME;
-  var cubeName = queryDesigner.getCube().CUBE_NAME;
-  var properties = {
-    DataSourceInfo: queryDesigner.datasouce.DataSourceInfo,
-    Catalog: catalogName
-  };
-  var restrictions = {
-    CATALOG_NAME: catalogName,
-    CUBE_NAME: cubeName,
-    MEMBER_UNIQUE_NAME: drillEventData.member
-  };
-  var drillAction = function(xmla, options, rowset){
-    busy(false);
-    var rows = rowset.fetchAllAsObject();
-    if (rows.length !== 1) {
-      throw "Expected exactly 1 result row, not " + rows.length;
-    }
-    var metadata = rows[0];
-    var hierarchy = metadata.HIERARCHY_UNIQUE_NAME;
-    var setDefs = axis.getSetDefs(hierarchy);
-    if (!setDefs) {
-      throw "Cant find set definitions for " + setDefs;
-    }
-    switch (drillDirection) {
-      case "up":
-        //TODO: find descendants with a proper metadata query.
-        var descendants;
-        try {
-          descendants = axis.getMemberDescendants(metadata, "member");
-        }
-        catch (e) {
-          if (e === "Member not found") {
-            if (metadata.LEVEL_NUMBER === 0) {
-              descendants = [];
-            }
-            else {
-              descendants = axis.getMemberDescendants(metadata, "member-drilldown");
-            }
-            var member = axis.getMember(metadata, "member-drilldown");
-            if (!member) {
-              throw "Member not found";
-            }
-            descendants.push(member.setDef);
-          }
-        }
-        var removed = axis.removeMember(descendants);
-        if (!removed) {
-          //apparently this member was not expanded from within the pivot table.
-          //manually remove all child expressions of this member.
-          debugger;
-        }
-        break;
-      case "down":
-        axis.addMember(setDefs.length, "member-drilldown", metadata);
-        break;
-      default:
-        throw "Unknown drill direction " + drillDirection;
-    }
-  };
-
-  xmla.discoverMDMembers({
-    url: queryDesigner.datasouce.URL,
-    properties: properties,
-    restrictions: restrictions,
-    success: drillAction,
-    error: function(xmla, options, exception){
-      busy(false);
-      throw exception;
-    }
-  });
-}
-
-function collapseMember(data){
-  drillMember(data, "up");
-}
-
-function expandMember(data) {
-  drillMember(data, "down");
-}
-
-function executeQuery(queryDesigner){
-  busy(true);
-  try {
-    if (!pivotTable) {
-      pivotTable = createPivotTable();
-    }
-    pivotTable.clear();
-    var mdx = queryDesigner.getMdx();
-    if (!mdx) {
-      throw "Not a valid query";
-    }
-    console.time("executeQuery");
-    xmla.execute({
-      url: queryDesigner.datasouce.URL,
-      properties: {
-        DataSourceInfo: queryDesigner.datasouce.DataSourceInfo,
-        Catalog: queryDesigner.catalog.CATALOG_NAME
-      },
-      statement: mdx,
-      success: function(xmla, options, dataset){
-        console.timeEnd("executeQuery");
-        pivotTable.renderDataset(dataset);
-        busy(false);
-      },
-      error: function(xmla, options, exception){
-        console.timeEnd("executeQuery");
-        busy(false);
-        showAlert("Error executing query", exception.toString());
-      }
-    });
-  }
-  catch (exception) {
-    busy(false);
-    showAlert(exception.toString());
-  }
-}
-
 var xlsxExporter;
 function exportToExcel(){
-  if (!pivotTable) {
-    showAlert("Nothing to export", "There is nothing to export. Please enter a query first");
-    return;
-  }
-
-  if (!xlsxExporter) {
-    xlsxExporter = new XlsxExporter();
-  }
   try {
-    var name = queryDesigner.getCatalogName() + " " + queryDesigner.getCubeCaption() + " - ";
+    var selectedTab = workArea.getSelectedTab();
+    var visualizer = selectedTab ? selectedTab.getVisualizer() : null;
+    var dataset = visualizer ? visualizer.getDataset() : null;
+    var queryDesigner = selectedTab ? selectedTab.getQueryDesigner() : null;
+    if (!selectedTab || !visualizer || !queryDesigner || !dataset) {
+      throw "There is nothing to export. Please enter a query first";
+    }
+
+    if (!xlsxExporter) {
+      xlsxExporter = new XlsxExporter();
+    }
+
+    var catalog = workArea.getCatalog();
+    var cube = workArea.getCube();
+    var name = catalog.CATALOG_NAME + " " + cube.CUBE_CAPTION + " - ";
     var i, hierarchyCount, hierarchies, hierarchy, measures, measure, measureNames = [];
     var measureAxis, axes = {};
     queryDesigner.eachAxis(function(id, axis){
@@ -438,7 +240,7 @@ function exportToExcel(){
       name += " for a selection of " + axisDescription(slicer);
     }
 
-    xlsxExporter.export(name, pivotTable);
+    xlsxExporter.export(name, visualizer);
   }
   catch (exception){
     showAlert("Export Error", exception);
@@ -447,6 +249,10 @@ function exportToExcel(){
 
 function startDrag(event, dndHandler) {
   var dragInfo;
+  var queryDesigner = workArea.getQueryDesigner();
+  if (!queryDesigner) {
+    return false;
+  }
   if (!
     (
       (dragInfo = xmlaTreeView.checkStartDrag(event, dndHandler))
@@ -455,6 +261,7 @@ function startDrag(event, dndHandler) {
   ) {
     return false;
   }
+  //todo: apply to the current querydesigner
   queryDesigner.highlightDropTargets(event.getTarget(), dragInfo);
   dndHandler.dragInfo = dragInfo;
   var proxy = dndHandler.dragProxy;
@@ -596,6 +403,8 @@ function endDrag(event, dndHandler) {
     dndHandler.dropTargetAxis.removeHighlight();
     dndHandler.dropTargetAxis = null;
   }
+  //todo: apply to the current query designer
+  var queryDesigner = workArea.getQueryDesigner();
   queryDesigner.unHighlightDropTargets();
 
   var target = event.getTarget();
@@ -700,9 +509,7 @@ function windowResized(){
     return;
   }
   xmlaTreeView.getSplitPane().setSplitterPosition((100 * resizeEvent.factor) + "%");
-  if (pivotTable) {
-    pivotTable.doLayout();
-  }
+  workArea.doLayout();
   resizeEvent = null;
 }
 var resizeTimer = new Timer({

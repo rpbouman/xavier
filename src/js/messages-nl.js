@@ -18,6 +18,9 @@ aMsg({
   "Show column hierarchy headers": "Toon kolomkoppen",
   "Show row hierarchy headers": "Toon rijlabels",
   "Export to Microsoft Excel": "Naar Microsoft Excel uitvoeren",
+  "New Table": "Nieuwe Tabel",
+  "New Pivot Table": "Nieuwe Draaitabel",
+  "Welcome!": "Welkom!",
   //excel
   "Nothing to export": "Niets om te exporteren",
   "There is nothing to export. Please enter a query first": "Er kan niets geexporteerd worden. Stel eerst een zoekopdracht samen.",

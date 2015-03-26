@@ -480,7 +480,7 @@ var PivotTable;
     cellsStyle.overflowX = overflow;
     cellsStyle.height = cellsHeight + "px";
 
-    if (rowsTableHeight + colsTable.clientHeight < (containerParentHeight - (container.offsetTop + container.clientTop))) {
+    if (rowsTableHeight + colsTable.clientHeight + 24 < (containerParentHeight - (container.offsetTop + container.clientTop))) {
       overflow = "hidden";
     }
     else {

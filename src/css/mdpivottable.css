@@ -28,7 +28,7 @@ table.pivot-table tr > td.new-hierarchy {
     position: relative;
     left: 0px;
     right: 0px;
-    margin: 0px 5px 5px 10px;
+    margin: 0px 5px 5px 5px;
 }
 
 .pivot-table-axis, .pivot-table-axis-rows-headers {
