@@ -1,0 +1,42 @@
+.pentaho-tab-bar {
+  padding-top: 0px;
+}
+
+.tabpane-components {
+  top: 24px;
+}
+
+.xavier-tabpane > .pentaho-tab-bar > .pentaho-tabWidget {
+  background-repeat: no-repeat;
+  text-indent: 20px;
+  background-position: 4px 4px;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-left-width: 1px;
+  border-left-style: solid;
+  border-color: lightgrey;
+}
+
+.xavier-tabpane > .pentaho-tab-bar > .table {
+  background-image: url('../images/table.png');
+}
+
+.toolbar > .new-table {
+  background-image: url('../images/new-table.png');
+}
+
+.xavier-tabpane > .pentaho-tab-bar > .pivot-table {
+  background-image: url('../images/pivot-table.png');
+}
+
+.toolbar > .new-pivot-table {
+  background-image: url('../images/new-pivot-table.png');
+}
+
+.xavier-tabpane > .tabpane-components > DIV {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  top: 0px;
+}
