@@ -501,7 +501,7 @@ var PivotTable;
       this.dataset.close();
     }
     this.dataset = dataset;
-    this.clear("");
+    this.clear();
 
     if (dataset.hasColumnAxis()) {
       this.renderColumnAxis();
@@ -915,7 +915,7 @@ var PivotTable;
     style.width = "0px";
     style.height = "0px";
   },
-  clear: function(text){
+  clear: function(){
     this.clearAxis(this.getRowsHeadersDom());
     this.clearAxis(this.getRowsDom());
     this.clearAxis(this.getCellsDom());

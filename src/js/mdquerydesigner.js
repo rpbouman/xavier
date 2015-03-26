@@ -122,7 +122,7 @@ var QueryDesigner;
     }
     this.fireEvent("changed");
   },
-  reset: function() {
+  clear: function() {
     for (var p in this.axes) {
         this.axes[p].reset();
     }
@@ -207,10 +207,6 @@ var QueryDesigner;
     //r = dom.insertRow(dom.rows.length);
     return dom;
   },
-  busy: function(busy) {
-    var spinner = gEl("ajax-spinner");
-    spinner.style.visibility = busy ? "" : "hidden";
-  },
   getDom: function(create) {
     var el = gEl(this.getId());
     if (!el && create !== false) el = this.createDom();
@@ -237,22 +233,12 @@ var QueryDesigner;
       axis.updateDom();
     });
   },
-  getHorizontalDragProxy: function(){
-    return this.horizontalDragProxy;
-  },
-  getVerticalDragProxy: function(){
-    return this.verticalDragProxy;
-  },
-  hideProxies: function() {
-    if (this.horizontalDragProxy) this.horizontalDragProxy.style.display = "none";
-    if (this.verticalDragProxy) this.verticalDragProxy.style.display = "none";
-  },
   getContainer: function() {
     return gEl(this.conf.container);
   },
   getMdx: function(cubeName) {
     var mdx = "";
-    var columnsMdx = this.getAxis(Xmla.Dataset.AXIS_COLUMNS).getMdx("{}");
+    var columnsMdx = this.getAxis(Xmla.Dataset.AXIS_COLUMNS).getMdx();
     var rowsMdx = this.getAxis(Xmla.Dataset.AXIS_ROWS).getMdx();
     var slicerMdx = this.getAxis(Xmla.Dataset.AXIS_SLICER).getMdx();
 

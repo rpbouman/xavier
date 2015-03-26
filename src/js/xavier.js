@@ -53,7 +53,9 @@ mainToolbar.addButton([
   {"class": "run", tooltip: gMsg("Run Query")},
   {"class": "auto-run", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
   {"class": "separator"},
-  {"class": "excel", tooltip: gMsg("Export to Microsoft Excel")}
+  {"class": "excel", tooltip: gMsg("Export to Microsoft Excel")},
+  {"class": "separator"},
+  {"class": "clear", tooltip: gMsg("Discard this query and start over")}
 ]);
 mainToolbar.listen({
   buttonPressed: function(toolbar, event, button){
@@ -69,6 +71,9 @@ mainToolbar.listen({
       case "run":
         workArea.executeQuery();
         break;
+      case "clear":
+        workArea.clear();
+        break
       case "excel":
         exportToExcel();
         break

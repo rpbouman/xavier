@@ -82,10 +82,6 @@ html, body {
   background-image: url('../mui/images/empty16x16.png');
 }
 
-.toolbar .swap-axes {
-  background-image: url('../mui/images/swap-axes16x16.png');
-}
-
 .toolbar .run {
   background-image: url('../images/run.png');
 }
@@ -94,14 +90,10 @@ html, body {
   background-image: url('../images/auto-run.png');
 }
 
-.toolbar .show-column-hierarchy-headers {
-  background-image: url('../images/column-axis.png');
-}
-
-.toolbar .show-row-hierarchy-headers {
-  background-image: url('../images/row-axis.png');
-}
-
 .toolbar .excel {
   background-image: url('../images/excel.png');
+}
+
+.toolbar .clear {
+  background-image: url('../mui/images/trash_16x16.png');
 }
