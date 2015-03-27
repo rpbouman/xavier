@@ -195,7 +195,9 @@ var XavierTab;
       var cube = this.getCube();
       var mdx = queryDesigner.getMdx(cube.CUBE_NAME);
       if (!mdx) {
-        throw "Not a valid query";
+        //throw "Not a valid query";
+        busy(false);
+        return;
       }
       console.time("executeQuery");
       xmla.execute({
