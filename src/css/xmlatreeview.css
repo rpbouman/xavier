@@ -69,7 +69,7 @@ span.current-cube,
 /**
  * dimension type 2 (MD_DIMTYPE_MEASURE)
 **/
-.measures-dragging,
+.dimensiontype2-dragging,
 .tree .dimensiontype2 > .head > .toggle {
   background-image: url('../images/measures.png');
 }
