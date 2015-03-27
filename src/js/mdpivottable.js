@@ -231,6 +231,12 @@ var PivotTable;
     var container = this.getContainer(),
         id = this.getId()
     ;
+    if (!container) {
+      container = cEl("div", {
+        id: id,
+        "class": "pivot-table"
+      });
+    }
     container.className = PivotTable.prefix + "-widget";
     var axisPrefix = PivotTable.prefix + "-axis";
     cEl("DIV", {
@@ -249,12 +255,16 @@ var PivotTable;
       "class": axisPrefix + "-rows-headers",
       id: id + "-rows-headers"
     }, null, container);
+
     var cells = cEl("DIV", {
       "class": axisPrefix + " " + PivotTable.prefix + "-cells",
       id: id + "-cells"
     }, null, container);
+
     listen(cells, "scroll", this.scrollHandler, this);
     listen(container, "click", this.clickHandler, this);
+
+    return container;
   },
   clickHandler: function(event) {
     var target = event.getTarget();
@@ -336,10 +346,11 @@ var PivotTable;
     return gEl(this.getId() + "-cells-table");
   },
   getDom: function() {
-    if (!this.dom) {
-      this.createDom();
+    var dom = gEl(this.getId());
+    if (!dom) {
+      dom = this.createDom();
     }
-    return this.dom;
+    return dom;
   },
   addPositionableRow: function(table, n, last, minWidthCells) {
     var c, c1, i, r = table.insertRow(last ? table.rows.length : 0);
@@ -352,7 +363,7 @@ var PivotTable;
     return r;
   },
   doLayout: function() {
-    var container = this.getContainer(),
+    var container = this.getDom(),
         containerParent = container.parentNode,
         containerParentWidth = containerParent.clientWidth,
         containerParentHeight = containerParent.clientHeight,
