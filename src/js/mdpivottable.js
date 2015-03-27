@@ -774,7 +774,7 @@ var PivotTable;
         columnAxis = dataset.hasColumnAxis() ? dataset.getColumnAxis() : null,
         tbody = table.tBodies[0] || cEl("TBODY", null, null, table),
         rows = tbody.rows, r,
-        i, n = columnAxis.tupleCount(), colTuples, colTuple,
+        i, n = columnAxis ? columnAxis.tupleCount() : 1, colTuples, colTuple,
         j, m, rowTuples, rowTuple
     ;
     if (rowAxis) {
@@ -801,8 +801,10 @@ var PivotTable;
         r.insertCell(r.cells.length).className = "td";
       }
     }
-    //try to size cell widths as much as possible ahead.
-    this.addPositionableRow(table, n, true, this.getColumnsTableDom().rows[0].cells);
+    if (columnAxis) {
+      //try to size cell widths as much as possible ahead.
+      this.addPositionableRow(table, n, true, this.getColumnsTableDom().rows[0].cells);
+    }
 
     //add cells to the dom
     this.getCellsDom().appendChild(table);
@@ -816,9 +818,9 @@ var PivotTable;
         cellset = dataset.getCellset(),
         cell, cells, from, to,
         func = cellset.getByTupleIndexes,
-        columnAxis = dataset.getColumnAxis(),
+        columnAxis = dataset.hasColumnAxis() ? dataset.getColumnAxis() : null,
         axisCount = dataset.axisCount(),
-        i, n = columnAxis.tupleCount(), colTuples, colTuple,
+        i, n = columnAxis ? columnAxis.tupleCount() : 1, colTuples, colTuple,
         j, m, rowTuples, rowTuple,
         k, l,
         r, c, tds, r1, c1,
@@ -879,27 +881,31 @@ var PivotTable;
         }
       }
     }
-    table.style.display = "";
 
-    var columnsTable = this.getColumnsTableDom(),
-        columnsPositioningCells = columnsTable.rows[0].cells,
-        positioningCells = rows[rows.length - 1].cells,
-        x = 0, y = 0;
-    ;
-    for (i = 0; i < n; i++) {
-      c = columnsPositioningCells[i];
-      c1 = positioningCells[i];
-      if (c1.offsetWidth === c.offsetWidth) {
-        c.firstChild.style.width = c.offsetWidth + "px";
-        continue;
-      }
-      if (c1.offsetWidth > c.offsetWidth) {
-        y++;
-        c.firstChild.style.width = c1.offsetWidth + "px";
-      }
-      else {
-        x++;
-        c1.firstChild.style.width = c.offsetWidth + "px";
+    //align the columnn header
+    if (dataset.hasColumnAxis()){
+      table.style.display = "";
+
+      var columnsTable = this.getColumnsTableDom(),
+          columnsPositioningCells = columnsTable.rows[0].cells,
+          positioningCells = rows[rows.length - 1].cells,
+          x = 0, y = 0;
+      ;
+      for (i = 0; i < n; i++) {
+        c = columnsPositioningCells[i];
+        c1 = positioningCells[i];
+        if (c1.offsetWidth === c.offsetWidth) {
+          c.firstChild.style.width = c.offsetWidth + "px";
+          continue;
+        }
+        if (c1.offsetWidth > c.offsetWidth) {
+          y++;
+          c.firstChild.style.width = c1.offsetWidth + "px";
+        }
+        else {
+          x++;
+          c1.firstChild.style.width = c.offsetWidth + "px";
+        }
       }
     }
   },
