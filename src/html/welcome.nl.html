@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<!--
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-->
+  <head>
+    <meta http-equiv="Content-Type" content="type=text/html; charset=utf-8" />
+    <title>Welkom bij Xavier!</title>
+    <link rel="stylesheet" type="text/css" href="../css/welcome.css"/>
+  </head>
+  <body>
+    <h1>Welkom bij Xavier!</h1>
+    <p>
+      Xavier is een gebruiksvriendelijke tool voor <dfn class="olap"><a href="#olap"><abbr>OLAP</abbr></a></dfn> data analyse en visualisatie.
+      Xavier kan gebruikt worden in combinatie met elke XML/A (XML for Analysis) server, zoals Mondrian, Pentaho, icCube, Microsoft Analysis Services en zo meer.
+    </p>
+    <h2>Snel van start met Xavier</h2>
+    <p>
+      Xavier gebruiken is eenvoudig:
+    </p>
+    <ol>
+      <li>Kies één van de beschikbare <dfn class="cube"><a href="#cube">kubussen</a></dfn> uit de lijst aan de linkerzijde van het scherm door erop te klikken.</li>
+      <li>Creëer een visualisatie tabblad door een visualisatie-type te kiezen, zoals <dfn class="table"><a href="#table">tabel</a></dfn>, <dfn class="pivot-table"><a href="#pivot-table">draaitabel</a></dfn>, of een grafiektype (zoals <dfn class="pie-chart"><a href="#pie-chart">taartdiagram</a></dfn>) en de overeenkomstige knop op de werkbalk bovenaan het scherm aan te klikken.</li>
+      <li>Kies <dfn class="measure"><a href="#measure">meetwaardes</a></dfn> en categorische elementen (zoals <dfn class="hierarchy"><a href="#hierarchy">hiërarchieën</a></dfn>, <dfn class="level"><a href="#level">hiërarchieniveau</a></dfn> of individuele <dfn class="member"><a href="#member">lid-elementen</a></dfn>) uit de kubus en sleep ze van de linkerzijde van het scherm naar het visualisatie tabblad in de rechterzijde van het scherm.</li>
+      <li>Gebruik de interactieve mogelijkheden van uw visualizatie om selecties te maken of om informatie uit een boven- of onderliggend niveau aan te boren</li>
+    </ol>
+    <p>
+      Dat is alles! U kunt zoveel verschillende visualisaties maken als u maar wilt.
+      Zodra u tevreden bent kunt u de visualisaties opslaan of uitprinten.
+    </p>
+    <p>
+      U kunt de visualisaties natuurlijk ook uitvoeren naar <dfn class="excel"><a href="#excel">Microsoft Excel</a></dfn> om deze daar verder te bewerken.
+    </p>
+    <h2>Begrippenlijst</h2>
+    <dl>
+      <dt><dfn class="pivot-table"><a name="pivot-table">Draaitabel</a></dfn></dt>
+      <dd>
+        Een draaitabel (ook wel kruistabel genoemd) is een soort tabel waar zowel de rij- als de kolomkoppen groepen van gegevens voorstellen.
+        Op de kruispunten van kolom- en rijkoppen bevinden zich cellen, met daarin een geaggregeerde waarde die berekent wordt uit de onderliggende <a href="#measure">meetwaarden</a>.
+        Lees meer over <a href="http://nl.wikipedia.org/wiki/Draaitabel">draaitabellen in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="hierarchy"><a name="hierarchy">Hiërarchie</a></dfn></dt>
+      <dd>
+        Een hiërarchie is een op aggregatie-niveau geordende verzameling van categorische waarden.
+        Bijvoorbeeld: tijd is hiërarchisch geordend volgens jaar, dan kwartaal, dan maand, en zo verder.
+        Lees meer over <a href="http://nl.wikipedia.org/wiki/Cube_(informatica)#Hi.C3.ABrarchie">hiërarchieën in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="level"><a name="level">Hiërarchieniveau</a></dfn></dt>
+      <dd>
+        Een aggregatie niveau binnen een <a href="#hierarchy">hiërarchie</a>.
+      </dd>
+
+      <dt><dfn class="cube"><a name="cube">Kubus</a></dfn></dt>
+      <dd>
+        Een gegevensstructuur die is toegesneden op het gemakkelijke en snelle data-analyse.
+        Lees meer over <a href="http://nl.wikipedia.org/wiki/Cube_(informatica)">kubussen in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="member"><a name="member">Lid-element</a></dfn></dt>
+      <dd>
+        Een lid is één bepaalde categorische waarde binnen een <a href="#level">niveau</a> van een <a href="#hierarchy">hiërarchie</a>.
+        Bijvoorbeeld: "2015" is een lid van het jaar niveau binnen een tijd hiërarchie.
+      </dd>
+
+      <dt><dfn class="measure"><a name="measure">Meetwaarde</a></dfn></dt>
+      <dd>
+        Meetwaardes (ook wel feiten genoemd) zijn quantitatieve gegevens die vastgelegd worden over een bedrijfsproces.
+        Bijvoorbeeld: het bedrijfsproces "verkoop" kent meetwaarden als verkocht aantal en verkoopprijs.
+        Lees meer over <a href="http://en.wikipedia.org/wiki/Data_warehouse#Facts">meetwaardes in de Engelstalige wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="olap"><a name="olap"><abbr>OLAP</abbr></a></dfn></dt>
+      <dd>
+        <abbr>OLAP</abbr> is een afkorting van <dfn class="olap">Online Analytical Processing</dfn>.
+        Hieronder wordt verstaan het op ad-hoc basis analyseren en rapporteren van gegevens over het verloop van bedrijfsprocessen.
+        Lees meer over <a href="http://nl.wikipedia.org/wiki/Online_analytical_processing"><abbr>OLAP</abbr> in de wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="pie-chart"><a name="pie-chart">Taartdiagram</a></dfn></dt>
+      <dd>
+        Een taartdiagram (ook wel cirkeldiagram genoemd) is een grafiek die de categorie van één serie meetwaarden uitbeeld als een sector ("taartpunt") van een cirkel.
+        Lees meer over <a href="http://nl.wikipedia.org/wiki/Cirkeldiagram">taartdiagrammen in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="table"><a name="table">Tabel</a></dfn></dt>
+      <dd>
+        Een gegevenspresentatie bestaande uit een verzameling rijen met een vaste indeling in kolommen.
+        Lees meer over <a href="http://nl.wikipedia.org/wiki/Tabel">tabellen in wikipedia</a>.
+      </dd>
+    </dl>
+  </body>
+</html>

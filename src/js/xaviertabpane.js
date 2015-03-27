@@ -243,9 +243,15 @@ var XavierWelcomeTab;
 }).prototype = {
   text: gMsg("Welcome!"),
   createDom: function(){
-    var dom = cEl("DIV", {
-      id: this.getId()
-    }, gMsg("Welcome to Xavier!"));
+    var dom = cEl("IFRAME", {
+      id: this.getId(),
+      src: gMsg("welcome.html"),
+      style: {
+        "border-style": "none"
+      },
+      width: "100%",
+      height: "100%"
+    });
     return dom;
   },
   getTabPane: function(){

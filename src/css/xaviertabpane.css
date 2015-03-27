@@ -35,6 +35,10 @@ limitations under the License.
 }
 
 /* table */
+.xavier-tabpane > .pentaho-tab-bar > .welcome {
+  background-image: url('../mui/images/info_16x16.png');
+}
+
 .xavier-tabpane > .pentaho-tab-bar > .table {
   background-image: url('../images/table.png');
 }
@@ -69,6 +73,7 @@ limitations under the License.
   background-image: url('../images/row-axis.png');
 }
 
+.xavier-tabpane > .tabpane-components > IFRAME,
 .xavier-tabpane > .tabpane-components > DIV {
   position: absolute;
   left: 0px;

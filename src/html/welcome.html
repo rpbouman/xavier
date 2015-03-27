@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<!--
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-->
+  <head>
+    <meta http-equiv="Content-Type" content="type=text/html; charset=utf-8" />
+    <title>Welcome to Xavier!</title>
+    <link rel="stylesheet" type="text/css" href="../css/welcome.css"/>
+  </head>
+  <body>
+    <h1>Welcome to Xavier!</h1>
+    <p>
+      Xavier is een user-friendly tool for <dfn class="olap"><a href="#olap"><abbr>OLAP</abbr></a></dfn> data analysis and visualisation.
+      Xavier can be used in combination with any XML/A (XML for Analysis) server, like Mondrian, Pentaho, icCube, Microsoft Analysis Services and others.
+    </p>
+    <h2>Getting started with Xavier</h2>
+    <p>
+      Using Xavier is simple:
+    </p>
+    <ol>
+      <li>Click one of the available <dfn class="cube"><a href="#cube">cubes</a></dfn> from the list at the left-hand side of the screen to select it.</li>
+      <li>Create a visualization tab page by choosing a visualization type, like <dfn class="table"><a href="#table">table</a></dfn>, <dfn class="pivot-table"><a href="#pivot-table">pivot table</a></dfn>, or a chart type (like <dfn class="pie-chart"><a href="#pie-chart">pie chart</a></dfn>) by clicking the corresponding button on the main toolbar at the top of the screen.</li>
+      <li>Choose <dfn class="measure"><a href="#measure">measures</a></dfn> and categorical items (like <dfn class="hierarchy"><a href="#hierarchy">hierarchies</a></dfn>, <dfn class="level"><a href="#level">hierarchy levels</a></dfn> or individual <dfn class="member"><a href="#member">members</a></dfn>) from the cube and drag them from the left-hand side of the screen to the visualization tab at the right hand side of the screen.</li>
+      <li>Use the interactive capabilities of the visualization to make selections or to drill up or down.</li>
+    </ol>
+    <p>
+      That's it! U can create as many visualizations as you like.
+      When you're done creating visualization, you can save them or print them.
+    </p>
+    <p>
+      You can also export your visualization to <dfn class="excel"><a href="#excel">Microsoft Excel</a></dfn> for further processing or distribution.
+    </p>
+    <h2>Glossary</h2>
+    <dl>
+      <dt><dfn class="pivot-table"><a name="pivot-table">Pivot table</a></dfn></dt>
+      <dd>
+        A pivot table (also known as crosstab) is a kind of table in which both column and row headers represent a group of data.
+        At the intersection of the column and row headers are cells containing an aggregated value calculated from the underlying <a href="#measure">measures</a>a>.
+        Read more about <a href="http://en.wikipedia.org/wiki/Pivot_table">pivot tables in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="hierarchy"><a name="hierarchy">Hierarchy</a></dfn></dt>
+      <dd>
+        A hierarchy is a collection of categorical values, ordered by aggregation level.
+        For example, time is hierarchically ordered into levels of year, quarter, month, and so on.
+        Read more about <a href="http://en.wikipedia.org/wiki/OLAP_cube#Hierarchy">hierarchies in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="level"><a name="level">Level</a></dfn></dt>
+      <dd>
+        A level of aggregation within a <a href="#hierarchy">hierarchy</a>.
+      </dd>
+
+      <dt><dfn class="cube"><a name="cube">Cube</a></dfn></dt>
+      <dd>
+        A data structure suitable for quick analysis of business process data.
+        Read more about <a href="http://en.wikipedia.org/wiki/OLAP_cube">cubes in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="member"><a name="member">Member</a></dfn></dt>
+      <dd>
+        A member is a single categorical value within a <a href="#level">level</a> of a <a href="#hierarchy">hierarchy</a>.
+        For example, "2015" is a member of the year level within a time hierarchy.
+      </dd>
+
+      <dt><dfn class="measure"><a name="measure">Measure</a></dfn></dt>
+      <dd>
+        Measures (also known as facts) are quantitative data describing a business process.
+        For example, a sales process typically as sale quantity and sale price as measures.
+        Read more about <a href="http://en.wikipedia.org/wiki/Data_warehouse#Facts">measures in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="olap"><a name="olap"><abbr>OLAP</abbr></a></dfn></dt>
+      <dd>
+        <abbr>OLAP</abbr> is an abbreviation of <dfn class="olap">Online Analytical Processing</dfn>.
+        <abbr>OLAP</abbr> is mostly used for quickly analysing and reporting business process data on an ad-hoc basis .
+        Read more about <a href="http://en.wikipedia.org/wiki/Online_analytical_processing"><abbr>OLAP</abbr> in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="pie-chart"><a name="pie-chart">Pie chart</a></dfn></dt>
+      <dd>
+        A pie chart graphically represents categories of one series of measures as sectors ("slice") of a circle.
+        Read more about <a href="http://en.wikipedia.org/wiki/Pie_chart">pie charts in wikipedia</a>.
+      </dd>
+
+      <dt><dfn class="table"><a name="table">Tabel</a></dfn></dt>
+      <dd>
+        A means of organizing data in a collection of rows having a fixed column structure.
+        Read more about <a href="http://en.wikipedia.org/wiki/Table_(information)">tables in wikipedia</a>.
+      </dd>
+    </dl>
+  </body>
+</html>

@@ -20,7 +20,9 @@ aMsg({
   "Export to Microsoft Excel": "Naar Microsoft Excel uitvoeren",
   "New Table": "Nieuwe Tabel",
   "New Pivot Table": "Nieuwe Draaitabel",
+  "New Pie Chart": "Nieuw Taartdiagram",
   "Welcome!": "Welkom!",
+  "welcome.html": "welcome.nl.html",
   //excel
   "Nothing to export": "Niets om te exporteren",
   "There is nothing to export. Please enter a query first": "Er kan niets geexporteerd worden. Stel eerst een zoekopdracht samen.",
