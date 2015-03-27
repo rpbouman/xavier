@@ -253,13 +253,13 @@ var QueryDesigner;
       mdx += "\n,      " + rowsMdx;
     }
 
-    if (mdx) {
+    if (mdx || slicerMdx) {
       mdx = "SELECT" + mdx +
           "\nFROM   [" + cubeName + "]"
       ;
-    }
-    if (slicerMdx) {
-      mdx += "\nWHERE " + slicerMdx;
+      if (slicerMdx) {
+        mdx += "\nWHERE " + slicerMdx;
+      }
     }
     return mdx;
   },
