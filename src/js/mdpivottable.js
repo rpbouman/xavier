@@ -224,20 +224,11 @@ var PivotTable;
     }
     return numLevels;
   },
-  getContainer: function(){
-    return gEl(this.conf.container);
-  },
   createDom: function() {
-    var container = this.getContainer(),
-        id = this.getId()
-    ;
-    if (!container) {
-      container = cEl("div", {
-        id: id,
-        "class": "pivot-table"
-      });
-    }
-    container.className = PivotTable.prefix + "-widget";
+    container = cEl("div", {
+      id: id,
+      "class": "pivot-table " + PivotTable.prefix + "-widget"
+    });
     var axisPrefix = PivotTable.prefix + "-axis";
     cEl("DIV", {
       "class": axisPrefix+ " " + axisPrefix + "-pages",
