@@ -225,7 +225,8 @@ var PivotTable;
     return numLevels;
   },
   createDom: function() {
-    container = cEl("div", {
+    var id = this.getId();
+    var container = cEl("div", {
       id: id,
       "class": "pivot-table " + PivotTable.prefix + "-widget"
     });
