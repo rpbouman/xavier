@@ -148,9 +148,6 @@ var PivotTable;
   getId: function() {
     return PivotTable.prefix + this.id;
   },
-  getContainer: function() {
-    return gEl(this.conf.container);
-  },
   getTupleName: function (tuple, hierarchy) {
     for (var mName = "", i = 0; i <= hierarchy.index; i++) {
       mName += tuple.members[i][Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
