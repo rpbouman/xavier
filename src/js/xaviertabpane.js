@@ -67,6 +67,13 @@ var XavierTabPane;
     this.addTab(tableTab);
     return tableTab;
   },
+  newPieChartTab: function(){
+    var pieChartTab = new XavierPieChartTab({
+      tabPane: this
+    });
+    this.addTab(pieChartTab);
+    return pieChartTab;
+  },
   setCube: function(metadata){
     this.cube = metadata;
   },
@@ -212,7 +219,7 @@ var XavierTab;
     }
     catch (exception) {
       busy(false);
-      showAlert(exception.toString());
+      showAlert(gMsg("Error executing query"), exception.toString() || exception.message || gMsg("Unexpected error"));
     }
   },
   doLayout: function(){
@@ -256,14 +263,43 @@ var XavierTableTab;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("New Table"),
+  initQueryDesigner: function(dom){
+    var queryDesigner = this.queryDesigner = new QueryDesigner({
+      container: cEl("DIV", {
+      }, null, dom),
+      dnd: this.getDnd()
+    });
+    queryDesigner.listen({
+      changed: function(queryDesigner, event, data){
+        if (this.getAutoRunEnabled()) {
+          this.executeQuery();
+        }
+        else {
+
+        }
+      },
+      scope: this
+    });
+    queryDesigner.render();
+  },
+  initTable: function(dom){
+    var dataTable = this.visualizer = new DataTable({
+      container: cEl("div", {
+        id: "data-table",
+        "class": "data-table"
+      }, null, dom)
+    });
+    return dataTable;
+  },
   createDom: function(){
+    var me = this;
+
     var dom = cEl("DIV", {
       id: this.getId()
     });
+    this.initQueryDesigner(dom);
+    this.initTable(dom);
     return dom;
-  },
-  getTabPane: function(){
-    return this.conf.tabPane;
   }
 };
 adopt(XavierTableTab, XavierTab);
@@ -482,5 +518,145 @@ var XavierPivotTableTab;
   }
 };
 adopt(XavierPivotTableTab, XavierTab);
+
+/**
+*   Pie Chart tab
+*/
+var PieChart;
+
+(PieChart = function(conf){
+  this.conf = conf || {};
+  this.id = arguments.callee.prefix + (++arguments.callee.id);
+  this.classes = [arguments.callee.prefix];
+  this.createDom();
+}).prototype = {
+  chartType: "pie",
+  getId: function() {
+    return this.id;
+  },
+  createDom: function(){
+    var id = this.getId();
+    cEl("div", {
+      id: id,
+    }, null, this.conf.container);
+  },
+  clear: function(){
+    var chart = this.chart;
+    if (!chart) {
+      return;
+    }
+    var dataset = this.dataset;
+    if (!dataset) {
+      return null;
+    }
+    var rowAxis = dataset.getRowAxis();
+    var column, members, member, cell, i, n = rowAxis.hierarchyCount();
+    var ids = [];
+    rowAxis.eachTuple(function(tuple){
+      members = tuple.members;
+      column = "";
+      for (i = 0; i < n; i++) {
+        member = members[i];
+        if (column) {
+          column += " / ";
+        }
+        column += member[Xmla.Dataset.Axis.MEMBER_CAPTION];
+      }
+      ids.push(column);
+    });
+    chart.unload({
+      ids: ids
+    });
+  },
+  renderDataset: function(dataset){
+    this.clear();
+    if (!dataset.hasRowAxis()){
+      return;
+    }
+    this.dataset = dataset;
+    var columns = [];
+    var rowAxis = dataset.getRowAxis();
+    var cellset = dataset.getCellset();
+    var column, members, member, cell, i, n = rowAxis.hierarchyCount();
+    rowAxis.eachTuple(function(tuple){
+      members = tuple.members;
+      column = "";
+      for (i = 0; i < n; i++) {
+        member = members[i];
+        if (column) {
+          column += " / ";
+        }
+        column += member[Xmla.Dataset.Axis.MEMBER_CAPTION];
+      }
+      cell = cellset.readCell();
+      columns.push([column, cell.Value]);
+      cellset.nextCell();
+    });
+    if (this.chart) {
+      this.chart.load({
+        columns: columns
+      });
+    }
+    else {
+      var id = this.getId();
+      this.chart = c3.generate({
+        bindto: "#" + id,
+        data: {
+          columns: columns,
+          type : this.chartType
+        }
+      });
+    }
+  },
+  doLayout: function(){
+  }
+};
+PieChart.id = 0;
+PieChart.prefix = "pie-chart";
+
+
+var XavierPieChartTab;
+(XavierPieChartTab = function(conf){
+  conf = conf || {};
+  this.classes = ["pie-chart"];
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  text: gMsg("New Pie Chart"),
+  initQueryDesigner: function(dom){
+    var queryDesigner = this.queryDesigner = new QueryDesigner({
+      container: cEl("DIV", {
+      }, null, dom),
+      dnd: this.getDnd()
+    });
+    queryDesigner.listen({
+      changed: function(queryDesigner, event, data){
+        if (this.getAutoRunEnabled()) {
+          this.executeQuery();
+        }
+        else {
+
+        }
+      },
+      scope: this
+    });
+    queryDesigner.render();
+  },
+  initPieChart: function(dom) {
+    var pieChart = this.visualizer = new PieChart({
+      container: dom
+    });
+  },
+  createDom: function(){
+    var me = this;
+
+    var dom = cEl("DIV", {
+      id: this.getId()
+    });
+    this.initQueryDesigner(dom);
+    this.initPieChart(dom);
+    return dom;
+  }
+};
+adopt(XavierPieChartTab, XavierTab);
 
 })();

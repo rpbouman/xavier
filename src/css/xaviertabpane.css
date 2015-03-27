@@ -34,6 +34,7 @@ limitations under the License.
   border-color: lightgrey;
 }
 
+/* table */
 .xavier-tabpane > .pentaho-tab-bar > .table {
   background-image: url('../images/table.png');
 }
@@ -42,12 +43,22 @@ limitations under the License.
   background-image: url('../images/new-table.png');
 }
 
+/* pivot table */
 .xavier-tabpane > .pentaho-tab-bar > .pivot-table {
   background-image: url('../images/pivot-table.png');
 }
 
 .toolbar > .new-pivot-table {
   background-image: url('../images/new-pivot-table.png');
+}
+
+/* pie chart */
+.xavier-tabpane > .pentaho-tab-bar > .pie-chart {
+  background-image: url('../images/pie-chart.png');
+}
+
+.toolbar > .new-pie-chart {
+  background-image: url('../images/new-pie-chart.png');
 }
 
 .toolbar .show-column-hierarchy-headers {
@@ -65,3 +76,4 @@ limitations under the License.
   bottom: 0px;
   top: 0px;
 }
+

@@ -49,6 +49,7 @@ mainToolbar.addButton([
   {"class": "separator"},
   {"class": "new-table", tooltip: gMsg("New Table")},
   {"class": "new-pivot-table", tooltip: gMsg("New Pivot Table")},
+  {"class": "new-pie-chart", tooltip: gMsg("New Pie Chart")},
   {"class": "separator"},
   {"class": "run", tooltip: gMsg("Run Query")},
   {"class": "auto-run", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
@@ -67,6 +68,9 @@ mainToolbar.listen({
         break;
       case "new-pivot-table":
         workArea.newPivotTableTab();
+        break;
+      case "new-pie-chart":
+        workArea.newPieChartTab();
         break;
       case "run":
         workArea.executeQuery();
