@@ -195,16 +195,21 @@ var QueryDesigner;
         })
     ;
     this.eachAxis(function(index, axis){
-      var r, c;
+      var r, c, conf = axis.conf;
       r = dom.insertRow(dom.rows.length);
       c = r.insertCell(r.cells.length);
       c.className = confCls(
         QueryDesignerAxis.prefix,
-        QueryDesignerAxis.prefix + axis.conf.id,
-        axis.conf
+        QueryDesignerAxis.prefix + conf.id,
+        conf
       ).join(" ");
       c.setAttribute("colspan", "100%");
       c.appendChild(axis.getDom());
+      if (conf.tooltip) {
+        cEl("DIV", {
+          "class": "tooltip"
+        }, conf.tooltip, c);
+      }
     }, this);
 
     return dom;
@@ -289,6 +294,9 @@ var QueryDesigner;
           }
           mdx += axisMdx;
         }
+      }
+      if (axisMdx === "" && axis.conf.mandator === true) {
+        return false;
       }
     }) === false) {
       return null;
