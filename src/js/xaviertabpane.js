@@ -399,16 +399,20 @@ var XavierPivotTableTab;
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Columns"),
-          "class": "columns"
+          tooltip: gMsg("Items on this axis are used to generate columns for the pivot table"),
+          "class": "columns",
+          mandatory: true
         },
         {
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Rows"),
+          tooltip: gMsg("Items on this axis are used to generate rows for the pivot table"),
           "class": "rows"
         },
         {
           id: Xmla.Dataset.AXIS_SLICER,
           label: gMsg("Slicer"),
+          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
           "class": "slicer",
           drop: {
             include: "member"
@@ -657,6 +661,8 @@ var XavierPieChartTab;
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Measures"),
+          tooltip: gMsg("Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices."),
+          mandatory: true,
           canBeEmpty: false,
           "class": "measures",
           drop: {
@@ -666,6 +672,8 @@ var XavierPieChartTab;
         {
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Categories"),
+          tooltip: gMsg("Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy."),
+          mandatory: true,
           canBeEmpty: false,
           "class": "levels",
           drop: {
@@ -675,6 +683,7 @@ var XavierPieChartTab;
         {
           id: Xmla.Dataset.AXIS_PAGES,
           label: gMsg("Columns"),
+          tooltip: gMsg("For each unique combination of members, one column is layed out and filled with pie charts."),
           canBeEmpty: false,
           "class": "columns",
           drop: {
@@ -684,6 +693,7 @@ var XavierPieChartTab;
         {
           id: Xmla.Dataset.AXIS_CHAPTERS,
           label: gMsg("Rows"),
+          tooltip: gMsg("For each unique combination of members, one row is layed out and its columns are filled with pie charts."),
           canBeEmpty: false,
           "class": "rows",
           drop: {
@@ -693,6 +703,7 @@ var XavierPieChartTab;
         {
           id: Xmla.Dataset.AXIS_SLICER,
           label: gMsg("Slicer"),
+          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
           "class": "slicer",
           drop: {
             include: "member"
