@@ -73,17 +73,17 @@ table.query-designer-axis {
   font-weight: bold;
 }
 
-.query-designer-axis-header, .query-designer-axis .hierarchy, .query-designer-axis .measures{
+.query-designer-axis-header, .query-designer-axis td.hierarchy, .query-designer-axis td.measures{
   background-repeat: no-repeat;
   background-position: 2px 2px;
   text-indent: 20px;
 }
 
-.query-designer-axis .hierarchy:after, .query-designer-axis .measures:after {
+.query-designer-axis td.hierarchy:after, .query-designer-axis td.measures:after {
   content: ":"
 }
 
-.query-designer-axis .hierarchy {
+.query-designer-axis td.hierarchy {
   background-image: url('../images/hierarchy.png');
 }
 
@@ -92,28 +92,37 @@ table.query-designer-axis {
   background-position: 4px 2px;
 }
 
-.query-designer-axis .measures {
+.query-designer-axis td.measures {
+  background-repeat: no-repeat;
   background-image: url('../images/measures.png');
 }
 
 .query-designer-axis0-dragging,
-.query-designer-axis0 .query-designer-axis-header {
+.query-designer .query-designer-axis .columns .query-designer-axis-header {
   background-image: url('../images/column-axis.png');
 }
 
 .query-designer-axis1-dragging,
-.query-designer-axis1 .query-designer-axis-header {
+.query-designer .query-designer-axis .rows .query-designer-axis-header {
   background-image: url('../images/row-axis.png');
 }
 
 .query-designer-axis2-dragging,
-.query-designer-axis2 .query-designer-axis-header {
+.query-designer .query-designer-axis .pages .query-designer-axis-header {
   background-image: url('../images/pages-axis.png');
 }
 
 .query-designer-axisSlicerAxis-dragging,
-.query-designer-axisSlicerAxis .query-designer-axis-header {
+.query-designer .query-designer-axis .slicer .query-designer-axis-header {
   background-image: url('../images/slicer-axis.png');
+}
+
+.query-designer .query-designer-axis .measures .query-designer-axis-header {
+  background-image: url('../images/measures.png');
+}
+
+.query-designer .query-designer-axis .levels .query-designer-axis-header {
+  background-image: url('../images/level.png');
 }
 
 table.valid-drop-axis {

@@ -29,6 +29,20 @@ var QueryDesigner;
     this.createAxes();
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
+  defaultAxesConf: [
+    {
+      id: Xmla.Dataset.AXIS_COLUMNS,
+      label: gMsg("Columns")
+    },
+    {
+      id: Xmla.Dataset.AXIS_ROWS,
+      label: gMsg("Rows")
+    },
+    {
+      id: Xmla.Dataset.AXIS_SLICER,
+      label: gMsg("Slicer")
+    }
+  ],
   highlightDropTargets: function(target, dragInfo){
     this.eachAxis(function(id, axis){
       if (axis.canDropItem(target, dragInfo)){
@@ -145,15 +159,13 @@ var QueryDesigner;
     axis.listen("changed", this.axisChanged, this);
   },
   createAxes: function() {
-    this.createAxis({
-      id: Xmla.Dataset.AXIS_COLUMNS
-    });
-    this.createAxis({
-      id: Xmla.Dataset.AXIS_ROWS
-    });
-    this.createAxis({
-      id: Xmla.Dataset.AXIS_SLICER
-    });
+    var conf = this.conf, axisConf;
+    var axesConf = conf.axes || this.defaultAxesConf;
+    var i, n = axesConf.length;
+    for (i = 0; i < n; i++){
+      axisConf = axesConf[i];
+      this.createAxis(axisConf);
+    }
   },
   getAxis: function(id) {
     return this.axes[id];
@@ -180,36 +192,28 @@ var QueryDesigner;
             id: id,
             "class": QueryDesigner.prefix,
             cellspacing: 0
-        }),
-        r, c
+        })
     ;
-    //colums axis
-    r = dom.insertRow(dom.rows.length);
-    c = r.insertCell(r.cells.length);
-    c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_COLUMNS;
-    c.setAttribute("colspan", "100%");
-    c.appendChild(this.getAxis(Xmla.Dataset.AXIS_COLUMNS).getDom());
+    this.eachAxis(function(index, axis){
+      var r, c;
+      r = dom.insertRow(dom.rows.length);
+      c = r.insertCell(r.cells.length);
+      c.className = confCls(
+        QueryDesignerAxis.prefix,
+        QueryDesignerAxis.prefix + axis.conf.id,
+        axis.conf
+      ).join(" ");
+      c.setAttribute("colspan", "100%");
+      c.appendChild(axis.getDom());
+    }, this);
 
-    //rows axis
-    r = dom.insertRow(dom.rows.length);
-    c = r.insertCell(r.cells.length);
-    c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_ROWS;
-    c.setAttribute("colspan", "100%");
-    c.appendChild(this.getAxis(Xmla.Dataset.AXIS_ROWS).getDom());
-
-    //slicer axis
-    r = dom.insertRow(dom.rows.length);
-    c = r.insertCell(r.cells.length);
-    c.className = QueryDesignerAxis.prefix + " " + QueryDesignerAxis.prefix + Xmla.Dataset.AXIS_SLICER;
-    c.setAttribute("colspan", "100%");
-    c.appendChild(this.getAxis(Xmla.Dataset.AXIS_SLICER).getDom());
-
-    //r = dom.insertRow(dom.rows.length);
     return dom;
   },
   getDom: function(create) {
     var el = gEl(this.getId());
-    if (!el && create !== false) el = this.createDom();
+    if (!el && create !== false) {
+      el = this.createDom();
+    }
     return el;
   },
   render: function() {
@@ -316,17 +320,23 @@ var QueryDesignerAxis;
     return this.conf.id === Xmla.Dataset.AXIS_SLICER;
   },
   createDom: function() {
+    var conf = this.conf;
     var layout = this.getLayout();
     var id = this.getId();
     var dom = this.dom = cEl("TABLE", {
-            cellspacing: 0,
-            cellpadding: 2,
-            id: id,
-            "class": QueryDesignerAxis.prefix + " " +  QueryDesignerAxis.prefix + this.conf.id + " " + QueryDesignerAxis.prefix + "-" + layout
-        }),
-        r = dom.insertRow(0),
-        c = r.insertCell(0),
-        t
+          cellspacing: 0,
+          cellpadding: 2,
+          id: id,
+          "class": confCls(
+            QueryDesignerAxis.prefix,
+            QueryDesignerAxis.prefix + this.conf.id,
+            QueryDesignerAxis.prefix + "-" + layout,
+            this.conf
+          )
+      }),
+      r = dom.insertRow(0),
+      c = r.insertCell(0),
+      t
     ;
     c.className = QueryDesignerAxis.prefix + "-header";
     sAtt(c, "colspan", "100%");
@@ -339,7 +349,7 @@ var QueryDesignerAxis;
         break;
     }
 
-    var canBeEmpty = true, label;
+    var canBeEmpty = iDef(conf.canBeEmpty) ? conf.canBeEmpty : true;
     switch (this.conf.id) {
       case Xmla.Dataset.AXIS_COLUMNS:
         label = gMsg("Columns");
@@ -352,7 +362,8 @@ var QueryDesignerAxis;
         canBeEmpty = false;
         break;
     }
-    c.innerHTML = label;
+    conf.canBeEmpty = canBeEmpty;
+    c.innerHTML = conf.label || label;
 
     if (canBeEmpty) {
       var nonEmptyCheckbox = cEl("INPUT", {
@@ -438,6 +449,7 @@ var QueryDesignerAxis;
       hierarchyName = this.getHierarchyName(hierarchy);
 
       r = dom.insertRow(rows.length);
+      r.className = "hierarchy";
       c = r.insertCell(0);
       c.id = hierarchyName;
       c.innerHTML = this.getHierarchyCaption(hierarchy);
@@ -514,11 +526,39 @@ var QueryDesignerAxis;
       tupleIndex: tupleIndex
     };
   },
+  dropIncludes: function(name) {
+    var item, conf = this.conf;
+    if (!conf.drop) {
+      return true;
+    }
+
+    item = conf.drop.exclude;
+    if (item) {
+      if (
+        (iStr(item) && item === name) ||
+        (iArr(item) && item.indexOf(name) !== -1)
+      ) {
+        return false;
+      }
+    }
+
+    item = conf.drop.include;
+    if (item) {
+      if (
+        (iStr(item) && item !== name) ||
+        (iArr(item) && item.indexOf(name) === -1)
+      ){
+        return false;
+      }
+    }
+    return true;
+  },
   canDropItem: function(target, dragInfo) {
-    var requestType = dragInfo.className,
+    var conf = this.conf,
+        requestType = dragInfo.className,
         metadata = dragInfo.metadata
     ;
-    if (this.isSlicerAxis() && requestType !== "member") {
+    if (!this.dropIncludes(requestType)) {
       return false;
     }
     //the item is an entire axis.
@@ -1058,7 +1098,8 @@ var QueryDesignerAxis;
     }
   },
   getMdx: function(defaultSet) {
-    var hierarchies = this.hierarchies, i, n = hierarchies.length,
+    var conf = this.conf,
+        hierarchies = this.hierarchies, i, n = hierarchies.length,
         hierarchy, hierarchyName, minLevel, maxLevel,
         setDefs = this.setDefs, setDef, member, members,
         queryDesigner = this.getQueryDesigner(),
@@ -1084,10 +1125,17 @@ var QueryDesignerAxis;
     if (!mdx.length && defaultSet) {
       mdx = defaultSet;
     }
-    if (this.conf.id !== Xmla.Dataset.AXIS_SLICER) {
+    if (conf.id !== Xmla.Dataset.AXIS_SLICER) {
       if (mdx.length) {
-        var emptyCheckBox = gEl(this.getId() + "-empty-checkbox");
-        if (emptyCheckBox && !emptyCheckBox.checked) {
+        var nonEmpty = false;
+        if (conf.canBeEmpty === true) {
+          var emptyCheckBox = gEl(this.getId() + "-empty-checkbox");
+          nonEmpty = emptyCheckBox && !emptyCheckBox.checked;
+        }
+        else {
+          nonEmpty = true;
+        }
+        if (nonEmpty) {
           mdx = "NON EMPTY " + mdx;
         }
         mdx += " DIMENSION PROPERTIES PARENT_UNIQUE_NAME";
@@ -1125,7 +1173,7 @@ QueryDesignerAxis.getInstance = function(id){
 };
 
 QueryDesignerAxis.lookup = function(el){
-  while (el && (iUnd(el.className) || el.className.indexOf(QueryDesignerAxis.prefix + " "))) {
+  while (el && (iUnd(el.className) || (iStr(el.className) && el.className.indexOf(QueryDesignerAxis.prefix + " ")))) {
     if ((el = el.parentNode) === doc) return null;
   }
   return QueryDesignerAxis.getInstance(el.id);

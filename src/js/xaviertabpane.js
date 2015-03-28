@@ -45,7 +45,11 @@ var XavierTabPane;
     this.conf.autorun = autorun;
   },
   getQueryDesigner: function(){
-    return this.getSelectedTab().getQueryDesigner();
+    var selectedTab = this.getSelectedTab();
+    if (!selectedTab) {
+      return null;
+    }
+    return selectedTab.getQueryDesigner();
   },
   getDnd: function(){
     return this.conf.dnd;
@@ -98,13 +102,25 @@ var XavierTabPane;
     });
   },
   clear: function(){
-    this.getSelectedTab().clear();
+    var selectedTab = this.getSelectedTab();
+    if (!selectedTab) {
+      return null;
+    }
+    selectedTab.clear();
   },
   executeQuery: function(){
-    this.getSelectedTab().executeQuery();
+    var selectedTab = this.getSelectedTab();
+    if (!selectedTab) {
+      return null;
+    }
+    selectedTab.executeQuery();
   },
   exportToExcel: function(){
-    this.getSelectedTab().exportToExcel();
+    var selectedTab = this.getSelectedTab();
+    if (!selectedTab) {
+      return null;
+    }
+    selectedTab.exportToExcel();
   }
 };
 adopt(XavierTabPane, TabPane);
@@ -209,7 +225,12 @@ var XavierTab;
         statement: mdx,
         success: function(xmla, options, dataset){
           console.timeEnd("executeQuery");
-          visualizer.renderDataset(dataset);
+          try {
+            visualizer.renderDataset(dataset);
+          }
+          catch (exception) {
+            showAlert(gMsg("Error rendering dataset"), exception.toString() || exception.message || gMsg("Unexpected error"));
+          }
           busy(false);
         },
         error: function(xmla, options, exception){
@@ -372,9 +393,28 @@ var XavierPivotTableTab;
   },
   initQueryDesigner: function(dom){
     var queryDesigner = this.queryDesigner = new QueryDesigner({
-      container: cEl("DIV", {
-      }, null, dom),
-      dnd: this.getDnd()
+      container: cEl("DIV", {}, null, dom),
+      dnd: this.getDnd(),
+      axes: [
+        {
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Columns"),
+          "class": "columns"
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
+          label: gMsg("Rows"),
+          "class": "rows"
+        },
+        {
+          id: Xmla.Dataset.AXIS_SLICER,
+          label: gMsg("Slicer"),
+          "class": "slicer",
+          drop: {
+            include: "member"
+          }
+        }
+      ]
     });
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
@@ -409,13 +449,10 @@ var XavierPivotTableTab;
   },
   initPivotTable: function(dom){
     var pivotTable = this.visualizer = new PivotTable({
-      container: cEl("div", {
-        id: "pivot-table",
-        "class": "pivot-table"
-      }, null, dom),
       showHorizontalHierarchyHeaders: this.showHorizontalHierarchyHeaders(),
       showVerticalHierarchyHeaders: this.showVerticalHierarchyHeaders()
     });
+    dom.appendChild(pivotTable.getDom());
     pivotTable.listen({
       scope: this,
       collapse: function(pivotTable, event, data){
@@ -542,39 +579,22 @@ var PieChart;
   getId: function() {
     return this.id;
   },
+  getDom: function(){
+    var dom = gEl(this.getId());
+    if (!dom) {
+      dom = this.createDom();
+    }
+    return dom;
+  },
   createDom: function(){
     var id = this.getId();
-    cEl("div", {
+    var dom = cEl("div", {
       id: id,
     }, null, this.conf.container);
+    return dom;
   },
   clear: function(){
-    var chart = this.chart;
-    if (!chart) {
-      return;
-    }
-    var dataset = this.dataset;
-    if (!dataset) {
-      return null;
-    }
-    var rowAxis = dataset.getRowAxis();
-    var column, members, member, cell, i, n = rowAxis.hierarchyCount();
-    var ids = [];
-    rowAxis.eachTuple(function(tuple){
-      members = tuple.members;
-      column = "";
-      for (i = 0; i < n; i++) {
-        member = members[i];
-        if (column) {
-          column += " / ";
-        }
-        column += member[Xmla.Dataset.Axis.MEMBER_CAPTION];
-      }
-      ids.push(column);
-    });
-    chart.unload({
-      ids: ids
-    });
+    this.getDom().innerHTML = "";
   },
   renderDataset: function(dataset){
     this.clear();
@@ -583,38 +603,37 @@ var PieChart;
     }
     this.dataset = dataset;
     var columns = [];
+    var names = {};
     var rowAxis = dataset.getRowAxis();
     var cellset = dataset.getCellset();
-    var column, members, member, cell, i, n = rowAxis.hierarchyCount();
+    var column, name, members, member, cell, i, n = rowAxis.hierarchyCount();
     rowAxis.eachTuple(function(tuple){
       members = tuple.members;
-      column = "";
+      column = "", name = "";
       for (i = 0; i < n; i++) {
         member = members[i];
         if (column) {
-          column += " / ";
+          column += ".";
+          name += " / ";
         }
-        column += member[Xmla.Dataset.Axis.MEMBER_CAPTION];
+        column += member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
+        name += member[Xmla.Dataset.Axis.MEMBER_CAPTION];
       }
       cell = cellset.readCell();
       columns.push([column, cell.Value]);
+      names[column] = name;
       cellset.nextCell();
     });
-    if (this.chart) {
-      this.chart.load({
-        columns: columns
-      });
-    }
-    else {
-      var id = this.getId();
-      this.chart = c3.generate({
-        bindto: "#" + id,
-        data: {
-          columns: columns,
-          type : this.chartType
-        }
-      });
-    }
+    this.chartData = {
+      columns: columns,
+      names: names,
+      type : this.chartType
+    };
+    var id = this.getId();
+    c3.generate({
+      bindto: "#" + id,
+      data: this.chartData
+    });
   },
   doLayout: function(){
   }
@@ -632,9 +651,54 @@ var XavierPieChartTab;
   text: gMsg("New Pie Chart"),
   initQueryDesigner: function(dom){
     var queryDesigner = this.queryDesigner = new QueryDesigner({
-      container: cEl("DIV", {
-      }, null, dom),
-      dnd: this.getDnd()
+      container: cEl("DIV", {}, null, dom),
+      dnd: this.getDnd(),
+      axes: [
+        {
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Measures"),
+          canBeEmpty: false,
+          "class": "measures",
+          drop: {
+            include: "measure"
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
+          label: gMsg("Categories"),
+          canBeEmpty: false,
+          "class": "levels",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_PAGES,
+          label: gMsg("Columns"),
+          canBeEmpty: false,
+          "class": "columns",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_CHAPTERS,
+          label: gMsg("Rows"),
+          canBeEmpty: false,
+          "class": "rows",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_SLICER,
+          label: gMsg("Slicer"),
+          "class": "slicer",
+          drop: {
+            include: "member"
+          }
+        }
+      ]
     });
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
