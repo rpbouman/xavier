@@ -267,6 +267,38 @@ var QueryDesigner;
     }
     return mdx;
   },
+  getMdx: function(cubeName){
+    var mdx = "", gap = false, slicerMdx;
+    if (this.eachAxis(function(id, axis){
+      var axisMdx = "", isSlicer = axis.isSlicerAxis();
+      axisMdx = axis.getMdx();
+      if (isSlicer) {
+        slicerMdx = axisMdx;
+      }
+      else {
+        if (axisMdx === "") {
+          gap = true;
+        }
+        else
+        if (gap === true) {
+          return false;
+        }
+        else {
+          if (mdx){
+            mdx += "\n,      ";
+          }
+          mdx += axisMdx;
+        }
+      }
+    }) === false) {
+      return null;
+    }
+    mdx = "SELECT " + mdx + "\nFROM   [" + cubeName + "]";
+    if (slicerMdx) {
+      mdx += "\nWHERE " + slicerMdx;
+    }
+    return mdx;
+  },
   axisChanged: function(axis, event, data) {
     this.fireEvent("changed", axis);
   }
