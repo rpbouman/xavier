@@ -639,11 +639,177 @@ var PieChart;
       data: this.chartData
     });
   },
+  createLayoutTable: function(){
+    var dom = this.getDom();
+    var table = cEl("TABLE", {
+      style: {
+        width: "100%",
+        "table-layout": "fixed"
+      }
+    }, null, dom);
+    return table;
+  },
+  getHeader: function(tuple) {
+    var list = cEl("UL", {
+    });
+
+    var members = tuple.members, n = members.length, member, i;
+    for (i = 0; i < n; i++) {
+      member = members[i];
+      cEl("LI", {
+      }, member[Xmla.Dataset.Axis.MEMBER_CAPTION], list);
+    }
+    return list;
+  },
+  renderChapterAxis: function(dataset){
+    console.time("pie chart renderChapterAxis");
+    var table = this.createLayoutTable();
+    var rows = table.rows;
+    var chapterAxis = dataset.getChapterAxis();
+    chapterAxis.eachTuple(function(tuple){
+      var row = table.insertRow(rows.length), cells = row.cells, cell, list;
+      cell = row.insertCell(0);
+      list = this.getHeader(tuple);
+      aCh(cell, list);
+      this.renderPageAxis(dataset, row, tuple.index);
+    }, this);
+    console.timeEnd("pie chart renderChapterAxis");
+  },
+  renderPageAxis: function(dataset, row, chapterAxisOrdinal){
+    console.time("pie chart renderPageAxis");
+    var me  = this;
+    function renderPieCharts(dataset, row, pageAxisOrdinal, chapterAxisOrdinal){
+      var cell = row.insertCell(row.cells.length);
+      me.renderPieCharts(dataset, cell, pageAxisOrdinal, chapterAxisOrdinal);
+    }
+
+    var pageAxis = dataset.getPageAxis();
+    var n = pageAxis.tupleCount();
+    var headerRow, headerRowCells;
+    if (row.rowIndex === 0) {
+      var table = row.parentNode.parentNode;
+      headerRow = table.insertRow(0);
+      if (dataset.hasChapterAxis()) {
+        headerRow.insertCell(0);
+      }
+      headerRowCells = headerRow.cells;
+
+      pageAxis.eachTuple(function(tuple){
+        headerRowCell = headerRow.insertCell(headerRowCells.length);
+        var list = this.getHeader(tuple);
+        aCh(headerRowCell, list);
+        //local
+        renderPieCharts(dataset, row, tuple.index, chapterAxisOrdinal);
+      }, this);
+    }
+    else {
+      for (i = 0; i < n; i++){
+        //local
+        renderPieCharts(dataset, row, i, chapterAxisOrdinal);
+      }
+    }
+    console.timeEnd("pie chart renderPageAxis");
+  },
+  createChartDataTemplate: function(dataset) {
+    console.time("pie chart createChartDataTemplate");
+    //categories
+    var columnAxis = dataset.getColumnAxis();
+    var cellset = dataset.getCellset();
+    var chartData = {
+      type: this.chartType,
+      columns: [],
+      names: {}
+    };
+    columnAxis.eachTuple(function(tuple){
+      var members = tuple.members;
+      var member, i, n = members.length;
+      var id = [], name = [], value;
+      for (i = 0; i < n; i++) {
+        member = members[i];
+        id.push(member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME]);
+        name.push(member[Xmla.Dataset.Axis.MEMBER_CAPTION])
+      }
+      id = id.join("|");
+      name = name.join(" / ");
+      chartData.names[id] = name;
+      value = cellset.readCell().Value;
+      cellset.nextCell();
+      chartData.columns.push([id, value]);
+    });
+    this.chartData = chartData;
+    columnAxis.reset();
+    console.timeEnd("pie chart createChartDataTemplate");
+  },
+  renderPieCharts: function(dataset, cell, pageAxisOrdinal, chapterAxisOrdinal) {
+    console.time("pie chart renderPieCharts");
+    //measures
+    var rowAxis = dataset.getRowAxis();
+    var n = rowAxis.tupleCount(), i;
+    //categories
+    var columnAxis = dataset.getColumnAxis();
+    var m = columnAxis.tupleCount(), j;
+    //data
+
+    //for each measure
+    for (i = 0; i < n; i++) {
+      if (
+        (chapterAxisOrdinal === 0 || chapterAxisOrdinal === null) &&
+        (pageAxisOrdinal === 0 || pageAxisOrdinal === null) &&
+        (i === 0)
+      ){
+        //noop
+      }
+      else {
+        var cellset = dataset.getCellset();
+        for (j = 0; j < m; j++) {
+          this.chartData.columns[j].splice(1, 1, cellset.readCell().Value);
+          cellset.nextCell();
+        }
+      }
+      var piechartId = PieChart.prefix + "chart" + (++PieChart.chartId);
+      var el = cEl("DIV", {
+        id: piechartId
+      }, null, cell);
+      c3.generate({
+        bindto: "#" + piechartId,
+        type: this.chartType,
+        data: this.chartData
+      });
+    }
+    console.timeEnd("pie chart renderPieCharts");
+  },
+  renderDataset: function(dataset){
+    console.time("pie chart renderDataset");
+    this.clear();
+
+    if (dataset.hasRowAxis()) {
+      this.createChartDataTemplate(dataset);
+    }
+
+    if (dataset.hasChapterAxis()) {
+      this.renderChapterAxis(dataset);
+    }
+    else
+    if (dataset.hasPageAxis()) {
+      var table = this.createLayoutTable();
+      var row = table.insertRow(0);
+      this.renderPageAxis(dataset, row, null);
+    }
+    else
+    if (!dataset.hasRowAxis()){
+      return;
+    }
+    else {
+      this.renderPieCharts(dataset, this.getDom(), null, null);
+    }
+    console.timeEnd("pie chart renderDataset");
+  },
   doLayout: function(){
   }
 };
 PieChart.id = 0;
 PieChart.prefix = "pie-chart";
+PieChart.chartId = 0;
 
 
 var XavierPieChartTab;
@@ -660,17 +826,6 @@ var XavierPieChartTab;
       axes: [
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
-          label: gMsg("Measures"),
-          tooltip: gMsg("Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices."),
-          mandatory: true,
-          canBeEmpty: false,
-          "class": "measures",
-          drop: {
-            include: "measure"
-          }
-        },
-        {
-          id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Categories"),
           tooltip: gMsg("Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy."),
           mandatory: true,
@@ -678,6 +833,17 @@ var XavierPieChartTab;
           "class": "levels",
           drop: {
             include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
+          label: gMsg("Measures"),
+          tooltip: gMsg("Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "measures",
+          drop: {
+            include: "measure"
           }
         },
         {
