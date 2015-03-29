@@ -22,6 +22,7 @@ limitations under the License.
 
 td.query-designer-axis {
   vertical-align: top;
+  padding: 4px;
 }
 
 td.query-designer-axis1 {
@@ -125,11 +126,20 @@ table.query-designer-axis {
   background-image: url('../images/level.png');
 }
 
+table.valid-drop-axis td.query-designer-axis-header {
+  background-color: blue;
+}
+
 table.valid-drop-axis {
-  -moz-box-shadow: 0 0 20px lightgreen;
-  -webkit-box-shadow: 0 0 20px lightgreen;
-  box-shadow: 0px 0px 20px lightgreen;
+  -moz-box-shadow: 0 0 20px green;
+  -webkit-box-shadow: 0 0 20px green;
+  box-shadow: 0px 0px 20px green;
   cursor: copy;
+}
+
+table.invalid-drop-axis td.query-designer-axis-header {
+  color: gray;
+  background-color: lightgray;
 }
 
 table.invalid-drop-axis {
