@@ -136,9 +136,12 @@ table.valid-drop-axis {
   cursor: copy;
 }
 
-table.invalid-drop-axis td.query-designer-axis-header {
+table.invalid-drop-axis td {
   color: gray;
   background-color: lightgray;
+}
+table.invalid-drop-axis td.query-designer-axis-header {
+  background-color: darkgray;
 }
 
 table.invalid-drop-axis {
