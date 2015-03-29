@@ -686,11 +686,13 @@ var PieChart;
     var pageAxis = dataset.getPageAxis();
     var n = pageAxis.tupleCount();
     var headerRow, headerRowCells;
+    //if the row is the first row, create a header row.
     if (row.rowIndex === 0) {
       var table = row.parentNode.parentNode;
       headerRow = table.insertRow(0);
       if (dataset.hasChapterAxis()) {
-        headerRow.insertCell(0);
+        var cell;
+        cell = headerRow.insertCell(0);
       }
       headerRowCells = headerRow.cells;
 
@@ -740,6 +742,43 @@ var PieChart;
     columnAxis.reset();
     console.timeEnd("pie chart createChartDataTemplate");
   },
+  renderPieChartC3: function(id){
+    c3.generate({
+      bindto: "#" + id,
+      type: this.chartType,
+      data: this.chartData
+    });
+  },
+  renderPieChartNVD3: function(id) {
+    var el = gEl(id);
+    el.innerHTML = "<svg></svg>";
+    var me = this;
+    nv.addGraph(function(){
+
+      var chart = nv.models.pieChart()
+        .x(function(d){
+          return me.chartData.names[d[0]];
+        })
+        .y(function(d){
+          return d[1]
+        })
+        .showLegend(false)
+        .showLabels(true)
+        .color(["red", "yellow", "blue"])
+        ;
+
+      d3.select("#" + id + " svg")
+        .datum(me.chartData.columns)
+        .transition().duration(350)
+        .call(chart);
+
+      return chart;
+    });
+  },
+  renderPieChart: function(id){
+    //this.renderPieChartC3(id);
+    this.renderPieChartNVD3(id);
+  },
   renderPieCharts: function(dataset, cell, pageAxisOrdinal, chapterAxisOrdinal) {
     console.time("pie chart renderPieCharts");
     //measures
@@ -752,6 +791,7 @@ var PieChart;
 
     //for each measure
     for (i = 0; i < n; i++) {
+      //we can skip the very first time since we already fetched cells for that case
       if (
         (chapterAxisOrdinal === 0 || chapterAxisOrdinal === null) &&
         (pageAxisOrdinal === 0 || pageAxisOrdinal === null) &&
@@ -760,23 +800,23 @@ var PieChart;
         //noop
       }
       else {
+      //update the chart data with cells values.
         var cellset = dataset.getCellset();
         for (j = 0; j < m; j++) {
           this.chartData.columns[j].splice(1, 1, cellset.readCell().Value);
           cellset.nextCell();
         }
       }
-      var piechartId = PieChart.prefix + "chart" + (++PieChart.chartId);
+      var piechartId = this.newChartId();
       var el = cEl("DIV", {
         id: piechartId
       }, null, cell);
-      c3.generate({
-        bindto: "#" + piechartId,
-        type: this.chartType,
-        data: this.chartData
-      });
+      this.renderPieChart(piechartId);
     }
     console.timeEnd("pie chart renderPieCharts");
+  },
+  newChartId: function(){
+    return PieChart.prefix + "chart" + (++PieChart.chartId);
   },
   renderDataset: function(dataset){
     console.time("pie chart renderDataset");
