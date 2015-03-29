@@ -44,20 +44,28 @@ limitations under the License.
     <link rel="stylesheet" type="text/css" href="../mui/css/tooltip.css"/>
 
     <link rel="stylesheet" type="text/css" href="../../lib/c3-0.4.10/c3.min.css"/>
+    <link rel="stylesheet" type="text/css" href="../../lib/nvd3-1.7.1/nv.d3.min.css"/>
   </head>
   <body class="pentaho-page-background" >
+    <!-- d3 - dependency for all charting libs. Please mind the charset att - it is required -->
     <script type="text/javascript" src="../../lib/d3-3.5.5/d3.js" charset="utf-8"></script>
+
+    <!-- c3 reusable charts and graphs based on d3 -->
     <script type="text/javascript" src="../../lib/c3-0.4.10/c3.js"></script>
+    <!-- nvd3 reusable charts and graphs based on d3 by novus -->
+    <script type="text/javascript" src="../../lib/nvd3-1.7.1/nv.d3.min.js"></script>
 
-
+    <!-- zip lib required to do excel export -->
     <script type="text/javascript" src="../../lib/jszip/jszip.min.js"></script>
+    <!-- blob lib required to do downloads of excel export -->
     <script type="text/javascript" src="../../lib/blob/Blob.js"></script>
+    <!-- filesaver lib required to do downloads of excel export -->
     <script type="text/javascript" src="../../lib/filesaver/FileSaver.min.js"></script>
 
-    <script type="text/javascript" src="../js/xlsxexport.js"></script>
-
+    <!-- xmla4js required to talk to XML/A servers -->
     <script type="text/javascript" src="../xmla4js/Xmla.js"></script>
 
+    <!-- mui required for building GUI -->
     <script type="text/javascript" src="../mui/js/utilities.js"></script>
     <script type="text/javascript" src="../mui/js/dom.js"></script>
     <script type="text/javascript" src="../mui/js/event.js"></script>
@@ -66,7 +74,6 @@ limitations under the License.
     <script type="text/javascript" src="../mui/js/displayed.js"></script>
     <script type="text/javascript" src="../mui/js/disabled.js"></script>
     <script type="text/javascript" src="../mui/js/timer.js"></script>
-
     <script type="text/javascript" src="../mui/js/spinner.js"></script>
     <script type="text/javascript" src="../mui/js/dialog.js"></script>
     <script type="text/javascript" src="../mui/js/toolbar.js"></script>
@@ -78,8 +85,9 @@ limitations under the License.
     <script type="text/javascript" src="../mui/js/splitpane.js"></script>
     <script type="text/javascript" src="../mui/js/tabpane.js"></script>
 
+    <!-- xavier specific stuff -->
+    <script type="text/javascript" src="../js/xlsxexport.js"></script>
     <script type="text/javascript" src="../js/messages.js"></script>
-    <script type="text/javascript" src="../js/messages-nl.js"></script>
     <script type="text/javascript" src="../js/xmlaUrl.js"></script>
     <script type="text/javascript" src="../js/loadingindicator.js"></script>
     <script type="text/javascript" src="../js/msgbox.js"></script>
@@ -88,6 +96,10 @@ limitations under the License.
     <script type="text/javascript" src="../js/mdpivottable.js"></script>
     <script type="text/javascript" src="../js/xaviertabpane.js"></script>
 
+    <!-- xavier message bundle -->
+    <script type="text/javascript" src="../js/messages-nl.js"></script>
+
+    <!-- xavier main application -->
     <script type="text/javascript" src="../js/xavier.js"></script>
   </body>
 </html>
