@@ -47,17 +47,19 @@ var mainToolbar = new Toolbar({
 mainToolbar.addButton([
   {"class": "refresh", tooltip: gMsg("Refresh metadata")},
   {"class": "separator"},
-  {"class": "new-table", tooltip: gMsg("New Table")},
-  {"class": "new-pivot-table", tooltip: gMsg("New Pivot Table")},
-  {"class": "new-pie-chart", tooltip: gMsg("New Pie Chart")},
+  {"class": "new-table", group: "vis", tooltip: gMsg("New Table")},
+  {"class": "new-pivot-table", group: "vis", tooltip: gMsg("New Pivot Table")},
+  {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")},
   {"class": "separator"},
-  {"class": "run", tooltip: gMsg("Run Query")},
-  {"class": "auto-run", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
+  {"class": "run", group: "visaction", tooltip: gMsg("Run Query")},
+  {"class": "auto-run", group: "visaction", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
   {"class": "separator"},
-  {"class": "excel", tooltip: gMsg("Export to Microsoft Excel")},
+  {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel")},
   {"class": "separator"},
-  {"class": "clear", tooltip: gMsg("Discard this query and start over")}
+  {"class": "clear", group: "visaction", tooltip: gMsg("Discard this query and start over")}
 ]);
+mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
+mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
 mainToolbar.listen({
   buttonPressed: function(toolbar, event, button){
     var conf = button.conf;
@@ -115,6 +117,7 @@ xmlaTreeView.listen({
     console.error(error.getStackTrace());
   },
   cubeSelected: function(xmlaTreeView, event, cubeTreeNode){
+    mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
     var catalogTreeNode = cubeTreeNode.getParentTreeNode();
     var datasourceTreeNode = catalogTreeNode.getParentTreeNode();
     workArea.setCube(cubeTreeNode.conf.metadata);
@@ -130,7 +133,20 @@ function getAutoRunEnabled(){
 var workArea = new XavierTabPane({
   dnd: dnd,
   xmla: xmla,
-  autorun: getAutoRunEnabled()
+  autorun: getAutoRunEnabled(),
+  listeners: {
+    tabClosed: function(tabPane, event, data){
+      if (tabPane.getSelectedTab() !== null) {
+        return;
+      }
+      mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
+    },
+    tabSelected: function(tabPane, event, data){
+      var tab = tabPane.getTab(data.newTab);
+      var display = tab ? Boolean(tab.getVisualizer()) : false;
+      mainToolbar.displayGroup(mainToolbar.groups.visaction.name, display);
+    }
+  }
 });
 
 var mainSplitPane = new SplitPane({
