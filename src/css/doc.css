@@ -22,6 +22,12 @@ html, body {
   padding: 0em 1em 0em 1em;
 }
 
+span.go-back {
+  cursor: pointer;
+  color: blue;
+  text-decoration: underline;
+}
+
 dfn {
   background-repeat: no-repeat;
   padding-left: 20px;

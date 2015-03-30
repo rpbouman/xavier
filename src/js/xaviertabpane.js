@@ -268,7 +268,7 @@ var XavierWelcomeTab;
   createDom: function(){
     var dom = cEl("IFRAME", {
       id: this.getId(),
-      src: gMsg("welcome.html"),
+      src: "../doc/" + gMsg("en/welcome.html"),
       style: {
         "border-style": "none"
       },
@@ -594,6 +594,7 @@ var PieChart;
     var id = this.getId();
     var dom = cEl("div", {
       id: id,
+      "class": ["chart", PieChart.prefix]
     }, null, this.conf.container);
     return dom;
   },
@@ -738,9 +739,10 @@ var PieChart;
       cellset.nextCell();
       chartData.columns.push([id, value]);
     });
-    this.chartData = chartData;
+    //this.chartData = chartData;
     columnAxis.reset();
     console.timeEnd("pie chart createChartDataTemplate");
+    return chartData;
   },
   renderPieChartC3: function(id){
     c3.generate({
@@ -749,7 +751,7 @@ var PieChart;
       data: this.chartData
     });
   },
-  renderPieChartNVD3: function(id) {
+  renderPieChartNVD3: function(id, data) {
     var el = gEl(id);
     el.innerHTML = "<svg></svg>";
     var me = this;
@@ -757,27 +759,27 @@ var PieChart;
 
       var chart = nv.models.pieChart()
         .x(function(d){
-          return me.chartData.names[d[0]];
+          return data.names[d[0]];
         })
         .y(function(d){
           return d[1]
         })
         .showLegend(false)
-        .showLabels(true)
+        .showLabels(false)
         .color(["red", "yellow", "blue"])
         ;
 
       d3.select("#" + id + " svg")
-        .datum(me.chartData.columns)
+        .datum(data.columns)
         .transition().duration(350)
         .call(chart);
 
       return chart;
     });
   },
-  renderPieChart: function(id){
+  renderPieChart: function(id, data){
     //this.renderPieChartC3(id);
-    this.renderPieChartNVD3(id);
+    this.renderPieChartNVD3(id, data);
   },
   renderPieCharts: function(dataset, cell, pageAxisOrdinal, chapterAxisOrdinal) {
     console.time("pie chart renderPieCharts");
@@ -791,6 +793,8 @@ var PieChart;
 
     //for each measure
     for (i = 0; i < n; i++) {
+      var data = this.createChartDataTemplate(dataset);
+      /*
       //we can skip the very first time since we already fetched cells for that case
       if (
         (chapterAxisOrdinal === 0 || chapterAxisOrdinal === null) &&
@@ -807,11 +811,12 @@ var PieChart;
           cellset.nextCell();
         }
       }
+      */
       var piechartId = this.newChartId();
       var el = cEl("DIV", {
         id: piechartId
       }, null, cell);
-      this.renderPieChart(piechartId);
+      this.renderPieChart(piechartId, data);
     }
     console.timeEnd("pie chart renderPieCharts");
   },
@@ -823,7 +828,7 @@ var PieChart;
     this.clear();
 
     if (dataset.hasRowAxis()) {
-      this.createChartDataTemplate(dataset);
+      //this.createChartDataTemplate(dataset);
     }
 
     if (dataset.hasChapterAxis()) {
@@ -919,6 +924,7 @@ var XavierPieChartTab;
     });
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
+        this.layoutChartArea();
         if (this.getAutoRunEnabled()) {
           this.executeQuery();
         }
@@ -937,13 +943,31 @@ var XavierPieChartTab;
   },
   createDom: function(){
     var me = this;
-
     var dom = cEl("DIV", {
-      id: this.getId()
+      id: this.getId(),
+      "class": ["chart", PieChart.prefix]
     });
     this.initQueryDesigner(dom);
     this.initPieChart(dom);
     return dom;
+  },
+  layoutChartArea: function() {
+    var queryDesigner = this.getQueryDesigner();
+    var queryDesignerDom = queryDesigner.getDom().firstChild;
+    var visualizer = this.getVisualizer();
+    var visualizerDom = visualizer.getDom();
+    var dom = this.getDom();
+    var width = dom.clientWidth - queryDesignerDom.clientWidth;
+
+    var style = visualizerDom.style;
+    style.top = 0 + "px";
+    style.width = width + "px";
+    style.left = queryDesignerDom.clientWidth + "px";
+    style.height = dom.clientHeight + "px";
+  },
+  doLayout: function(){
+    this.layoutChartArea();
+    XavierPieChartTab._super.prototype.doLayout.call(this);
   }
 };
 adopt(XavierPieChartTab, XavierTab);

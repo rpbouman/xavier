@@ -18,7 +18,7 @@ aMsg({
   "Discard this query and start over": "Zoekopdracht wissen en opnieuw samenstellen",
   //welkom
   "Welcome!": "Welkom!",
-  "welcome.html": "welcome.nl.html",
+  "en/welcome.html": "nl/welcome.html",
   //slice
   "The members on this axis form a selection of the total data set (a slice) or which data are shown.": "Lid-elementen op deze as vormen de selectie (slice) van de totale gegevensverzameling",
   //table
