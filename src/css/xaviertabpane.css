@@ -84,5 +84,10 @@ limitations under the License.
   right: 0px;
   bottom: 0px;
   top: 0px;
+  overflow: auto;
+}
+
+.xavier-tabpane > .tabpane-components > DIV > DIV.chart {
+  position: absolute;
 }
 
