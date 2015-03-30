@@ -1,11 +1,16 @@
-var messages = {};
+if (typeof(messages) === "undefined") {
+  var messages = {};
+}
+else {
+  console.error("There is already a global variable called \"messages\".");
+}
 
 function aMsg(key, message){
-  if (arguments.length === 2 && iStr(key) && iStr(message)) {
+  if (arguments.length === 2 && typeof(key) === "string" && iStr(message)) {
     messages[key] = message;
   }
   else
-  if (arguments.length === 1 && iObj(key)){
+  if (arguments.length === 1 && typeof(key) === "object"){
     var p;
     for (p in key) {
       aMsg(p, key[p]);
@@ -28,7 +33,7 @@ function gMsg(key, args){
   else
   if (n === 2) {
     msgArgs = args;
-    if (!iObj(msgArgs)) {
+    if (typeof(msgArgs) !== "object") {
       msgArgs = {"1": msgArgs}
     }
   }
