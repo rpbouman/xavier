@@ -33,14 +33,14 @@ var xmla = new Xmla({
   forceResponseXMLEmulation: true
 });
 
-/**
-*
-*/
 var dnd = new DDHandler({
   node: body
 });
 SplitPane.listenToDnd(dnd);
 
+/**
+*   Toolbar
+*/
 var mainToolbar = new Toolbar({
   container: body
 });
@@ -97,8 +97,13 @@ mainToolbar.listen({
   }
 });
 
-var oldSplitterPosition = 300;
+function getAutoRunEnabled(){
+  return mainToolbar.getDepressedButtonInToggleGroup("auto-run");
+}
 
+/**
+*   TreeView
+*/
 var xmlaTreeView = new XmlaTreeView({
   xmla: xmla,
   catalogNodesInitiallyFlattened: true,
@@ -126,10 +131,9 @@ xmlaTreeView.listen({
   }
 });
 
-function getAutoRunEnabled(){
-  return mainToolbar.getDepressedButtonInToggleGroup("auto-run");
-}
-
+/**
+*   Tabs (Workarea)
+*/
 var workArea = new XavierTabPane({
   dnd: dnd,
   xmla: xmla,
@@ -149,6 +153,9 @@ var workArea = new XavierTabPane({
   }
 });
 
+/**
+*   Main layout
+*/
 var mainSplitPane = new SplitPane({
   container: body,
   classes: ["mainsplitpane"],
@@ -156,122 +163,26 @@ var mainSplitPane = new SplitPane({
   secondComponent: workArea,
   orientation: SplitPane.orientations.vertical
 });
+
 mainSplitPane.listen("splitterPositionChanged", function(mainSplitPane, event, data){
+  //tell the workArea to redo layout since its size has just changed.
   workArea.doLayout();
 });
 
 //force rendering
 mainSplitPane.getDom();
+xmlaTreeView.init();
 
-var xlsxExporter;
-function exportToExcel(){
-  try {
-    var selectedTab = workArea.getSelectedTab();
-    var visualizer = selectedTab ? selectedTab.getVisualizer() : null;
-    var dataset = visualizer ? visualizer.getDataset() : null;
-    var queryDesigner = selectedTab ? selectedTab.getQueryDesigner() : null;
-    if (!selectedTab || !visualizer || !queryDesigner || !dataset) {
-      throw "There is nothing to export. Please enter a query first";
-    }
+var oldSplitterPosition = 300;
+setTimeout(function(){
+  mainSplitPane.setSplitterPosition(oldSplitterPosition + "px");
+  windowResized();
+  xmlaTreeView.collapseCube();
+}, 200);
 
-    if (!xlsxExporter) {
-      xlsxExporter = new XlsxExporter();
-    }
-
-    var catalog = workArea.getCatalog();
-    var cube = workArea.getCube();
-    var name = catalog.CATALOG_NAME + " " + cube.CUBE_CAPTION + " - ";
-    var i, hierarchyCount, hierarchies, hierarchy, measures, measure, measureNames = [];
-    var measureAxis, axes = {};
-    queryDesigner.eachAxis(function(id, axis){
-      axes[id] = [];
-      hierarchyCount = axis.getHierarchyCount();
-      for (i = 0; i < hierarchyCount; i++){
-        hierarchy = axis.getHierarchyByIndex(i);
-        if (axis.getHierarchyName(hierarchy) === "Measures") {
-          measureAxis = id;
-          var j, setDef, setDefs = axis.setDefs["Measures"], n = setDefs.length;
-          for (j = 0; j < n; j++) {
-            setDef = setDefs[j];
-            measureNames.push(axis.getMemberCaption(setDef.metadata));
-          }
-        }
-        else {
-          axes[id].push(axis.getHierarchyCaption(hierarchy));
-        }
-      }
-    });
-
-    //TODO: localize file name for export.
-    var last;
-    if (measureNames.length) {
-      last = measureNames.pop();
-      name += measureNames.join(", ");
-      if (measureNames.length) {
-        name += " and ";
-      }
-      name += last;
-    }
-    function axisDescription(hierarchies){
-      var last, name = "";
-      last = hierarchies.pop();
-      name += hierarchies.join(",");
-      if (hierarchies.length) {
-        name += " and ";
-      }
-      name += last;
-      return name;
-    }
-
-    var by, hasBy, vs, slicer;
-    switch (measureAxis) {
-      case String(Xmla.Dataset.AXIS_COLUMNS):
-      case Xmla.Dataset.AXIS_SLICER:
-        by = Xmla.Dataset.AXIS_COLUMNS;
-        vs = Xmla.Dataset.AXIS_ROWS;
-        break;
-      case String(Xmla.Dataset.AXIS_ROWS):
-        by = Xmla.Dataset.AXIS_ROWS;
-        vs = Xmla.Dataset.AXIS_COLUMNS;
-        break;
-      //no measures specified
-      default:
-        by = Xmla.Dataset.AXIS_COLUMNS;
-        vs = Xmla.Dataset.AXIS_ROWS;
-    }
-
-    by = axes[by];
-    var hasBy = by.length;
-    if (hasBy) {
-      if (last) {
-        name += " by ";
-      }
-      name += axisDescription(by);
-    }
-
-    vs = axes[vs];
-    if (vs.length) {
-      if (hasBy) {
-        name += " vs ";
-      }
-      else {
-        name += " by ";
-      }
-      name += axisDescription(vs);
-    }
-
-    slicer = axes["SlicerAxis"];
-    if (slicer.length) {
-      name += " for a selection of " + axisDescription(slicer);
-    }
-
-    xlsxExporter.export(name, visualizer);
-  }
-  catch (exception){
-    showAlert("Export Error", exception);
-  }
-}
-
+/**
+*   Drag and drop stuff
+*/
 function startDrag(event, dndHandler) {
   var dragInfo;
   var queryDesigner = workArea.getQueryDesigner();
@@ -524,8 +435,121 @@ dnd.listen({
   endDrag: endDrag
 });
 
-xmlaTreeView.init();
+/**
+* Excel Export
+*/
+var xlsxExporter;
+function exportToExcel(){
+  try {
+    var selectedTab = workArea.getSelectedTab();
+    var visualizer = selectedTab ? selectedTab.getVisualizer() : null;
+    var dataset = visualizer ? visualizer.getDataset() : null;
+    var queryDesigner = selectedTab ? selectedTab.getQueryDesigner() : null;
+    if (!selectedTab || !visualizer || !queryDesigner || !dataset) {
+      throw "There is nothing to export. Please enter a query first";
+    }
 
+    if (!xlsxExporter) {
+      xlsxExporter = new XlsxExporter();
+    }
+
+    var catalog = workArea.getCatalog();
+    var cube = workArea.getCube();
+    var name = catalog.CATALOG_NAME + " " + cube.CUBE_CAPTION + " - ";
+    var i, hierarchyCount, hierarchies, hierarchy, measures, measure, measureNames = [];
+    var measureAxis, axes = {};
+    queryDesigner.eachAxis(function(id, axis){
+      axes[id] = [];
+      hierarchyCount = axis.getHierarchyCount();
+      for (i = 0; i < hierarchyCount; i++){
+        hierarchy = axis.getHierarchyByIndex(i);
+        if (axis.getHierarchyName(hierarchy) === "Measures") {
+          measureAxis = id;
+          var j, setDef, setDefs = axis.setDefs["Measures"], n = setDefs.length;
+          for (j = 0; j < n; j++) {
+            setDef = setDefs[j];
+            measureNames.push(axis.getMemberCaption(setDef.metadata));
+          }
+        }
+        else {
+          axes[id].push(axis.getHierarchyCaption(hierarchy));
+        }
+      }
+    });
+
+    //TODO: localize file name for export.
+    var last;
+    if (measureNames.length) {
+      last = measureNames.pop();
+      name += measureNames.join(", ");
+      if (measureNames.length) {
+        name += " and ";
+      }
+      name += last;
+    }
+    function axisDescription(hierarchies){
+      var last, name = "";
+      last = hierarchies.pop();
+      name += hierarchies.join(",");
+      if (hierarchies.length) {
+        name += " and ";
+      }
+      name += last;
+      return name;
+    }
+
+    var by, hasBy, vs, slicer;
+    switch (measureAxis) {
+      case String(Xmla.Dataset.AXIS_COLUMNS):
+      case Xmla.Dataset.AXIS_SLICER:
+        by = Xmla.Dataset.AXIS_COLUMNS;
+        vs = Xmla.Dataset.AXIS_ROWS;
+        break;
+      case String(Xmla.Dataset.AXIS_ROWS):
+        by = Xmla.Dataset.AXIS_ROWS;
+        vs = Xmla.Dataset.AXIS_COLUMNS;
+        break;
+      //no measures specified
+      default:
+        by = Xmla.Dataset.AXIS_COLUMNS;
+        vs = Xmla.Dataset.AXIS_ROWS;
+    }
+
+    by = axes[by];
+    var hasBy = by.length;
+    if (hasBy) {
+      if (last) {
+        name += " by ";
+      }
+      name += axisDescription(by);
+    }
+
+    vs = axes[vs];
+    if (vs.length) {
+      if (hasBy) {
+        name += " vs ";
+      }
+      else {
+        name += " by ";
+      }
+      name += axisDescription(vs);
+    }
+
+    slicer = axes["SlicerAxis"];
+    if (slicer.length) {
+      name += " for a selection of " + axisDescription(slicer);
+    }
+
+    xlsxExporter.export(name, visualizer);
+  }
+  catch (exception){
+    showAlert("Export Error", exception);
+  }
+}
+
+/**
+*   Resize window stuff
+*/
 var resizeEvent = {
   factor: .33
 };
@@ -552,11 +576,5 @@ listen(window, "resize", function(){
   }
   resizeTimer.start();
 });
-
-setTimeout(function(){
-  mainSplitPane.setSplitterPosition(oldSplitterPosition + "px");
-  windowResized();
-  xmlaTreeView.collapseCube();
-}, 200);
 
 })();
