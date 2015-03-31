@@ -495,7 +495,7 @@ var PivotTable;
   getDataset: function(){
     return this.dataset;
   },
-  renderDataset: function (dataset) {
+  renderDataset: function (dataset, queryDesigner) {
     var me = this;
     if (this.dataset) {
       this.dataset.close();
