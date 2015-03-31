@@ -78,29 +78,31 @@ span.current-cube,
 .tree .dimensiontype2 > .body > .node > .head > .toggle {
   background-image: url('../images/measure.png');
 }
+
 /* MDMEASURE_AGGR_UNKNOWN */
 .tree .dimensiontype2 > .body > .aggregator0 > .head > .toggle {
   background-image: url('../images/measure.png');
 }
 /* MDMEASURE_AGGR_SUM */
+.aggregator1-dragging,
 .tree .dimensiontype2 > .body > .aggregator1 > .head > .toggle {
-  background-image: url('../images/measure.png');
+  background-image: url('../images/sum.png');
 }
 /* MDMEASURE_AGGR_COUNT */
 .tree .dimensiontype2 > .body > .aggregator2 > .head > .toggle {
-  background-image: url('../images/measure.png');
+  background-image: url('../images/count.png');
 }
 /* MDMEASURE_AGGR_MIN */
 .tree .dimensiontype2 > .body > .aggregator3 > .head > .toggle {
-  background-image: url('../images/measure.png');
+  background-image: url('../images/minimum.png');
 }
 /* MDMEASURE_AGGR_MAX */
 .tree .dimensiontype2 > .body > .aggregator4 > .head > .toggle {
-  background-image: url('../images/measure.png');
+  background-image: url('../images/maximum.png');
 }
 /* MDMEASURE_AGGR_AVG */
 .tree .dimensiontype2 > .body > .aggregator5 > .head > .toggle {
-  background-image: url('../images/measure.png');
+  background-image: url('../images/average.png');
 }
 /* MDMEASURE_AGGR_VAR */
 .tree .dimensiontype2 > .body > .aggregator6 > .head > .toggle {
@@ -112,7 +114,7 @@ span.current-cube,
 }
 /* MDMEASURE_AGGR_DST (distinct count) */
 .tree .dimensiontype2 > .body > .aggregator8 > .head > .toggle {
-  background-image: url('../images/measure.png');
+  background-image: url('../images/count.png');
 }
 /* MDMEASURE_AGGR_NONE */
 .tree .dimensiontype2 > .body > .aggregator9 > .head > .toggle {

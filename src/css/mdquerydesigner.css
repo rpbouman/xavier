@@ -55,6 +55,80 @@ table.query-designer-axis {
   background-image: url('../images/measure.png');
 }
 
+/* MDMEASURE_AGGR_UNKNOWN */
+.query-designer-axis td span.aggregator0 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_SUM */
+.aggregator1-dragging,
+.query-designer-axis td span.aggregator1 {
+  background-image: url('../images/sum.png');
+}
+/* MDMEASURE_AGGR_COUNT */
+.query-designer-axis td span.aggregator2 {
+  background-image: url('../images/count.png');
+}
+/* MDMEASURE_AGGR_MIN */
+.query-designer-axis td span.aggregator3 {
+  background-image: url('../images/minimum.png');
+}
+/* MDMEASURE_AGGR_MAX */
+.query-designer-axis td span.aggregator4 {
+  background-image: url('../images/maximum.png');
+}
+/* MDMEASURE_AGGR_AVG */
+.query-designer-axis td span.aggregator5 {
+  background-image: url('../images/average.png');
+}
+/* MDMEASURE_AGGR_VAR */
+.query-designer-axis td span.aggregator6 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_STD */
+.query-designer-axis td span.aggregator7 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_DST (distinct count) */
+.query-designer-axis td span.aggregator8 {
+  background-image: url('../images/count.png');
+}
+/* MDMEASURE_AGGR_NONE */
+.query-designer-axis td span.aggregator9 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_AVGCHILDREN  */
+.query-designer-axis td span.aggregator10 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_FIRSTCHILD */
+.tree .dimensiontype2 > .body > .aggregator11 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_LASTCHILD */
+.tree .dimensiontype2 > .body > .aggregator12 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_FIRSTNONEMPTY */
+.tree .dimensiontype2 > .body > .aggregator13 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_LASTNONEMPTY */
+.tree .dimensiontype2 > .body > .aggregator14 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_BYACCOUNT */
+.tree .dimensiontype2 > .body > .aggregator15 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_CALCULATED */
+.tree .dimensiontype2 > .body > .aggregator127 {
+  background-image: url('../images/measure.png');
+}
+/* MDMEASURE_AGGR_UNKNOWN */
+.tree .dimensiontype2 > .body > .aggregator0 {
+  background-image: url('../images/measure.png');
+}
+
 .query-designer-axis td span.level {
   background-image: url('../images/level.png');
 }
