@@ -288,33 +288,6 @@ var QueryDesigner;
   getContainer: function() {
     return gEl(this.conf.container);
   },
-  getMdx: function(cubeName) {
-    var mdx = "";
-    var columnsMdx = this.getAxis(Xmla.Dataset.AXIS_COLUMNS).getMdx();
-    var rowsMdx = this.getAxis(Xmla.Dataset.AXIS_ROWS).getMdx();
-    var slicerMdx = this.getAxis(Xmla.Dataset.AXIS_SLICER).getMdx();
-
-    if (!columnsMdx && rowsMdx) {
-      //fill in a dummy for the columns axis
-    }
-
-    if (columnsMdx) {
-      mdx += " " + columnsMdx;
-    }
-    if (columnsMdx && rowsMdx) {
-      mdx += "\n,      " + rowsMdx;
-    }
-
-    if (mdx || slicerMdx) {
-      mdx = "SELECT" + mdx +
-          "\nFROM   [" + cubeName + "]"
-      ;
-      if (slicerMdx) {
-        mdx += "\nWHERE " + slicerMdx;
-      }
-    }
-    return mdx;
-  },
   getMdx: function(cubeName){
     var mdx = "", gap = false, slicerMdx;
     if (this.eachAxis(function(id, axis){
@@ -338,7 +311,7 @@ var QueryDesigner;
           mdx += axisMdx;
         }
       }
-      if (axisMdx === "" && axis.conf.mandator === true) {
+      if (axisMdx === "" && axis.conf.mandatory === true) {
         return false;
       }
     }) === false) {
@@ -478,8 +451,12 @@ var QueryDesignerAxis;
     ;
     for (j = 0; j < m; j++) {
       setDef = hierarchySetDefs[j];
+      var classes = [setDef.type, QueryDesignerAxis.prefix + "-item"];
+      if (iDef(setDef.metadata.MEASURE_AGGREGATOR)){
+        classes.push("aggregator" + setDef.metadata.MEASURE_AGGREGATOR);
+      }
       var el = cEl("SPAN", {
-        "class": setDef.type + " " + QueryDesignerAxis.prefix + "-item",
+        "class":  classes,
         title: setDef.expression,
         id: setDef.expression
       }, setDef.caption, c);
