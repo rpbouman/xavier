@@ -168,7 +168,50 @@ var QueryDesigner;
     }
   },
   getAxis: function(id) {
-    return this.axes[id];
+    var axis = this.axes[id];
+    if (!axis){
+      throw "No such axis " + id;
+    }
+    return axis;
+  },
+  hasAxis: function(id){
+    return Boolean(this.axes[id]);
+  },
+  hasColumnAxis: function(){
+    return this.hasAxis(Xmla.Dataset.AXIS_COLUMNS);
+  },
+  getColumnAxis: function(){
+    return this.getAxis(Xmla.Dataset.AXIS_COLUMNS);
+  },
+  hasRowAxis: function(){
+    return this.hasAxis(Xmla.Dataset.AXIS_ROWS);
+  },
+  getRowAxis: function(){
+    return this.getAxis(Xmla.Dataset.AXIS_ROWS);
+  },
+  hasPageAxis: function(){
+    return this.hasAxis(Xmla.Dataset.AXIS_PAGES);
+  },
+  getPageAxis: function(){
+    return this.getAxis(Xmla.Dataset.AXIS_PAGES);
+  },
+  hasChapterAxis: function(){
+    return this.hasAxis(Xmla.Dataset.AXIS_CHAPTERS);
+  },
+  getChapterAxis: function(){
+    return this.getAxis(Xmla.Dataset.AXIS_CHAPTERS);
+  },
+  hasSectionAxis: function(){
+    return this.hasAxis(Xmla.Dataset.AXIS_SECTIONS);
+  },
+  getSectionAxis: function(){
+    return this.getAxis(Xmla.Dataset.AXIS_SECTIONS);
+  },
+  hasSlicerAxis: function(){
+    return this.hasAxis(Xmla.Dataset.AXIS_SLICER);
+  },
+  getSlicerAxis: function(){
+    return this.getAxis(Xmla.Dataset.AXIS_SLICER);
   },
   getAxisForHierarchy: function(hierarchyUniqueName) {
     var ret = null;
@@ -747,6 +790,38 @@ var QueryDesignerAxis;
     }
     return dimensionName;
   },
+  eachHierarchy: function(callback, scope){
+    var i, hierarchies = this.hierarchies, n = hierarchies.length, hierarchy;
+    for (i = 0; i < n; i++){
+      hierarchy = hierarchies[i];
+      if (callback.call(scope, hierarchy, i) === false) {
+        return false;
+      }
+    }
+    return true;
+  },
+  eachSetDef: function(callback, scope, hierarchy){
+    if (hierarchy) {
+      var hierarchyName = this.getHierarchyName(hierarchy);
+      hierarchy = this.getHierarchyByName(hierarchyName);
+      var hierarchyIndex = this.getHierarchyIndex(hierarchyName);
+      var setDefs = this.getSetDefs(hierarchyName);
+      var i, n = setDefs.length;
+      for (i = 0; i < n; i++) {
+        if (callback.call(scope, setDefs[i], i, hierarchy, hierarchyIndex) === false) {
+          return false;
+        }
+      }
+    }
+    else {
+      if (this.eachHierarchy(function(hierarchy, index){
+        return this.eachSetDef(callback, scope, hierarchy);
+      }, this) === false) {
+        return false;
+      }
+    }
+    return true;
+  },
   getHierarchyByIndex: function(index) {
     return this.hierarchies[index];
   },
@@ -1042,6 +1117,10 @@ var QueryDesignerAxis;
   getSetDefs: function(hierarchy){
     if (iInt(hierarchy)){
       hierarchy = this.getHierarchyByIndex(hierarchy);
+      hierarchy = this.getHierarchyName(hierarchy);
+    }
+    else
+    if (iObj(hierarchy)) {
       hierarchy = this.getHierarchyName(hierarchy);
     }
     return this.setDefs[hierarchy];
