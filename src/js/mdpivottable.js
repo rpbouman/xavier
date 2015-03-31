@@ -16,6 +16,7 @@ limitations under the License.
 
 */
 
+if (iUnd(scrollbarWidth) || iUnd(scrollbarHeight)) {
 //scrollbar dimensions:
 cEl("div", {
   id: "_scrollbars1",
@@ -42,7 +43,7 @@ cEl("div", {
 var _scrollbars1 = gEl("_scrollbars1");
 var scrollbarWidth = (_scrollbars1.offsetWidth - _scrollbars1.clientWidth) + 2;
 var scrollbarHeight = (_scrollbars1.offsetHeight - _scrollbars1.clientHeight) + 2;
-
+}
 
 /***************************************************************
 *
