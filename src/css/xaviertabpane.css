@@ -91,3 +91,12 @@ limitations under the License.
   position: absolute;
 }
 
+ul.chart-container, ul.chart-container > li {
+  margin: 0px;
+  padding: 0px;
+}
+
+.xavier-tabpane > .tabpane-components > DIV > DIV.datagrid {
+  margin: 8px;
+}
+

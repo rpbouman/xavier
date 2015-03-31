@@ -226,7 +226,9 @@ var XavierTab;
         success: function(xmla, options, dataset){
           console.timeEnd("executeQuery");
           try {
-            visualizer.renderDataset(dataset);
+            console.time("renderDataset");
+            visualizer.renderDataset(dataset, queryDesigner);
+          console.timeEnd("renderDataset");
           }
           catch (exception) {
             showAlert(gMsg("Error rendering dataset"), exception.toString() || exception.message || gMsg("Unexpected error"));
@@ -283,6 +285,70 @@ var XavierWelcomeTab;
 };
 adopt(XavierWelcomeTab, XavierTab);
 
+var DataTable;
+(DataTable = function(){
+  this.initDataGrid();
+}).prototype = {
+  initDataGrid: function(){
+    this.dataGrid = new DataGrid({});
+    this.dataGrid.setRowHeaders([{
+      label: "Row",
+      isAutoRowNum: true
+    }]);
+  },
+  getDom: function(){
+    return this.dataGrid.getDom();
+  },
+  clear: function(){
+    this.dataGrid.clear();
+  },
+  renderDataset: function(dataset, queryDesigner){
+    if (!dataset.hasColumnAxis()) {
+      return;
+    }
+    var columnLookup = [], columns = [], cells = [];
+    var data = {
+      columns: columns,
+      rows: [],
+      cells: cells
+    };
+
+    var columnAxis = queryDesigner.getColumnAxis();
+    columnAxis.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
+      var levels;
+      if (iUnd(columnLookup[hierarchyIndex])) {
+        columnLookup[hierarchyIndex] = {};
+      }
+      levels = columnLookup[hierarchyIndex];
+      var column = {
+        label: setDef.caption,
+        name: setDef.metadata.LEVEL_UNIQUE_NAME,
+        index: columns.length
+      };
+      levels[setDef.metadata.LEVEL_NUMBER] = column;
+      columns.push(column);
+    }, this);
+
+    var columnAxis = dataset.getColumnAxis();
+    columnAxis.eachTuple(function(tuple){
+      var members = tuple.members, n = members.length, i, member, column, values = [];
+      values.length = columns.length;
+      for (i = 0; i < n; i++){
+        member = members[i];
+        column = columnLookup[i][member.LNum];
+        values[column.index] = member.Caption;
+      }
+      cells.push(values);
+    }, this);
+
+    this.dataGrid.setData(data);
+    this.dataGrid.doLayout();
+  },
+  doLayout: function(){
+    this.dataGrid.doLayout();
+  }
+};
+
 /**
 *   Table tab
 */
@@ -296,12 +362,44 @@ var XavierTableTab;
     var queryDesigner = this.queryDesigner = new QueryDesigner({
       container: cEl("DIV", {
       }, null, dom),
-      dnd: this.getDnd()
+      dnd: this.getDnd(),
+      axes: [
+        {
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Columns"),
+          classes: ["levels"],
+          tooltip: gMsg("Items on this axis are used to generate columns for the table"),
+          mandatory: true,
+          drop: {
+            include: "level",
+            exclude: ["measures", "measure"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
+          label: gMsg("Measures"),
+          classes: ["measures"],
+          tooltip: gMsg("If you want to include any measures, please place them on this axis"),
+          drop: {
+            include: ["measures", "measure"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_SLICER,
+          label: gMsg("Slicer"),
+          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
+          "class": "slicer",
+          drop: {
+            include: "member"
+          }
+        }
+      ]
     });
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
         if (this.getAutoRunEnabled()) {
           this.executeQuery();
+          this.doLayout();
         }
         else {
 
@@ -312,23 +410,36 @@ var XavierTableTab;
     queryDesigner.render();
   },
   initTable: function(dom){
-    var dataTable = this.visualizer = new DataTable({
-      container: cEl("div", {
-        id: "data-table",
-        "class": "data-table"
-      }, null, dom)
-    });
+    var dataTable = this.visualizer = new DataTable();
+    dom.appendChild(dataTable.getDom());
     return dataTable;
   },
   createDom: function(){
     var me = this;
-
     var dom = cEl("DIV", {
       id: this.getId()
     });
     this.initQueryDesigner(dom);
     this.initTable(dom);
     return dom;
+  },
+  doLayout: function(){
+    var queryDesigner = this.getQueryDesigner();
+    var queryDesignerDom = queryDesigner.getDom().firstChild;
+    var visualizer = this.getVisualizer();
+    var visualizerDom = visualizer.getDom();
+    var dom = this.getDom();
+
+    var style = visualizerDom.style;
+    style.top = queryDesignerDom.clientHeight + "px";
+
+    var width = dom.getClientWidth - scrollbarWidth;
+    style.width = width + "px";
+    style.left = 0 + "px";
+
+    var height = dom.clientHeight - queryDesignerDom.clientHeight - scrollbarHeight;
+    style.height = height + "px";
+    visualizer.doLayout();
   }
 };
 adopt(XavierTableTab, XavierTab);
@@ -601,45 +712,6 @@ var PieChart;
   clear: function(){
     this.getDom().innerHTML = "";
   },
-  renderDataset: function(dataset){
-    this.clear();
-    if (!dataset.hasRowAxis()){
-      return;
-    }
-    this.dataset = dataset;
-    var columns = [];
-    var names = {};
-    var rowAxis = dataset.getRowAxis();
-    var cellset = dataset.getCellset();
-    var column, name, members, member, cell, i, n = rowAxis.hierarchyCount();
-    rowAxis.eachTuple(function(tuple){
-      members = tuple.members;
-      column = "", name = "";
-      for (i = 0; i < n; i++) {
-        member = members[i];
-        if (column) {
-          column += ".";
-          name += " / ";
-        }
-        column += member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
-        name += member[Xmla.Dataset.Axis.MEMBER_CAPTION];
-      }
-      cell = cellset.readCell();
-      columns.push([column, cell.Value]);
-      names[column] = name;
-      cellset.nextCell();
-    });
-    this.chartData = {
-      columns: columns,
-      names: names,
-      type : this.chartType
-    };
-    var id = this.getId();
-    c3.generate({
-      bindto: "#" + id,
-      data: this.chartData
-    });
-  },
   createLayoutTable: function(){
     var dom = this.getDom();
     var table = cEl("TABLE", {
@@ -791,31 +863,25 @@ var PieChart;
     var m = columnAxis.tupleCount(), j;
     //data
 
+    var chartWrapper, chartContainerTag;
+    if (n > 1) {
+      chartContainerTag = "LI";
+      chartWrapper = cEl("UL", {
+        "class": ["chart-container", "pie-chart-container"]
+      }, null, cell);
+    }
+    else {
+      chartContainerTag = "DIV";
+      chartWrapper = cell;
+    }
     //for each measure
     for (i = 0; i < n; i++) {
       var data = this.createChartDataTemplate(dataset);
-      /*
-      //we can skip the very first time since we already fetched cells for that case
-      if (
-        (chapterAxisOrdinal === 0 || chapterAxisOrdinal === null) &&
-        (pageAxisOrdinal === 0 || pageAxisOrdinal === null) &&
-        (i === 0)
-      ){
-        //noop
-      }
-      else {
-      //update the chart data with cells values.
-        var cellset = dataset.getCellset();
-        for (j = 0; j < m; j++) {
-          this.chartData.columns[j].splice(1, 1, cellset.readCell().Value);
-          cellset.nextCell();
-        }
-      }
-      */
       var piechartId = this.newChartId();
-      var el = cEl("DIV", {
-        id: piechartId
-      }, null, cell);
+      var el = cEl(chartContainerTag, {
+        id: piechartId,
+        "class": ["chart-container", "pie-chart-container"]
+      }, null, chartWrapper);
       this.renderPieChart(piechartId, data);
     }
     console.timeEnd("pie chart renderPieCharts");
@@ -823,28 +889,39 @@ var PieChart;
   newChartId: function(){
     return PieChart.prefix + "chart" + (++PieChart.chartId);
   },
-  renderDataset: function(dataset){
+  getDataset: function(){
+    return this.dataset;
+  },
+  renderDataset: function(dataset, queryDesigner){
     console.time("pie chart renderDataset");
     this.clear();
+    this.dataset = dataset;
+    this.numCharts = 0;
+    this.chartsRendering = 0;
 
-    if (dataset.hasRowAxis()) {
-      //this.createChartDataTemplate(dataset);
+    if (!dataset.hasRowAxis()){
+      //nothing to do here: no measures, only categories
+      return;
     }
 
+    var numCharts = dataset.getRowAxis().tupleCount();
+
     if (dataset.hasChapterAxis()) {
+      this.chartsRendering = this.numCharts = dataset.getChapterAxis().tupleCount() * dataset.getPageAxis().tupleCount() * dataset.getRowAxis().tupleCount();
+      //generate a grid of Chapters x Pages;
       this.renderChapterAxis(dataset);
     }
     else
     if (dataset.hasPageAxis()) {
+      this.chartsRendering = this.numCharts = dataset.getPageAxis().tupleCount() * dataset.getRowAxis().tupleCount();
+      //generate a list of Pages x items
       var table = this.createLayoutTable();
       var row = table.insertRow(0);
       this.renderPageAxis(dataset, row, null);
     }
-    else
-    if (!dataset.hasRowAxis()){
-      return;
-    }
     else {
+      this.chartsRendering = this.numCharts = dataset.getRowAxis().tupleCount();
+      //render Columns x chart
       this.renderPieCharts(dataset, this.getDom(), null, null);
     }
     console.timeEnd("pie chart renderDataset");
@@ -924,8 +1001,8 @@ var XavierPieChartTab;
     });
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
-        this.layoutChartArea();
         if (this.getAutoRunEnabled()) {
+          this.layoutChartArea();
           this.executeQuery();
         }
         else {
