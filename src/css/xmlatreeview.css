@@ -146,7 +146,7 @@ span.current-cube,
 }
 /* MDMEASURE_AGGR_CALCULATED */
 .tree .dimensiontype2 > .body > .aggregator127 > .head > .toggle {
-  background-image: url('../images/measure.png');
+  background-image: url('../images/calculation.png');
 }
 /* MDMEASURE_AGGR_UNKNOWN */
 .tree .dimensiontype2 > .body > .aggregator0 > .head > .toggle {

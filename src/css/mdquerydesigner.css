@@ -101,31 +101,31 @@ table.query-designer-axis {
   background-image: url('../images/measure.png');
 }
 /* MDMEASURE_AGGR_FIRSTCHILD */
-.tree .dimensiontype2 > .body > .aggregator11 {
+.query-designer-axis td span.aggregator11 {
   background-image: url('../images/measure.png');
 }
 /* MDMEASURE_AGGR_LASTCHILD */
-.tree .dimensiontype2 > .body > .aggregator12 {
+.query-designer-axis td span.aggregator12 {
   background-image: url('../images/measure.png');
 }
 /* MDMEASURE_AGGR_FIRSTNONEMPTY */
-.tree .dimensiontype2 > .body > .aggregator13 {
+.query-designer-axis td span.aggregator13 {
   background-image: url('../images/measure.png');
 }
 /* MDMEASURE_AGGR_LASTNONEMPTY */
-.tree .dimensiontype2 > .body > .aggregator14 {
+.query-designer-axis td span.aggregator14 {
   background-image: url('../images/measure.png');
 }
 /* MDMEASURE_AGGR_BYACCOUNT */
-.tree .dimensiontype2 > .body > .aggregator15 {
+.query-designer-axis td span.aggregator15 {
   background-image: url('../images/measure.png');
 }
 /* MDMEASURE_AGGR_CALCULATED */
-.tree .dimensiontype2 > .body > .aggregator127 {
-  background-image: url('../images/measure.png');
+.query-designer-axis td span.aggregator127 {
+  background-image: url('../images/calculation.png');
 }
 /* MDMEASURE_AGGR_UNKNOWN */
-.tree .dimensiontype2 > .body > .aggregator0 {
+.query-designer-axis td span.aggregator0 {
   background-image: url('../images/measure.png');
 }
 
