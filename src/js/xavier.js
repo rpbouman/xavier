@@ -118,7 +118,7 @@ xmlaTreeView.listen({
   },
   error: function(xmlaTreeView, event, error){
     busy(false);
-    showAlert(error.toString());
+    showAlert(error.toString() || error.message);
     console.error(error.getStackTrace());
   },
   cubeSelected: function(xmlaTreeView, event, cubeTreeNode){
