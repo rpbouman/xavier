@@ -21,6 +21,7 @@ function aMsg(key, message){
 function gMsg(key, args){
   if (!key) {
     throw "No message key specified";
+    debugger;
   }
   var msg = messages[key] || key;
   var n = arguments.length, msgArgs;
