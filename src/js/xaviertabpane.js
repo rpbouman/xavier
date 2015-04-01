@@ -210,7 +210,11 @@ var XavierTab;
       var catalog = this.getCatalog();
       var cube = this.getCube();
       var mdx = queryDesigner.getMdx(cube.CUBE_NAME);
-      if (!mdx) {
+      if (mdx) {
+        console.log("MDX: " + mdx);
+      }
+      else {
+        console.log("No MDX, bailing out");
         //throw "Not a valid query";
         busy(false);
         return;
@@ -302,44 +306,93 @@ var DataTable;
   clear: function(){
     this.dataGrid.clear();
   },
+  getColumnInfo: function(queryDesignerAxis){
+    var columnLookup = [], index = 0;
+    queryDesignerAxis.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
+      var levels;
+      if (iUnd(columnLookup[hierarchyIndex])) {
+        columnLookup[hierarchyIndex] = levels = {};
+      }
+      else {
+        levels = columnLookup[hierarchyIndex];
+      }
+      var column = {
+        label: setDef.caption,
+        name: setDef.metadata.LEVEL_UNIQUE_NAME,
+        index: index++
+      };
+      if (iDef(setDef.metadata.LEVEL_NUMBER)) {
+        levels[setDef.metadata.LEVEL_NUMBER] = column;
+      }
+      else {
+        levels[setDef.metadata.MEASURE_NAME] = column;
+      }
+    }, this);
+    return columnLookup;
+  },
+  getColumns: function(columnInfo){
+    var columns = [], i, n = columnInfo.length, levels, column;
+    for (i = 0; i < n; i++) {
+      levels = columnInfo[i];
+      for (column in levels) {
+        columns.push(levels[column]);
+      }
+    }
+    return columns
+  },
   renderDataset: function(dataset, queryDesigner){
     if (!dataset.hasColumnAxis()) {
       return;
     }
-    var columnLookup = [], columns = [], cells = [];
+
+    var columnAxis = queryDesigner.getColumnAxis();
+    var columnAxisInfo = this.getColumnInfo(columnAxis);
+    var columns = this.getColumns(columnAxisInfo)
+    var cells = [];
+
+    var primaryAxis, secondaryAxis, measureColumns, j, m = 0, cellOrdinal, cell;
+    if (dataset.hasRowAxis()) {
+      primaryAxis = dataset.getRowAxis();
+      secondaryAxis = dataset.getColumnAxis();
+      var measuresIndex = columnAxis.getHierarchyIndex("Measures");
+      measureColumns = columnAxisInfo.splice(measuresIndex, 1);
+      measureColumns = measureColumns[0];
+      for (j in  measureColumns) {
+        m++;
+      }
+      cellset = dataset.getCellset();
+    }
+    else {
+      primaryAxis = dataset.getColumnAxis();
+    }
+    primaryAxis.eachTuple(function(tuple){
+      var members = tuple.members, n = members.length, i, member, column, values = [];
+      values.length = columns.length;
+      for (i = 0; i < n; i++){
+        member = members[i];
+        column = columnAxisInfo[i][member.LNum];
+        values[column.index] = member.Caption;
+      }
+
+      i = 0;
+      for (column in measureColumns){
+        cellOrdinal = tuple.index * m + i;
+        if (cellset.cellOrdinal() === cellOrdinal) {
+          column = measureColumns[column];
+          values[column.index] = cellset.cellValue();
+          cellset.nextCell();
+        }
+        i++;
+      }
+
+      cells.push(values);
+    }, this);
+
     var data = {
       columns: columns,
       rows: [],
       cells: cells
     };
-
-    var columnAxis = queryDesigner.getColumnAxis();
-    columnAxis.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
-      var levels;
-      if (iUnd(columnLookup[hierarchyIndex])) {
-        columnLookup[hierarchyIndex] = {};
-      }
-      levels = columnLookup[hierarchyIndex];
-      var column = {
-        label: setDef.caption,
-        name: setDef.metadata.LEVEL_UNIQUE_NAME,
-        index: columns.length
-      };
-      levels[setDef.metadata.LEVEL_NUMBER] = column;
-      columns.push(column);
-    }, this);
-
-    var columnAxis = dataset.getColumnAxis();
-    columnAxis.eachTuple(function(tuple){
-      var members = tuple.members, n = members.length, i, member, column, values = [];
-      values.length = columns.length;
-      for (i = 0; i < n; i++){
-        member = members[i];
-        column = columnLookup[i][member.LNum];
-        values[column.index] = member.Caption;
-      }
-      cells.push(values);
-    }, this);
 
     this.dataGrid.setData(data);
     this.dataGrid.doLayout();
@@ -367,21 +420,11 @@ var XavierTableTab;
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Columns"),
-          classes: ["levels"],
+          classes: ["columns"],
           tooltip: gMsg("Items on this axis are used to generate columns for the table"),
           mandatory: true,
           drop: {
-            include: "level",
-            exclude: ["measures", "measure"]
-          }
-        },
-        {
-          id: Xmla.Dataset.AXIS_ROWS,
-          label: gMsg("Measures"),
-          classes: ["measures"],
-          tooltip: gMsg("If you want to include any measures, please place them on this axis"),
-          drop: {
-            include: ["measures", "measure"]
+            include: ["level", "measure"]
           }
         },
         {
@@ -395,6 +438,48 @@ var XavierTableTab;
         }
       ]
     });
+    queryDesigner.getMdx = function(cubeName){
+      var columnAxis = this.getColumnAxis();
+
+      //rewrite query if necessary
+      //if the query includes measures, then we want those on the column axis,
+      //and all others on the row axis.
+      var undowRewrite;
+      if (columnAxis.hasHierarchy("Measures")) {
+        undowRewrite = true;
+        var indexOfMeasures = columnAxis.getHierarchyIndex("Measures");
+        var measures = columnAxis.hierarchies.splice(indexOfMeasures, 1);
+        measures = measures[0];
+        var newAxis = new QueryDesignerAxis({
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          queryDesigner: this,
+          _dummy: true
+        });
+        newAxis.hierarchies.push(measures);
+        newAxis.setDefs = columnAxis.setDefs;
+
+        columnAxis.conf.id = Xmla.Dataset.AXIS_ROWS;
+        this.axes[Xmla.Dataset.AXIS_ROWS] = columnAxis;
+        this.axes[Xmla.Dataset.AXIS_COLUMNS] = newAxis;
+      }
+      else {
+        undowRewrite = false;
+      }
+
+      //rely on the prototypes method to actually generate MDX
+      var mdx = QueryDesigner.prototype.getMdx.call(this, cubeName);
+
+      //undo rewrite query if necessary
+      if (undowRewrite === true) {
+        columnAxis = this.axes[Xmla.Dataset.AXIS_ROWS];
+        columnAxis.conf.id = Xmla.Dataset.AXIS_COLUMNS;
+        columnAxis.hierarchies.splice(indexOfMeasures, 0, measures);
+        this.axes[Xmla.Dataset.AXIS_COLUMNS] = columnAxis;
+        QueryDesignerAxis.instances[columnAxis.getId()] = columnAxis;
+        delete this.axes[Xmla.Dataset.AXIS_ROWS];
+      }
+      return mdx;
+    };
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
         if (this.getAutoRunEnabled()) {
@@ -493,16 +578,17 @@ var XavierPivotTableTab;
             this.emptyCells(depressedButton);
             break;
           case "show-column-hierarchy-headers":
-            this.pivotTable.showHorizontalHierarchyHeaders(depressedButton ? true : false);
+            this.visualizer.showHorizontalHierarchyHeaders(depressedButton ? true : false);
             break;
           case "show-row-hierarchy-headers":
-            this.pivotTable.showVerticalHierarchyHeaders(depressedButton ? true : false);
+            this.visualizer.showVerticalHierarchyHeaders(depressedButton ? true : false);
             break;
         }
       }
     });
   },
   initQueryDesigner: function(dom){
+    var intrinsicProperties = "PARENT_UNIQUE_NAME";
     var queryDesigner = this.queryDesigner = new QueryDesigner({
       container: cEl("DIV", {}, null, dom),
       dnd: this.getDnd(),
@@ -512,13 +598,15 @@ var XavierPivotTableTab;
           label: gMsg("Columns"),
           tooltip: gMsg("Items on this axis are used to generate columns for the pivot table"),
           "class": "columns",
-          mandatory: true
+          mandatory: true,
+          intrinsicProperties: intrinsicProperties
         },
         {
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Rows"),
           tooltip: gMsg("Items on this axis are used to generate rows for the pivot table"),
-          "class": "rows"
+          "class": "rows",
+          intrinsicProperties: intrinsicProperties
         },
         {
           id: Xmla.Dataset.AXIS_SLICER,
