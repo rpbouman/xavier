@@ -110,12 +110,36 @@ var QueryDesigner;
     };
     return dragInfo;
   },
-  eachAxis: function(callback, scope){
-    var id, axes = this.axes, axis;
-    scope = scope || this;
+  eachAxis: function(callback, scope, ordered){
+    var ids = [], id, axes = this.axes;
     for (id in axes) {
+      ids.push(id);
+    }
+    //if ordered, then use natural order of axes (order by id)
+    if (ordered) {
+      ids.sort(function(a, b){
+        if (a === Xmla.Dataset.AXIS_SLICER) {
+          return (b === Xmla.Dataset.AXIS_SLICER) ? 0 : 1;
+        }
+        else
+        if (a > b) {
+          return 1;
+        }
+        else
+        if (a < b) {
+          return -1;
+        }
+        else {
+          return 0;
+        }
+      })
+    }
+    var i, n = ids.length, axis;
+    scope = scope || this;
+    for (i = 0; i < n; i++) {
+      id = ids[i];
       axis = axes[id];
-      callback.call(scope, id, axis);
+      callback.call(scope, id, axis, i);
     }
   },
   swapAxes: function(axis1, axis2) {
@@ -314,7 +338,7 @@ var QueryDesigner;
       if (axisMdx === "" && axis.conf.mandatory === true) {
         return false;
       }
-    }) === false) {
+    }, this, true) === false) {
       return null;
     }
     mdx = "SELECT " + mdx + "\nFROM   [" + cubeName + "]";
@@ -808,7 +832,9 @@ var QueryDesignerAxis;
     ;
     for (i = 0; i < n; i++) {
       hierarchy = hierarchies[i];
-      if (this.getHierarchyName(hierarchy) === name) return hierarchy;
+      if (this.getHierarchyName(hierarchy) === name) {
+        return hierarchy;
+      }
     }
     return null;
   },
@@ -1234,7 +1260,29 @@ var QueryDesignerAxis;
         if (nonEmpty) {
           mdx = "NON EMPTY " + mdx;
         }
-        mdx += " DIMENSION PROPERTIES PARENT_UNIQUE_NAME";
+        var myIntrinsicProperties = this.conf.intrinsicProperties;
+        if (myIntrinsicProperties) {
+          var intrinsicProperties;
+          if (iStr(myIntrinsicProperties)) {
+            intrinsicProperties = myIntrinsicProperties;
+          }
+          else
+          if (iArr(myIntrinsicProperties)) {
+            intrinsicProperties = myIntrinsicProperties.join(", ");
+          }
+          else
+          if (iObj(myIntrinsicProperties)){
+            intrinsicProperties = "";
+            var intrinsicProperty
+            for (intrinsicProperty in myIntrinsicProperties) {
+              if (intrinsicProperties.length) {
+                intrinsicProperties += ", ";
+              }
+              intrinsicProperties += intrinsicProperty;
+            }
+          }
+          mdx += " DIMENSION PROPERTIES " + intrinsicProperties;
+        }
         mdx += " ON Axis(" + this.conf.id + ")";
       }
     }
