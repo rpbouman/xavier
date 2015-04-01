@@ -149,6 +149,7 @@ var workArea = new XavierTabPane({
       var tab = tabPane.getTab(data.newTab);
       var display = tab ? Boolean(tab.getVisualizer()) : false;
       mainToolbar.displayGroup(mainToolbar.groups.visaction.name, display);
+      tab.doLayout();
     }
   }
 });
