@@ -38,6 +38,11 @@ var XavierTabPane;
   }
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  closeTab: function(index) {
+    var tab = this.getTab(index);
+    tab.destroy();
+    TabPane.prototype.closeTab.call(this, index);
+  },
   getAutoRunEnabled: function(){
     return this.conf.autorun;
   },
@@ -143,6 +148,20 @@ var XavierTab;
 }).prototype = {
   queryDesigner: null,
   visualizer: null,
+  destroy: function(){
+    if (this.toolbar) {
+      this.toolbar.destroy();
+    }
+    this.clear();
+    this.conf.tabPane = null;
+    dEl(this.getId());
+    if (this.queryDesigner) {
+      this.queryDesigner.destroy();
+    }
+    if (this.visualizer) {
+      this.visualizer.destroy();
+    }
+  },
   getId: function(){
     return XavierTab.prefix + this.id;
   },
@@ -282,9 +301,6 @@ var XavierWelcomeTab;
       height: "100%"
     });
     return dom;
-  },
-  getTabPane: function(){
-    return this.conf.tabPane;
   }
 };
 adopt(XavierWelcomeTab, XavierTab);
@@ -293,6 +309,9 @@ var DataTable;
 (DataTable = function(){
   this.initDataGrid();
 }).prototype = {
+  destroy: function(){
+    this.dataGrid.destroy();
+  },
   initDataGrid: function(){
     this.dataGrid = new DataGrid({});
     this.dataGrid.setRowHeaders([{
@@ -458,7 +477,10 @@ var XavierTableTab;
         newAxis.hierarchies.push(measures);
         newAxis.setDefs = columnAxis.setDefs;
 
+        var dom = columnAxis.getDom();
         columnAxis.conf.id = Xmla.Dataset.AXIS_ROWS;
+        dom.id = columnAxis.getId();
+
         this.axes[Xmla.Dataset.AXIS_ROWS] = columnAxis;
         this.axes[Xmla.Dataset.AXIS_COLUMNS] = newAxis;
       }
@@ -471,11 +493,16 @@ var XavierTableTab;
 
       //undo rewrite query if necessary
       if (undowRewrite === true) {
+        newAxis.destroy();
         columnAxis = this.axes[Xmla.Dataset.AXIS_ROWS];
-        columnAxis.conf.id = Xmla.Dataset.AXIS_COLUMNS;
         columnAxis.hierarchies.splice(indexOfMeasures, 0, measures);
+
+        var dom = columnAxis.getDom();
+        columnAxis.conf.id = Xmla.Dataset.AXIS_COLUMNS;
+        var id = columnAxis.getId();
+        dom.id = id;
+        QueryDesignerAxis.instances[id] = columnAxis;
         this.axes[Xmla.Dataset.AXIS_COLUMNS] = columnAxis;
-        QueryDesignerAxis.instances[columnAxis.getId()] = columnAxis;
         delete this.axes[Xmla.Dataset.AXIS_ROWS];
       }
       return mdx;
@@ -779,6 +806,10 @@ var PieChart;
   this.createDom();
 }).prototype = {
   chartType: "pie",
+  destroy: function(){
+    var id = this.getId();
+    dEl(id);
+  },
   getId: function() {
     return this.id;
   },

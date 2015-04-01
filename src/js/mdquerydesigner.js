@@ -29,6 +29,19 @@ var QueryDesigner;
     this.createAxes();
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
+  destroy: function(){
+    this.unlisten();
+    this.destroyAxes();
+    this.axes = null;
+    var id = this.getId();
+    dEl(id);
+    delete QueryDesigner.instances[id] ;
+  },
+  destroyAxes: function(){
+    this.eachAxis(function(id, axis){
+      axis.destroy();
+    }, this);
+  },
   defaultAxesConf: [
     {
       id: Xmla.Dataset.AXIS_COLUMNS,
@@ -381,6 +394,14 @@ var QueryDesignerAxis;
   this.reset();
   QueryDesignerAxis.instances[this.getId()] = this;
 }).prototype = {
+  destroy: function(){
+    delete this.conf.queryDesigner.axes[this.conf.id];
+    this.unlisten();
+    var id = this.getId();
+    dEl(id);
+    delete QueryDesignerAxis.instances[id];
+    this.conf.queryDesigner = null;
+  },
   getQueryDesigner: function() {
     return this.conf.queryDesigner;
   },

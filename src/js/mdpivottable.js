@@ -61,6 +61,12 @@ var PivotTable;
   this.conf.showVerticalHierarchyHeaders = iDef(conf.showVerticalHierarchyHeaders) ? conf.showVerticalHierarchyHeaders : true;
   this.createDom();
 }).prototype = {
+  destroy: function(){
+    this.unlisten();
+    this.clear();
+    var id = this.getId();
+    dEl(id);
+  },
   showHorizontalHierarchyHeaders: function(setting){
     if (iDef(setting)) {
       setting = Boolean(setting);
