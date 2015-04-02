@@ -155,14 +155,20 @@ var XavierTab;
     this.clear();
     this.conf.tabPane = null;
     dEl(this.getId());
-    if (this.queryDesigner) {
-      this.queryDesigner.destroy();
+
+    var dataset = this.getDataset();
+    if (dataset) {
+      dataset.close();
     }
-    if (this.visualizer) {
-      if (visualizer.dataset) {
-        dataset.close();
-      }
-      this.visualizer.destroy();
+
+    var queryDesigner = this.getQueryDesigner();
+    if (queryDesigner) {
+      queryDesigner.destroy();
+    }
+
+    var visualizer = this.getVisualizer();
+    if (visualizer) {
+      visualizer.destroy();
     }
   },
   getId: function(){
@@ -173,6 +179,22 @@ var XavierTab;
   },
   getVisualizer: function(){
     return this.visualizer;
+  },
+  getDataset: function(){
+    if (this.dataset) {
+      return this.dataset;
+    }
+    var visualizer = this.getVisualizer();
+    if (!visualizer) {
+      return;
+    }
+    if (iFun(visualizer.getDataset)) {
+      return visualizer.getDataset();
+    }
+    if (visualizer.dataset) {
+      return visualizer.dataset;
+    }
+    throw "Unsupported operation: getDataset";
   },
   getDom: function(){
     var el = gEl(this.getId());
@@ -254,7 +276,7 @@ var XavierTab;
           try {
             console.time("renderDataset");
             visualizer.renderDataset(dataset, queryDesigner);
-          console.timeEnd("renderDataset");
+            console.timeEnd("renderDataset");
           }
           catch (exception) {
             showAlert(gMsg("Error rendering dataset"), exception.toString() || exception.message || gMsg("Unexpected error"));
@@ -363,10 +385,13 @@ var DataTable;
     return columns
   },
   renderDataset: function(dataset, queryDesigner){
+    if (this.dataset) {
+      this.dataset.close();
+    }
     if (!dataset.hasColumnAxis()) {
       return;
     }
-
+    this.dataset = dataset;
     var columnAxis = queryDesigner.getColumnAxis();
     var columnAxisInfo = this.getColumnInfo(columnAxis);
     var columns = this.getColumns(columnAxisInfo)
@@ -1020,9 +1045,6 @@ var PieChart;
   },
   newChartId: function(){
     return PieChart.prefix + "chart" + (++PieChart.chartId);
-  },
-  getDataset: function(){
-    return this.dataset;
   },
   renderDataset: function(dataset, queryDesigner){
     console.time("pie chart renderDataset");

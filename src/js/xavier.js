@@ -443,8 +443,11 @@ var xlsxExporter;
 function exportToExcel(){
   try {
     var selectedTab = workArea.getSelectedTab();
+    if (!selectedTab) {
+      throw "No selected tab to export.";
+    }
     var visualizer = selectedTab ? selectedTab.getVisualizer() : null;
-    var dataset = visualizer ? visualizer.getDataset() : null;
+    var dataset = selectedTab ? selectedTab.getDataset() : null;
     var queryDesigner = selectedTab ? selectedTab.getQueryDesigner() : null;
     if (!selectedTab || !visualizer || !queryDesigner || !dataset) {
       throw "There is nothing to export. Please enter a query first";

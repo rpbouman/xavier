@@ -63,7 +63,6 @@ var PivotTable;
 }).prototype = {
   destroy: function(){
     this.unlisten();
-    this.clear();
     var id = this.getId();
     dEl(id);
   },
@@ -504,11 +503,12 @@ var PivotTable;
   },
   renderDataset: function (dataset, queryDesigner) {
     var me = this;
+    //clear is being called by the tabpane.
+    //this.clear();
     if (this.dataset) {
       this.dataset.close();
     }
     this.dataset = dataset;
-    this.clear();
 
     if (dataset.hasColumnAxis()) {
       this.renderColumnAxis();
@@ -923,6 +923,9 @@ var PivotTable;
     return this.columnOffset;
   },
   clearAxis: function(dom){
+    if (!dom) {
+      return;
+    }
     dom.innerHTML = "";
     var style = dom.style;
     style.width = "0px";
