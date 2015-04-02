@@ -29,6 +29,12 @@ var QueryDesigner;
     this.createAxes();
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
+  fireEvents: function(flag){
+    this.eachAxis(function(id, axis){
+      axis.fireEvents(flag);
+    }, this);
+    Observable.prototype.fireEvents.call(this, flag);
+  },
   destroy: function(){
     this.unlisten();
     this.destroyAxes();
@@ -186,14 +192,33 @@ var QueryDesigner;
   moveHierarchy: function(hierarchyName, fromAxis, toAxis, toIndex) {
     toAxis.importHierarchy(fromAxis, hierarchyName, toIndex);
   },
+  addAxis: function(axis) {
+    var id = axis.conf.id;
+    if (this.hasAxis(id)) {
+      throw "Axis with id " + id + " already exists.";
+    }
+    this.axes[id] = axis;
+    axis.listen("changed", this.axisChanged, this);
+  },
+  removeAxis: function(axis){
+    var id = axis.conf.id;
+    if (this.hasAxis(id)) {
+      throw "Axis with id " + id + " already exists.";
+    }
+    axis.unlisten("changed", this.axisChanged, this);
+    delete this.axes[id];
+  },
   createAxis: function(conf) {
     conf = merge(conf, {
       queryDesigner: this,
       layout: QueryDesignerAxis.layouts.horizontal
     });
     var axis = new QueryDesignerAxis(conf);
-    this.axes[conf.id] = axis;
-    axis.listen("changed", this.axisChanged, this);
+    if (this.fireEvents === false) {
+      axis.fireEvents(false);
+    }
+    this.addAxis(axis);
+    return axis;
   },
   createAxes: function() {
     var conf = this.conf, axisConf;
@@ -301,7 +326,18 @@ var QueryDesigner;
     }
     return el;
   },
+  updateDom: function(flag){
+    if (flag === false) {
+      this.dontUpdateDom = true;
+    }
+    else {
+      delete this.dontUpdateDom;
+    }
+  },
   render: function() {
+    if (this.dontUpdateDom) {
+      return;
+    }
     var container = this.getContainer();
     container.innerHTML = "";
     aCh(container, this.getDom());
@@ -481,6 +517,9 @@ var QueryDesignerAxis;
     return dom;
   },
   updateDom: function() {
+    if (this.getQueryDesigner().dontUpdateDom) {
+      return;
+    }
     switch (this.getLayout()) {
       case QueryDesignerAxis.layouts.vertical:
         this.updateDomVertical();
@@ -572,7 +611,7 @@ var QueryDesignerAxis;
     return el;
   },
   hasHierarchy: function(hierarchy) {
-    return this.getHierarchyIndex(hierarchy)!==-1;
+    return this.getHierarchyIndex(hierarchy) !== -1;
   },
   getHierarchyIndex: function(name) {
     for (var h = this.hierarchies, i = 0, n = h.length; i < n; i++){
