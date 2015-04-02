@@ -159,6 +159,9 @@ var XavierTab;
       this.queryDesigner.destroy();
     }
     if (this.visualizer) {
+      if (visualizer.dataset) {
+        dataset.close();
+      }
       this.visualizer.destroy();
     }
   },
@@ -369,9 +372,10 @@ var DataTable;
     var columns = this.getColumns(columnAxisInfo)
     var cells = [];
 
-    var primaryAxis, secondaryAxis, measureColumns, j, m = 0, cellOrdinal, cell;
+    var primaryAxis, secondaryAxis, measureColumns, j, m = 0, cellOrdinal, cell, onlyMeasures = false;
     if (dataset.hasRowAxis()) {
       primaryAxis = dataset.getRowAxis();
+      n = primaryAxis.hierarchyCount();
       secondaryAxis = dataset.getColumnAxis();
       var measuresIndex = columnAxis.getHierarchyIndex("Measures");
       measureColumns = columnAxisInfo.splice(measuresIndex, 1);
@@ -383,19 +387,21 @@ var DataTable;
     }
     else {
       primaryAxis = dataset.getColumnAxis();
-    }
-    primaryAxis.eachTuple(function(tuple){
-      var members = tuple.members, n = members.length, i, member, column, values = [];
-      values.length = columns.length;
-      for (i = 0; i < n; i++){
-        member = members[i];
-        column = columnAxisInfo[i][member.LNum];
-        values[column.index] = member.Caption;
+      if (primaryAxis.getHierarchyNames().indexOf("Measures") === 0 && primaryAxis.hierarchyCount() === 1) {
+        cellset = dataset.getCellset();
+        measureColumns = columnAxisInfo[0];
+        n = 0;
+        onlyMeasures = true;
       }
+      else {
+        n = primaryAxis.hierarchyCount();
+      }
+    }
 
-      i = 0;
+    if (onlyMeasures) {
+      var i = 0, column, cellOrdinal, values = [];
       for (column in measureColumns){
-        cellOrdinal = tuple.index * m + i;
+        cellOrdinal = i;
         if (cellset.cellOrdinal() === cellOrdinal) {
           column = measureColumns[column];
           values[column.index] = cellset.cellValue();
@@ -403,9 +409,32 @@ var DataTable;
         }
         i++;
       }
-
       cells.push(values);
-    }, this);
+    }
+    else {
+      primaryAxis.eachTuple(function(tuple){
+        var members = tuple.members, i, member, column, cellOrdinal, values = [];
+        values.length = columns.length;
+        for (i = 0; i < n; i++){
+          member = members[i];
+          column = columnAxisInfo[i][member.LNum];
+          values[column.index] = member.Caption;
+        }
+
+        i = 0;
+        for (column in measureColumns){
+          cellOrdinal = tuple.index * m + i;
+          if (cellset.cellOrdinal() === cellOrdinal) {
+            column = measureColumns[column];
+            values[column.index] = cellset.cellValue();
+            cellset.nextCell();
+          }
+          i++;
+        }
+
+        cells.push(values);
+      }, this);
+    }
 
     var data = {
       columns: columns,
@@ -463,50 +492,34 @@ var XavierTableTab;
       //rewrite query if necessary
       //if the query includes measures, then we want those on the column axis,
       //and all others on the row axis.
-      var undowRewrite;
+      var rowAxis;
       if (columnAxis.hasHierarchy("Measures")) {
-        undowRewrite = true;
-        var indexOfMeasures = columnAxis.getHierarchyIndex("Measures");
-        var measures = columnAxis.hierarchies.splice(indexOfMeasures, 1);
-        measures = measures[0];
-        var newAxis = new QueryDesignerAxis({
-          id: Xmla.Dataset.AXIS_COLUMNS,
-          queryDesigner: this,
-          _dummy: true
-        });
-        newAxis.hierarchies.push(measures);
-        newAxis.setDefs = columnAxis.setDefs;
-
-        var dom = columnAxis.getDom();
-        columnAxis.conf.id = Xmla.Dataset.AXIS_ROWS;
-        dom.id = columnAxis.getId();
-
-        this.axes[Xmla.Dataset.AXIS_ROWS] = columnAxis;
-        this.axes[Xmla.Dataset.AXIS_COLUMNS] = newAxis;
-      }
-      else {
-        undowRewrite = false;
+        var measuresIndex = columnAxis.getHierarchyIndex("Measures");
+        this.fireEvents(false);
+        this.updateDom(false);
+        //create new dummy axis
+        rowAxis = this.createAxis({id: Xmla.Dataset.AXIS_ROWS});
+        //move the measures to the new axis
+        this.moveHierarchy("Measures", columnAxis, rowAxis);
+        //swap axes. Measures is now on columns, dimensions on rows.
+        this.swapAxes(columnAxis, rowAxis);
       }
 
       //rely on the prototypes method to actually generate MDX
       var mdx = QueryDesigner.prototype.getMdx.call(this, cubeName);
 
       //undo rewrite query if necessary
-      if (undowRewrite === true) {
-        newAxis.destroy();
-        columnAxis = this.axes[Xmla.Dataset.AXIS_ROWS];
-        columnAxis.hierarchies.splice(indexOfMeasures, 0, measures);
-
-        var dom = columnAxis.getDom();
-        columnAxis.conf.id = Xmla.Dataset.AXIS_COLUMNS;
-        var id = columnAxis.getId();
-        dom.id = id;
-        QueryDesignerAxis.instances[id] = columnAxis;
-        this.axes[Xmla.Dataset.AXIS_COLUMNS] = columnAxis;
-        delete this.axes[Xmla.Dataset.AXIS_ROWS];
+      if (rowAxis) {
+        //move the measures hierarchy back and remove the new axis.
+        this.moveHierarchy("Measures", rowAxis, columnAxis, measuresIndex);
+        this.swapAxes(columnAxis, rowAxis);
+        rowAxis.destroy();
+        this.fireEvents(true);
+        this.updateDom(true);
       }
       return mdx;
     };
+
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
         if (this.getAutoRunEnabled()) {
