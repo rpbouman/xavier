@@ -97,7 +97,7 @@ var XlsxExporter;
     var sharedStrings = this.sharedStrings, xml = "";
     var i, n = sharedStrings.length;
     for (i = 0; i < n; i++) {
-      xml += "<si><t>" + escXml(sharedStrings[i]) + "</t></si>";
+      xml += "<si><t>" + escXml(String(sharedStrings[i])) + "</t></si>";
     }
     return [
       "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>",
@@ -211,7 +211,6 @@ var XlsxExporter;
     var sharedString = this.sharedStrings = [];
     var dataset = pivotTable.getDataset();
     if (dataset) {
-      var me = this;
       var columnsOffset = 1, rowOffset = 1;
       var rowAxis, columnAxis;
       if (dataset.hasRowAxis()) {
@@ -230,13 +229,13 @@ var XlsxExporter;
           columnAxis.eachTuple(function(tuple){
             member = tuple.members[hierarchy.index];
             caption = member[Xmla.Dataset.Axis.MEMBER_CAPTION];
-            ref = me.getColumnAddress(columnsOffset + tuple.index) + String(hierarchy.index + 1);
+            ref = this.getColumnAddress(columnsOffset + tuple.index) + String(hierarchy.index + 1);
             rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-            rowsXml.push(me.getSharedString(caption));
+            rowsXml.push(this.getSharedString(caption));
             rowsXml.push("</c>");
-          });
+          }, this);
           rowsXml.push("</row>");
-        });
+        }, this);
       }
 
       //render the cell set
@@ -258,14 +257,14 @@ var XlsxExporter;
           rowAxis.eachHierarchy(function(hierarchy){
             member = tuple.members[hierarchy.index];
             caption = escXml(member[Xmla.Dataset.Axis.MEMBER_CAPTION]);
-            ref = me.getColumnAddress(hierarchy.index + 1) + String(rowOffset + tuple.index);
+            ref = this.getColumnAddress(hierarchy.index + 1) + String(rowOffset + tuple.index);
             rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-            rowsXml.push(me.getSharedString(caption));
+            rowsXml.push(this.getSharedString(caption));
             rowsXml.push("</c>");
-          });
+          }, this);
           if (hasMoreCells && ordinal >= minOrdinal && ordinal < maxOrdinal) {
             do {
-              ref = me.getColumnAddress(columnsOffset + (ordinal - minOrdinal));
+              ref = this.getColumnAddress(columnsOffset + (ordinal - minOrdinal));
               ref += String(rowOffset + tuple.index);
               type = "n";
               rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
@@ -275,7 +274,7 @@ var XlsxExporter;
             } while ((hasMoreCells = (ordinal !== -1)) && ordinal < maxOrdinal);
           }
           rowsXml.push("</row>");
-        });
+        }, this);
       }
       else {
         //either a column axis, or no column axis.
@@ -283,13 +282,56 @@ var XlsxExporter;
         type = "n";
         rowsXml.push("<row>");
         cellSet.eachCell(function(cell){
-          ref = me.getColumnAddress(columnsOffset + cell.ordinal) + String(rowOffset);
+          ref = this.getColumnAddress(columnsOffset + cell.ordinal) + String(rowOffset);
           rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
           rowsXml.push("<v>" + cell.Value + "</v>");
           rowsXml.push("</c>");
-        });
+        }, this);
         rowsXml.push("</row>");
       }
+    }
+    this.rowsXml = rowsXml.join("");
+  },
+  exportDataTable: function(dataTable){
+    var rowsXml = [];
+    var mergedCells = this.mergedCells = [];
+    var sharedString = this.sharedStrings = [];
+    var dataset = dataTable.getDataset();
+    if (dataset) {
+      var columns = [];
+      var dataGrid = dataTable.getDataGrid();
+      rowsXml.push("<row>");
+      dataGrid.eachColumn(function(i, column){
+        columns.push(column);
+        var ref = this.getColumnAddress(i+1) + String(1), type = "s", style = "0";
+        rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+        rowsXml.push(this.getSharedString(column.label || column.name));
+        rowsXml.push("</c>");
+      }, this);
+      rowsXml.push("</row>");
+
+      dataGrid.eachRow(function(i, rowValues, cellValues){
+        rowsXml.push("<row>");
+        var numRowHeaders = rowValues ? rowValues.length.length : 0;
+        for (j = 0; j < numRowHeaders; j++) {
+          var ref = this.getColumnAddress(j+1) + String(i+2), type = "s", style = "0";
+          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+          rowsXml.push(this.getSharedString(rowValues[j]));
+          rowsXml.push("</c>");
+        }
+        var value;
+        for (j = 0; j < cellValues.length; j++) {
+          value = cellValues[j];
+          if (iUnd(value)) {
+            continue;
+          }
+          var ref = this.getColumnAddress(numRowHeaders + j + 1) + String(numRowHeaders + 2 + i), type = "s", style = "0";
+          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+          rowsXml.push(this.getSharedString(value));
+          rowsXml.push("</c>");
+        }
+        rowsXml.push("</row>");
+      }, this)
     }
     this.rowsXml = rowsXml.join("");
   },
@@ -320,9 +362,13 @@ var XlsxExporter;
     return "data:" + mimetype + ";base64," + encodeURIComponent(this.jsZip.generate());
     //window.open(this.getContent());
   },
-  export: function(name, object){
-    if (object instanceof PivotTable) {
-      this.exportPivotTable(object);
+  export: function(name, visualizer, queryDesigner){
+    if (visualizer instanceof PivotTable) {
+      this.exportPivotTable(visualizer, queryDesigner);
+    }
+    else
+    if (visualizer instanceof DataTable) {
+      this.exportDataTable(visualizer, queryDesigner);
     }
     else {
       throw "Don't know how to export this type of object.";

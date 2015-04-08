@@ -16,6 +16,7 @@ limitations under the License.
 
 */
 var XavierTabPane;
+var DataTable;
 
 (function(){
 
@@ -330,7 +331,6 @@ var XavierWelcomeTab;
 };
 adopt(XavierWelcomeTab, XavierTab);
 
-var DataTable;
 (DataTable = function(){
   this.initDataGrid();
 }).prototype = {
@@ -343,6 +343,9 @@ var DataTable;
       label: "Row",
       isAutoRowNum: true
     }]);
+  },
+  getDataGrid: function(){
+    return this.dataGrid;
   },
   getDom: function(){
     return this.dataGrid.getDom();
@@ -383,6 +386,9 @@ var DataTable;
       }
     }
     return columns
+  },
+  getDataset: function(){
+    return this.dataset;
   },
   renderDataset: function(dataset, queryDesigner){
     if (this.dataset) {

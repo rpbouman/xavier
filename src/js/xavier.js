@@ -118,7 +118,7 @@ xmlaTreeView.listen({
   },
   error: function(xmlaTreeView, event, error){
     busy(false);
-    showAlert(error.toString() || error.message);
+    showAlert("Unexpected Error", error.toString() || error.message);
     console.error(error.getStackTrace());
   },
   cubeSelected: function(xmlaTreeView, event, cubeTreeNode){
@@ -528,23 +528,25 @@ function exportToExcel(){
       name += axisDescription(by);
     }
 
-    vs = axes[vs];
-    if (vs.length) {
-      if (hasBy) {
-        name += " vs ";
+    if (vs) {
+      vs = axes[vs];
+      if (vs && vs.length) {
+        if (hasBy) {
+          name += " vs ";
+        }
+        else {
+          name += " by ";
+        }
+        name += axisDescription(vs);
       }
-      else {
-        name += " by ";
-      }
-      name += axisDescription(vs);
     }
 
     slicer = axes["SlicerAxis"];
-    if (slicer.length) {
+    if (slicer && slicer.length) {
       name += " for a selection of " + axisDescription(slicer);
     }
 
-    xlsxExporter.export(name, visualizer);
+    xlsxExporter.export(name, visualizer, queryDesigner);
   }
   catch (exception){
     showAlert("Export Error", exception);
