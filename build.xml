@@ -20,6 +20,7 @@
 
   <property name="webapps.dir"  location="/home/roland/apache-tomcat-7.0.56/webapps"/>
   <property name="tomcat-deploy.dir"  location="${webapps.dir}/${ant.project.name}"/>
+  <property name="jasper.webapps.dir"  location="/home/roland/jasperreports-server-cp-6.0.1/apache-tomcat/webapps"/>
 
   <property name="icCube.dir"  location="/home/roland/icCube-4.8.2"/>
   <property name="icCube.web.dir"  location="${icCube.dir}/web"/>
@@ -140,6 +141,10 @@
 
   <target name="deploy-tomcat" depends="dist" description="deploy distribution">
     <unzip src="${dist}/${ant.project.name}.zip" dest="${webapps.dir}"/>
+  </target>
+
+  <target name="deploy-jasper" depends="dist" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${jasper.webapps.dir}"/>
   </target>
 
   <target name="startup" depends="shutdown">
