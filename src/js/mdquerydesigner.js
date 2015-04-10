@@ -27,6 +27,9 @@ var QueryDesigner;
     this.conf = conf;
     this.axes = {};
     this.createAxes();
+    if (iFun(conf.getMdx)) {
+      this.getMdx = conf.getMdx;
+    }
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
   fireEvents: function(flag){
@@ -191,6 +194,9 @@ var QueryDesigner;
   },
   moveHierarchy: function(hierarchyName, fromAxis, toAxis, toIndex) {
     toAxis.importHierarchy(fromAxis, hierarchyName, toIndex);
+  },
+  moveMeasures: function(fromAxis, toAxis, toIndex){
+    return this.moveHierarchy("Measures", fromAxis, toAxis, toIndex);
   },
   addAxis: function(axis) {
     var id = axis.conf.id;
@@ -502,7 +508,15 @@ var QueryDesignerAxis;
     conf.canBeEmpty = canBeEmpty;
     c.innerHTML = conf.label || label;
 
-    if (canBeEmpty) {
+    var hasEmptyCheckBox;
+    if (iDef(conf.hasEmptyCheckBox)) {
+      hasEmptyCheckBox = Boolean(conf.hasEmptyCheckBox);
+    }
+    else {
+      hasEmptyCheckBox = true;
+    }
+
+    if (canBeEmpty && hasEmptyCheckBox !== false) {
       var nonEmptyCheckbox = cEl("INPUT", {
         id: id + "-empty-checkbox",
         "class": "show-empty",
@@ -546,6 +560,10 @@ var QueryDesignerAxis;
       }, setDef.caption, c);
     }
   },
+  getHierarchyClassName: function(hierarchy) {
+    var hierarchyName = this.getHierarchyName(hierarchy);
+    return hierarchyName === "Measures" ? "measures" : "hierarchy";
+  },
   updateDomVertical: function() {
     var hierarchies = this.hierarchies,
         hierarchy, hierarchyName,
@@ -569,7 +587,7 @@ var QueryDesignerAxis;
       c = r1.insertCell(r1.cells.length);
       c.id = hierarchyName;
       c.innerHTML = this.getHierarchyCaption(hierarchy);
-      c.className = this.getHierarchyName(hierarchy) === "Measures" ? "measures" : "hierarchy";
+      c.className = this.getHierarchyClassName(hierarchy);
       c = r2.insertCell(r2.cells.length);
 
       this.updateDomSetDefs(hierarchyName, c);
@@ -597,7 +615,7 @@ var QueryDesignerAxis;
       c = r.insertCell(0);
       c.id = hierarchyName;
       c.innerHTML = this.getHierarchyCaption(hierarchy);
-      c.className = this.getHierarchyName(hierarchy) === "Measures" ? "measures" : "hierarchy";
+      c.className = this.getHierarchyClassName(hierarchy);
 
       c = r.insertCell(1);
       this.updateDomSetDefs(hierarchyName, c);
@@ -613,6 +631,9 @@ var QueryDesignerAxis;
   hasHierarchy: function(hierarchy) {
     return this.getHierarchyIndex(hierarchy) !== -1;
   },
+  hasMeasures: function(){
+    return this.hasHierarchy("Measures");
+  },
   getHierarchyIndex: function(name) {
     for (var h = this.hierarchies, i = 0, n = h.length; i < n; i++){
       if (this.getHierarchyName(h[i]) === name) {
@@ -620,6 +641,9 @@ var QueryDesignerAxis;
       }
     }
     return -1;
+  },
+  getMeasuresIndex: function(){
+    return this.getHierarchyIndex("Measures");
   },
   getHierarchyIndexForTd: function(td) {
     td = gAnc(td, "TD");
@@ -803,6 +827,9 @@ var QueryDesignerAxis;
     return null;
   },
   getHierarchyCaption: function(hierarchy) {
+    if (iStr(hierarchy)) {
+      hierarchy = this.getHierarchyByName(hierarchy);
+    }
     if (hierarchy.HIERARCHY_CAPTION) {
       return hierarchy.HIERARCHY_CAPTION;
     }
@@ -1312,7 +1339,9 @@ var QueryDesignerAxis;
         var nonEmpty = false;
         if (conf.canBeEmpty === true) {
           var emptyCheckBox = gEl(this.getId() + "-empty-checkbox");
-          nonEmpty = emptyCheckBox && !emptyCheckBox.checked;
+          if (emptyCheckBox) {
+            nonEmpty = emptyCheckBox && !emptyCheckBox.checked;
+          }
         }
         else {
           nonEmpty = true;

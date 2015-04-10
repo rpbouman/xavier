@@ -490,6 +490,49 @@ var XavierTableTab;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("New Table"),
+  getMdx: function(cubeName){
+    var columnAxis = this.getColumnAxis();
+
+    //rewrite query if necessary
+    //if the query includes measures, then we want those on the column axis,
+    //and all others on the row axis.
+    var rowAxis;
+    if (columnAxis.hasMeasures()) {
+      var measuresIndex = columnAxis.getMeasuresIndex();
+      this.fireEvents(false);
+      this.updateDom(false);
+      //create new dummy axis
+      rowAxis = this.createAxis({id: Xmla.Dataset.AXIS_ROWS});
+      //move the measures to the new axis
+      this.moveMeasures(columnAxis, rowAxis);
+      //swap axes. Measures is now on columns, dimensions on rows.
+      this.swapAxes(columnAxis, rowAxis);
+    }
+
+    //rely on the prototypes method to actually generate MDX
+    var mdx = QueryDesigner.prototype.getMdx.call(this, cubeName);
+
+    //undo rewrite query if necessary
+    if (rowAxis) {
+      //move the measures hierarchy back and remove the new axis.
+      this.moveMeasures(rowAxis, columnAxis, measuresIndex);
+      this.swapAxes(columnAxis, rowAxis);
+      rowAxis.destroy();
+      this.fireEvents(true);
+      this.updateDom(true);
+    }
+    return mdx;
+  },
+  _getMdx: function(cubeName) {
+    //for each hierarchy
+    //  find the lowest level (the one with the highest LNum)
+    //  replace any higher level with a calculated measure that gets the member caption at that level
+    var columnAxis = this.getColumnAxis();
+    columnAxis.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
+      var hierarchyName = this.getHierarchyName(hierarchy);
+    }, this);
+    return this._getMdx(cubeName);
+  },
   initQueryDesigner: function(dom){
     var queryDesigner = this.queryDesigner = new QueryDesigner({
       container: cEl("DIV", {
@@ -502,6 +545,7 @@ var XavierTableTab;
           classes: ["columns"],
           tooltip: gMsg("Items on this axis are used to generate columns for the table"),
           mandatory: true,
+          hasEmptyCheckBox: false,
           drop: {
             include: ["level", "measure"]
           }
@@ -515,41 +559,9 @@ var XavierTableTab;
             include: "member"
           }
         }
-      ]
+      ],
+      getMdx: this.getMdx
     });
-    queryDesigner.getMdx = function(cubeName){
-      var columnAxis = this.getColumnAxis();
-
-      //rewrite query if necessary
-      //if the query includes measures, then we want those on the column axis,
-      //and all others on the row axis.
-      var rowAxis;
-      if (columnAxis.hasHierarchy("Measures")) {
-        var measuresIndex = columnAxis.getHierarchyIndex("Measures");
-        this.fireEvents(false);
-        this.updateDom(false);
-        //create new dummy axis
-        rowAxis = this.createAxis({id: Xmla.Dataset.AXIS_ROWS});
-        //move the measures to the new axis
-        this.moveHierarchy("Measures", columnAxis, rowAxis);
-        //swap axes. Measures is now on columns, dimensions on rows.
-        this.swapAxes(columnAxis, rowAxis);
-      }
-
-      //rely on the prototypes method to actually generate MDX
-      var mdx = QueryDesigner.prototype.getMdx.call(this, cubeName);
-
-      //undo rewrite query if necessary
-      if (rowAxis) {
-        //move the measures hierarchy back and remove the new axis.
-        this.moveHierarchy("Measures", rowAxis, columnAxis, measuresIndex);
-        this.swapAxes(columnAxis, rowAxis);
-        rowAxis.destroy();
-        this.fireEvents(true);
-        this.updateDom(true);
-      }
-      return mdx;
-    };
 
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
