@@ -16,21 +16,32 @@ limitations under the License.
 
 */
 var xmlaUrl;
-var uri = parseUri(document.location);
-xmlaUrl = uri[parseUri.options.q.name]["XmlaUrl"];
 
-if (!xmlaUrl) {
-  //if we reach this point, we are probably running as a plugin inside pentaho
-  //so, dynamically find the url of the Pentaho Xmla provider
-  var index;
-  if ((index = document.location.href.indexOf("content/xavier/resources/html/index.html")) !== -1) {
-    xmlaUrl = document.location.href.substr(0, index) + "Xmla";
+(function() {
+  var uri = parseUri(document.location);
+  var _xmlaUrl = uri[parseUri.options.q.name]["XmlaUrl"];
+  if (typeof(_xmlaUrl) !== "undefined") {
+    xmlaUrl = _xmlaUrl;
   }
-  else
-  if ((index = document.location.href.indexOf("xavier/resources/html/index.html"))) {
-    xmlaUrl = document.location.href.substr(0, index) + "icCube/xmla";
+})();
+
+if (typeof(xmlaUrl) === "undefined") {
+
+
+  if (!xmlaUrl) {
+    //if we reach this point, we are probably running as a plugin inside pentaho
+    //so, dynamically find the url of the Pentaho Xmla provider
+    var index;
+    if ((index = document.location.href.indexOf("content")) !== -1) {
+      xmlaUrl = document.location.href.substr(0, index) + "Xmla";
+    }
+    else
+    if ((index = document.location.href.indexOf("xavier/resources/html/index.html"))) {
+      xmlaUrl = document.location.href.substr(0, index) + "icCube/xmla";
+    }
+    else {
+      alert("Could not determine XmlaUrl. Exiting.");
+    }
   }
-  else {
-    alert("Could not determine XmlaUrl. Exiting.");
-  }
+
 }
