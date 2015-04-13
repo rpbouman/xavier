@@ -33,10 +33,15 @@ var QueryDesigner;
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
   fireEvents: function(flag){
-    this.eachAxis(function(id, axis){
-      axis.fireEvents(flag);
-    }, this);
-    Observable.prototype.fireEvents.call(this, flag);
+    if (arguments.length) {
+      this.eachAxis(function(id, axis){
+        axis.fireEvents(flag);
+      }, this);
+      Observable.prototype.fireEvents.call(this, flag);
+    }
+    else {
+      return Observable.prototype.fireEvents.call(this);
+    }
   },
   destroy: function(){
     this.unlisten();
@@ -161,8 +166,11 @@ var QueryDesigner;
     for (i = 0; i < n; i++) {
       id = ids[i];
       axis = axes[id];
-      callback.call(scope, id, axis, i);
+      if (callback.call(scope, id, axis, i) === false) {
+        return false;
+      };
     }
+    return true;
   },
   swapAxes: function(axis1, axis2) {
     var id1 = axis1.conf.id;
@@ -207,12 +215,14 @@ var QueryDesigner;
     axis.listen("changed", this.axisChanged, this);
   },
   removeAxis: function(axis){
-    var id = axis.conf.id;
-    if (this.hasAxis(id)) {
-      throw "Axis with id " + id + " already exists.";
+    if (!this.hasAxis(axis)) {
+      throw "No such axis";
+    }
+    if (iInt(axis) || iStr(axis)) {
+      axis = this.getAxis(axis);
     }
     axis.unlisten("changed", this.axisChanged, this);
-    delete this.axes[id];
+    delete this.axes[axis.conf.id];
   },
   createAxis: function(conf) {
     conf = merge(conf, {
@@ -220,9 +230,7 @@ var QueryDesigner;
       layout: QueryDesignerAxis.layouts.horizontal
     });
     var axis = new QueryDesignerAxis(conf);
-    if (this.fireEvents === false) {
-      axis.fireEvents(false);
-    }
+    axis.fireEvents(this.fireEvents());
     this.addAxis(axis);
     return axis;
   },
@@ -242,8 +250,22 @@ var QueryDesigner;
     }
     return axis;
   },
-  hasAxis: function(id){
-    return Boolean(this.axes[id]);
+  hasAxis: function(axis){
+    if (iInt(axis) || iStr(axis)) {
+      return Boolean(this.axes[axis]);
+    }
+    else
+    if (axis instanceof QueryDesignerAxis){
+      var id = axis.conf.id;
+      var myAxis = this.axes[id];
+      if (myAxis && myAxis === axis) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+    throw "Invalid argument";
   },
   hasColumnAxis: function(){
     return this.hasAxis(Xmla.Dataset.AXIS_COLUMNS);
@@ -368,9 +390,13 @@ var QueryDesigner;
     return gEl(this.conf.container);
   },
   getMdx: function(cubeName){
-    var mdx = "", gap = false, slicerMdx;
+    var mdx = "", withClauseMdx = "", gap = false, slicerMdx;
     if (this.eachAxis(function(id, axis){
       var axisMdx = "", isSlicer = axis.isSlicerAxis();
+      var calculatedMembersMdx = axis.getCalculatedMembersMdx();
+      if (calculatedMembersMdx) {
+        withClauseMdx += calculatedMembersMdx;
+      }
       axisMdx = axis.getMdx();
       if (isSlicer) {
         slicerMdx = axisMdx;
@@ -399,6 +425,9 @@ var QueryDesigner;
     mdx = "SELECT " + mdx + "\nFROM   [" + cubeName + "]";
     if (slicerMdx) {
       mdx += "\nWHERE " + slicerMdx;
+    }
+    if (withClauseMdx) {
+      mdx = "WITH" + withClauseMdx + "\n" + mdx;
     }
     return mdx;
   },
@@ -634,6 +663,10 @@ var QueryDesignerAxis;
   hasMeasures: function(){
     return this.hasHierarchy("Measures");
   },
+  isMeasureHierarchy: function(hierarchy){
+    var hierarchyName = this.getHierarchyName(hierarchy);
+    return hierarchyName === "Measures";
+  },
   getHierarchyIndex: function(name) {
     for (var h = this.hierarchies, i = 0, n = h.length; i < n; i++){
       if (this.getHierarchyName(h[i]) === name) {
@@ -796,14 +829,18 @@ var QueryDesignerAxis;
     }
     return null;
   },
+  stripBracesFromIdentifier: function(identifier){
+    if (identifier.charAt(0) === "[" && identifier.charAt(identifier.length-1) === "]") {
+      identifier = identifier.substr(1, identifier.length-2);
+    }
+    return identifier;
+  },
   getDefaultMemberCaption: function(hierarchy) {
     var defaultMember = hierarchy.DEFAULT_MEMBER;
     if (!defaultMember || !defaultMember.indexOf(hierarchy.HIERARCHY_UNIQUE_NAME) + ".") {
       defaultMember = defaultMember.substr(hierarchy.HIERARCHY_UNIQUE_NAME.length + 1);
     }
-    if (defaultMember[0]==="[" && defaultMember[defaultMember.length-1]==="]") {
-      defaultMember = defaultMember.substr(1, defaultMember.length-2);
-    }
+    defaultMember = this.stripBracesFromIdentifier(defaultMember);
     return defaultMember;
   },
   getMemberCaption: function(metadata) {
@@ -819,9 +856,7 @@ var QueryDesignerAxis;
     var caption;
     if (metadata.DEFAULT_MEMBER) {
       caption = metadata.DEFAULT_MEMBER.substr(metadata.HIERARCHY_UNIQUE_NAME.length + 1);
-      if (caption[0] === "[") {
-        caption = caption.substr(1, caption.length - 2);
-      }
+      caption = this.stripBracesFromIdentifier(caption);
       return caption;
     }
     return null;
@@ -834,9 +869,7 @@ var QueryDesignerAxis;
       return hierarchy.HIERARCHY_CAPTION;
     }
     var name = this.getHierarchyName(hierarchy);
-    if (/^\[[^\]]+\]$/.test(name)) {
-      name = name.substr(1, name.length - 2);
-    }
+    name = this.stripBracesFromIdentifier(name);
     return name;
   },
   getHierarchyName: function(hierarchy) {
@@ -1146,6 +1179,9 @@ var QueryDesignerAxis;
       case "measure":
         caption = metadata.MEASURE_CAPTION;
         break;
+      case "calculated-member":
+        caption = metadata.CAPTION;
+        break;
     }
     return {
       expression: expression,
@@ -1155,16 +1191,14 @@ var QueryDesignerAxis;
     };
   },
   _addMember: function(memberIndex, requestType, metadata) {
-    var memberInfo = this.getMemberInfo(requestType, metadata),
-        hierarchyName = this.getHierarchyName(metadata),
-        hierarchyIndex = this.getHierarchyIndex(hierarchyName),
-        layout = this.getLayout(),
-        dom = this.getDom(),
-        r,c,memberList
+    var hierarchyName = this.getHierarchyName(metadata),
+        hierarchyIndex = this.getHierarchyIndex(hierarchyName)
     ;
     if (hierarchyIndex === -1) {
-      throw "Hierarchy not present in this axis";
+      //throw "Hierarchy not present in this axis";
+      this._addHierarchy(this.getHierarchyCount(), metadata);
     }
+    var memberInfo = this.getMemberInfo(requestType, metadata);
     this.getSetDefs(hierarchyName).splice(memberIndex + 1, 0, memberInfo);
     this.updateDom();
   },
@@ -1306,74 +1340,95 @@ var QueryDesignerAxis;
       }
     }
   },
-  getMdx: function(defaultSet) {
-    var conf = this.conf,
-        hierarchies = this.hierarchies, i, n = hierarchies.length,
-        hierarchy, hierarchyName, minLevel, maxLevel,
-        setDefs = this.setDefs, setDef, member, members,
-        queryDesigner = this.getQueryDesigner(),
-        mdx = "";
-    ;
-    for (i = 0; i < n; i++) {
-      minLevel = null, maxLevel = null;
-      hierarchy = hierarchies[i];
-      hierarchyName = this.getHierarchyName(hierarchy);
-      setDef = setDefs[hierarchyName];
-      for (j = 0, m = setDef.length, members = ""; j < m; j++) {
+  getIntrinsicPropertiesMdx: function(){
+    var mdx = "";
+    var myIntrinsicProperties = this.conf.intrinsicProperties;
+    if (myIntrinsicProperties) {
+      var intrinsicProperties;
+      if (iStr(myIntrinsicProperties)) {
+        intrinsicProperties = myIntrinsicProperties;
+      }
+      else
+      if (iArr(myIntrinsicProperties)) {
+        intrinsicProperties = myIntrinsicProperties.join(", ");
+      }
+      else
+      if (iObj(myIntrinsicProperties)){
+        intrinsicProperties = "";
+        var intrinsicProperty
+        for (intrinsicProperty in myIntrinsicProperties) {
+          if (intrinsicProperties.length) {
+            intrinsicProperties += ", ";
+          }
+          intrinsicProperties += intrinsicProperty;
+        }
+      }
+      mdx += " DIMENSION PROPERTIES " + intrinsicProperties;
+    }
+    return mdx;
+  },
+  getNonEmptyClauseMdx: function(){
+    var conf = this.conf, nonEmpty = false;
+    if (conf.canBeEmpty === true) {
+      var emptyCheckBox = gEl(this.getId() + "-empty-checkbox");
+      if (emptyCheckBox) {
+        nonEmpty = emptyCheckBox && !emptyCheckBox.checked;
+      }
+    }
+    else {
+      nonEmpty = true;
+    }
+    var mdx;
+    if (nonEmpty) {
+      mdx = "NON EMPTY ";
+    }
+    else {
+      mdx = "";
+    }
+    return mdx;
+  },
+  getOnAxisClauseMdx: function(){
+    var conf = this.conf;
+    return " ON Axis(" + this.conf.id + ")";
+  },
+  getCalculatedMembersMdx: function(){
+    var mdx = "";
+    this.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
+      if (setDef.type !== "calculated-member") {
+        return;
+      }
+      var metadata = setDef.metadata;
+      mdx += "\nMEMBER " + metadata.MEMBER_UNIQUE_NAME + " AS " + metadata.calculation;
+    }, this);
+    return mdx;
+  },
+  getMemberSetMdx: function(){
+    var mdx = "";
+    this.eachHierarchy(function(hierarchy, hierarchyIndex){
+      var members = "";
+      this.eachSetDef(function(setDef, setDefIndex){
         if (members.length) {
           members += ", ";
         }
-        members += setDef[j].expression;
+        members += setDef.expression;
+      }, this, hierarchy);
+      members = "{" + members + "}";
+      if (!this.isMeasureHierarchy(hierarchy) && !this.isSlicerAxis()) {
+        members = "Hierarchize(" + members + ")";
       }
-      setDef = "{" + members + "}";
-      if (hierarchyName !== "Measures" && !this.isSlicerAxis()) {
-        setDef = "Hierarchize(" + setDef + ")";
-      }
-      mdx = mdx ? "CrossJoin(" + mdx + ", " + setDef + ")" : setDef;
-    }
+      mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
+    }, this);
+    return mdx;
+  },
+  getMdx: function(defaultSet) {
+    var mdx = this.getMemberSetMdx();
     if (!mdx.length && defaultSet) {
       mdx = defaultSet;
     }
-    if (conf.id !== Xmla.Dataset.AXIS_SLICER) {
-      if (mdx.length) {
-        var nonEmpty = false;
-        if (conf.canBeEmpty === true) {
-          var emptyCheckBox = gEl(this.getId() + "-empty-checkbox");
-          if (emptyCheckBox) {
-            nonEmpty = emptyCheckBox && !emptyCheckBox.checked;
-          }
-        }
-        else {
-          nonEmpty = true;
-        }
-        if (nonEmpty) {
-          mdx = "NON EMPTY " + mdx;
-        }
-        var myIntrinsicProperties = this.conf.intrinsicProperties;
-        if (myIntrinsicProperties) {
-          var intrinsicProperties;
-          if (iStr(myIntrinsicProperties)) {
-            intrinsicProperties = myIntrinsicProperties;
-          }
-          else
-          if (iArr(myIntrinsicProperties)) {
-            intrinsicProperties = myIntrinsicProperties.join(", ");
-          }
-          else
-          if (iObj(myIntrinsicProperties)){
-            intrinsicProperties = "";
-            var intrinsicProperty
-            for (intrinsicProperty in myIntrinsicProperties) {
-              if (intrinsicProperties.length) {
-                intrinsicProperties += ", ";
-              }
-              intrinsicProperties += intrinsicProperty;
-            }
-          }
-          mdx += " DIMENSION PROPERTIES " + intrinsicProperties;
-        }
-        mdx += " ON Axis(" + this.conf.id + ")";
-      }
+    if (!this.isSlicerAxis() && mdx.length) {
+      mdx = this.getNonEmptyClauseMdx() + mdx;
+      mdx += this.getIntrinsicPropertiesMdx();
+      mdx += this.getOnAxisClauseMdx();
     }
     return mdx;
   },
