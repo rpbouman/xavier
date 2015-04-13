@@ -413,15 +413,21 @@ adopt(XavierWelcomeTab, XavierTab);
       }
     }
 
-    var axis, cellset;
+    var axis, cellset, onlyMeasures;
     if (dataset.hasRowAxis()){
       axis = dataset.getRowAxis();
       cellset = dataset.getCellset();
+      onlyMeasures = false;
     }
     else {
       axis = dataset.getColumnAxis();
-      if (queryDesigner.getColumnAxis().hasMeasures()){
+      var columnAxis = queryDesigner.getColumnAxis();
+      if (columnAxis.hasMeasures()){
         cellset = dataset.getCellset();
+        onlyMeasures = columnAxis.getHierarchyCount() === 1;
+      }
+      else {
+        onlyMeasures = false;
       }
     }
 
@@ -436,6 +442,9 @@ adopt(XavierWelcomeTab, XavierTab);
         if (cellset.cellOrdinal() === cellOrdinal++) {
           values[cellmap[i]] = cellset.cellValue();
           cellset.nextCell();
+        }
+        if (i && onlyMeasures) {
+          axis.nextTuple();
         }
       }
       cells.push(values);
@@ -474,7 +483,8 @@ var XavierTableTab;
       //in principle, each item on the axis will become a column in the datagrid.
       dataGridColumns.push(dataGridColumn = {
         label: setDef.caption,
-        dataGridColumnIndex: dataGridColumns.length
+        dataGridColumnIndex: dataGridColumns.length,
+        isMeasure: false
       });
       setDef.dataGridColumn = dataGridColumn;
       oldSetDefs.push(setDef);
@@ -484,6 +494,8 @@ var XavierTableTab;
         //measure values will apper in cells,
         //so mark where we can find the cells for those datagrid columns
         dataGridColumn.cellIndex = cellIndex++;
+        dataGridColumn.classes = ["measure", "datatype" + setDef.metadata.DATA_TYPE];
+        dataGridColumn.isMeasure = true;
       }
       else {
         //make an inventory of the levels in the hierarchy.

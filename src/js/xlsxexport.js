@@ -319,16 +319,30 @@ var XlsxExporter;
           rowsXml.push(this.getSharedString(rowValues[j]));
           rowsXml.push("</c>");
         }
-        var value;
+        var value, column;
         for (j = 0; j < cellValues.length; j++) {
           value = cellValues[j];
           if (iUnd(value)) {
             continue;
           }
-          var ref = this.getColumnAddress(numRowHeaders + j + 1) + String(numRowHeaders + 2 + i), type = "s", style = "0";
-          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-          rowsXml.push(this.getSharedString(value));
-          rowsXml.push("</c>");
+          var ref = this.getColumnAddress(numRowHeaders + j + 1) + String(numRowHeaders + 2 + i),
+              type,
+              style = "0"
+          ;
+          column = dataGrid.getColumn(j)
+          if (column.isMeasure){
+            type = "n";
+            rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+            rowsXml.push("<v>" + value + "</v>");
+            rowsXml.push("</c>");
+          }
+          else {
+            type = "s";
+            value = this.getSharedString(value);
+            rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
+            rowsXml.push(value);
+            rowsXml.push("</c>");
+          }
         }
         rowsXml.push("</row>");
       }, this)

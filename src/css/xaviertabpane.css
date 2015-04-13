@@ -100,3 +100,7 @@ ul.chart-container, ul.chart-container > li {
   margin: 8px;
 }
 
+.xavier-tabpane .datagrid-cells td.measure {
+  text-align: right;
+}
+
