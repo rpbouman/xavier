@@ -523,15 +523,135 @@ var XavierTableTab;
     }
     return mdx;
   },
-  _getMdx: function(cubeName) {
+  getMdx: function(cubeName) {
     //for each hierarchy
     //  find the lowest level (the one with the highest LNum)
     //  replace any higher level with a calculated measure that gets the member caption at that level
     var columnAxis = this.getColumnAxis();
+    var oldSetDefs = [], hierarchies = {}, measures = [];
+
+    //
     columnAxis.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
-      var hierarchyName = this.getHierarchyName(hierarchy);
+      oldSetDefs.push(setDef);
+      var hierarchyName = columnAxis.getHierarchyName(hierarchy);
+      if (columnAxis.isMeasureHierarchy(hierarchy)) {
+        measures.push(setDef);
+      }
+      else {
+        //make an inventory of the levels in the hierarchy.
+        //we need to know what is the lowest level (highest level number)
+        //because we want to put that on the row axis.
+        //the remaining levels will be rewritten to calculated measures
+        //and will be placed on the column axis.
+        var hierarchyStat = hierarchies[hierarchyName];
+        if (!hierarchyStat) {
+          hierarchies[hierarchyName] = hierarchyStat = {
+            minLevel: Number.MAX_VALUE,
+            maxLevel: Number.MIN_VALUE,
+            setDefs: {}
+          };
+        }
+
+        var level = setDef.metadata.LEVEL_NUMBER;
+        if (level > hierarchyStat.maxLevel) {
+          hierarchyStat.maxLevel = level;
+        }
+        if (level < hierarchyStat.minLevel) {
+          hierarchyStat.minLevel = level;
+        }
+
+        hierarchyStat.setDefs[level] = setDef;
+      }
     }, this);
-    return this._getMdx(cubeName);
+
+    //
+    var rowAxisItems = [], calculatedMeasures = [], hierarchyStat, setDefs, setDef, level;
+    for (hierarchy in hierarchies) {
+      hierarchyStat = hierarchies[hierarchy];
+      setDefs = hierarchyStat.setDefs;
+
+      //grab the lowest level
+      setDef = setDefs[hierarchyStat.maxLevel];
+      //push it to the row axis.
+      rowAxisItems.push(setDef);
+      //remove it from the column axis.
+      delete setDefs[hierarchyStat.maxLevel];
+
+      //create a calculated measure for the other levels
+      for (level in setDefs){
+        setDef = setDefs[level];
+        calculatedMeasures.push(setDef);
+      }
+    }
+
+    //silence events and dom updates so we can rewrite the query.
+    this.fireEvents(false);
+    this.updateDom(false);
+
+    if (measures.length || calculatedMeasures.length){
+      //create new dummy axis
+      var rowAxis;
+      rowAxis = this.createAxis({id: Xmla.Dataset.AXIS_ROWS});
+      //move the measures to the new axis
+      if (columnAxis.hasMeasures()) {
+        this.moveMeasures(columnAxis, rowAxis);
+      }
+      var i, n = calculatedMeasures.length,
+          calculatedMeasure, metadata, hierarchyName, caption, expression
+      ;
+      for (i = 0; i < n; i++) {
+        calculatedMeasure = calculatedMeasures[i];
+        metadata = calculatedMeasure.metadata;
+        hierarchyName = rowAxis.getHierarchyName(metadata);
+        hierarchyName = rowAxis.stripBracesFromIdentifier(hierarchyName);
+        caption = hierarchyName + "." + metadata.LEVEL_NAME;
+        expression =  "Ancestor(" +
+                      " [" + hierarchyName + "].CurrentMember" +
+                      ",[" + hierarchyName + "].[" + metadata.LEVEL_NAME + "]" +
+                      //use explicit full property, .Caption is not supported by everyone (http://issues.iccube.com/issue/ic3pub-146)
+                      ").Properties(\"MEMBER_CAPTION\")"
+        ;
+        rowAxis.addMember(measures.length + i, "calculated-member", {
+          HIERARCHY_UNIQUE_NAME: "Measures",
+          MEMBER_UNIQUE_NAME: "[Measures].[" + caption + "]",
+          CAPTION: caption,
+          calculation: expression
+        });
+      }
+      //
+      columnAxis.clear();
+      n = rowAxisItems.length;
+      for (i = 0; i < n; i++) {
+        setDef = rowAxisItems[i];
+        columnAxis.addMember(i - 1, setDef.type, setDef.metadata);
+      }
+      //swap axes. Measures is now on columns, dimensions on rows.
+      this.swapAxes(columnAxis, rowAxis);
+    }
+
+    //rely on the prototypes method to actually generate MDX
+    var mdx = QueryDesigner.prototype.getMdx.call(this, cubeName);
+
+    if (measures.length || calculatedMeasures.length){
+
+      //restore the state of the query designer
+      this.swapAxes(columnAxis, rowAxis);
+      if (rowAxis) {
+        this.removeAxis(rowAxis);
+      }
+      columnAxis.clear();
+      n = oldSetDefs.length;
+      for (i = 0; i < n; i++){
+        setDef = oldSetDefs[i];
+        columnAxis.addMember(i-1, setDef.type, setDef.metadata);
+      }
+    }
+
+    this.fireEvents(true);
+    this.updateDom(true);
+
+    //
+    return mdx;
   },
   initQueryDesigner: function(dom){
     var queryDesigner = this.queryDesigner = new QueryDesigner({
