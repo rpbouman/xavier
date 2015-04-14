@@ -157,6 +157,7 @@ span.current-cube,
 /**
  * dimension type 1 (MD_DIMTYPE_TIME)
 **/
+.dimensiontype1-dragging,
 .tree > div.dimensiontype1 > div.head > span.toggle {
   background-image: url('../images/date_dimension_16x16.png');
 }
@@ -171,6 +172,12 @@ span.current-cube,
 .level-dragging,
 .tree .level > .head > .toggle {
   background-image: url('../images/level.png');
+}
+
+.tree .levelunicity1 > .head > .toggle,
+.tree .levelunicity2 > .head > .toggle,
+.tree .levelunicity3 > .head > .toggle {
+  background-image: url('../images/unique-level.png');
 }
 
 .property-dragging,
@@ -189,31 +196,37 @@ span.current-cube,
 }
 
 /* MDLEVEL_TYPE_TIME_YEARS 0x0014*/
+.leveltype20-dragging,
 .tree .leveltype20 > .head > .toggle {
   background-image: url('../mui/images/calendar_16x16.png');
 }
 
 /* MDLEVEL_TYPE_TIME_HALF_YEAR 0x0024*/
+.leveltype36-dragging,
 .tree .leveltype36 > .head > .toggle {
   background-image: url('../mui/images/calendar_16x16.png');
 }
 
 /* MDLEVEL_TYPE_TIME_QUARTERS 0x0044*/
+.leveltype68-dragging,
 .tree .leveltype68 > .head > .toggle {
   background-image: url('../mui/images/calendar_16x16.png');
 }
 
 /* MDLEVEL_TYPE_TIME_MONTHS 0x0084*/
+.leveltype132-dragging,
 .tree .leveltype132 > .head > .toggle {
   background-image: url('../mui/images/calendar_month_16x16.png');
 }
 
 /* MDLEVEL_TYPE_TIME_WEEKS 0x0104*/
+.leveltype260-dragging,
 .tree .leveltype260 > .head > .toggle {
   background-image: url('../mui/images/calendar_week_16x16.png');
 }
 
 /* MDLEVEL_TYPE_TIME_DAYS 0x0204*/
+.leveltype516-dragging,
 .tree .leveltype516 > .head > .toggle {
   background-image: url('../mui/images/calendar_day_16x16.png');
 }

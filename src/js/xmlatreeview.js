@@ -338,6 +338,43 @@ var XmlaTreeView;
   notifyEndDrag: function(event, dndHandler){
     this.getCubeTreePane().getDom().style.overflow = "";
   },
+  renderAllLevel: function(conf, level) {
+    var me = this;
+    var hierarchyTreeNode = conf.hierarchyTreeNode;
+    var idPostfix =  ":level:" + level.LEVEL_UNIQUE_NAME;
+    var levelTreeNode = TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix);
+    conf.levelTreeNode = levelTreeNode;
+    var hierarchyMetaData = hierarchyTreeNode.conf.metadata;
+    var url = conf.url;
+    var properties = {
+      DataSourceInfo: conf.dataSourceInfo,
+      Catalog: conf.catalog
+    };
+    var restrictions = {
+      CUBE_NAME: conf.cube,
+      HIERARCHY_UNIQUE_NAME: hierarchyMetaData.HIERARCHY_UNIQUE_NAME,
+      MEMBER_UNIQUE_NAME: hierarchyMetaData.ALL_MEMBER
+    };
+    this.xmla.discoverMDMembers({
+      url: url,
+      properties: properties,
+      restrictions: restrictions,
+      success: function(xmla, options, rowset){
+        //actually render the member tree nodes residing beneath the level tree nodes
+        rowset.eachRow(function(row){
+          me.renderLevelMemberNode(conf, row);
+        });
+        //done rendering member treenodes
+        conf.callback();
+        me.fireEvent("done");
+      },
+      error: function(xmla, options, error){
+        conf.callback();
+        me.fireEvent("error", error);
+      }
+    });
+
+  },
   renderChildMemberNodes: function(conf){
     var me = this;
     var url = conf.url;
@@ -407,7 +444,7 @@ var XmlaTreeView;
   },
   renderLevelMemberNode: function(conf, row){
     var me = this;
-    var membersTreeNode = conf.membersTreeNode;
+    var membersTreeNode = conf.membersTreeNode || conf.levelTreeNode;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
@@ -491,9 +528,14 @@ var XmlaTreeView;
     var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     var idPostfix =  ":level:" + row.LEVEL_UNIQUE_NAME;
+    var levelTreeNode = TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix);
     var id = hierarchyTreeNode.conf.id + idPostfix;
+    if (!levelTreeNode) {
+      //the level tree node might not have been created if it was marked as not visible
+      return;
+    }
     new TreeNode({
-      parentTreeNode: TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix),
+      parentTreeNode: levelTreeNode,
       classes: "property",
       id: id + ":property:" + row.PROPERTY_NAME,
       title: row.PROPERTY_CAPTION || row.PROPERTY_NAME,
@@ -523,7 +565,15 @@ var XmlaTreeView;
           me.renderLevelPropertyNode(conf, row);
         });
         conf.levelsRowset.eachRow(function(row){
-          me.renderLevelMembersNode(conf, row);
+          if (!row.LEVEL_IS_VISIBLE) {
+            return;
+          }
+          if (row.LEVEL_TYPE === 1){  //All level
+            me.renderAllLevel(conf, row);
+          }
+          else {
+            me.renderLevelMembersNode(conf, row);
+          }
         });
         conf.callback();
         me.fireEvent("done");
@@ -551,7 +601,7 @@ var XmlaTreeView;
     };
     new TreeNode({
       parentTreeNode: hierarchyTreeNode,
-      classes: "level leveltype" + row.LEVEL_TYPE,
+      classes: ["level", "leveltype" + row.LEVEL_TYPE, "levelunicity" + row.LEVEL_UNIQUE_SETTINGS],
       id: id,
       title: row.LEVEL_CAPTION || row.LEVEL_NAME,
       metadata: row,
@@ -580,6 +630,9 @@ var XmlaTreeView;
       success: function(xmla, options, rowset){
         //create a treenode for each level
         rowset.eachRow(function(row){
+          if (!row.LEVEL_IS_VISIBLE) {
+            return;
+          }
           row.HIERARCHY_CAPTION = hierarchyCaption;
           me.renderLevelTreeNode(conf, row);
         });
