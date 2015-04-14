@@ -507,12 +507,17 @@ var XavierTableTab;
         if (!hierarchyStat) {
           hierarchies[hierarchyName] = hierarchyStat = {
             minLevel: Number.MAX_VALUE,
-            maxLevel: Number.MIN_VALUE,
+            //don't be tempted to use Number.MIN_VALUE here, it's not good for you.
+            maxLevel: -1,
             setDefs: {}
           };
         }
 
         var level = setDef.metadata.LEVEL_NUMBER;
+        //store the setdef in its hierarchy.
+        hierarchyStat.setDefs[level] = setDef;
+
+        //update level stats for the hierarchy
         if (level > hierarchyStat.maxLevel) {
           hierarchyStat.maxLevel = level;
         }
@@ -520,7 +525,6 @@ var XavierTableTab;
           hierarchyStat.minLevel = level;
         }
 
-        hierarchyStat.setDefs[level] = setDef;
       }
     }, this);
 
@@ -1308,4 +1312,25 @@ var XavierPieChartTab;
 };
 adopt(XavierPieChartTab, XavierTab);
 
+var XavierChartTab;
+(XavierChartTab = function(){
+  conf = conf || {};
+  this.classes = ["chart"];
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  text: gMsg("Generic Chart"),
+  createDom: function(){
+    var me = this;
+    var dom = cEl("DIV", {
+      id: this.getId(),
+      "class": ["chart", XavierChartTab.prefix]
+    });
+    this.initQueryDesigner(dom);
+    this.initPieChart(dom);
+    return dom;
+  },
+};
+XavierChartTab.prefix = "xavier-chart-tab";
+
+adopt(XavierChartTab, XavierTab);
 })();
