@@ -264,7 +264,7 @@ var XavierTab;
         busy(false);
         return;
       }
-      console.time("executeQuery");
+      //console.time("executeQuery");
       xmla.execute({
         url: datasource.URL,
         properties: {
@@ -273,11 +273,11 @@ var XavierTab;
         },
         statement: mdx,
         success: function(xmla, options, dataset){
-          console.timeEnd("executeQuery");
+          //console.timeEnd("executeQuery");
           try {
-            console.time("renderDataset");
+            //console.time("renderDataset");
             visualizer.renderDataset(dataset, queryDesigner);
-            console.timeEnd("renderDataset");
+            //console.timeEnd("renderDataset");
           }
           catch (exception) {
             showAlert(gMsg("Error rendering dataset"), exception.toString() || exception.message || gMsg("Unexpected error"));
@@ -285,7 +285,7 @@ var XavierTab;
           busy(false);
         },
         error: function(xmla, options, exception){
-          console.timeEnd("executeQuery");
+          //console.timeEnd("executeQuery");
           busy(false);
           showAlert("Error executing query", exception.toString());
         }
@@ -684,7 +684,7 @@ var XavierTableTab;
   },
   doLayout: function(){
     var queryDesigner = this.getQueryDesigner();
-    var queryDesignerDom = queryDesigner.getDom().firstChild;
+    var queryDesignerDom = queryDesigner.getDom();
     var visualizer = this.getVisualizer();
     var visualizerDom = visualizer.getDom();
     var dom = this.getDom();
@@ -1001,7 +1001,7 @@ var PieChart;
     return list;
   },
   renderChapterAxis: function(dataset){
-    console.time("pie chart renderChapterAxis");
+    //console.time("pie chart renderChapterAxis");
     var table = this.createLayoutTable();
     var rows = table.rows;
     var chapterAxis = dataset.getChapterAxis();
@@ -1012,10 +1012,10 @@ var PieChart;
       aCh(cell, list);
       this.renderPageAxis(dataset, row, tuple.index);
     }, this);
-    console.timeEnd("pie chart renderChapterAxis");
+    //console.timeEnd("pie chart renderChapterAxis");
   },
   renderPageAxis: function(dataset, row, chapterAxisOrdinal){
-    console.time("pie chart renderPageAxis");
+    //console.time("pie chart renderPageAxis");
     var me  = this;
     function renderPieCharts(dataset, row, pageAxisOrdinal, chapterAxisOrdinal){
       var cell = row.insertCell(row.cells.length);
@@ -1049,10 +1049,10 @@ var PieChart;
         renderPieCharts(dataset, row, i, chapterAxisOrdinal);
       }
     }
-    console.timeEnd("pie chart renderPageAxis");
+    //console.timeEnd("pie chart renderPageAxis");
   },
   createChartDataTemplate: function(dataset) {
-    console.time("pie chart createChartDataTemplate");
+    //console.time("pie chart createChartDataTemplate");
     //categories
     var columnAxis = dataset.getColumnAxis();
     var cellset = dataset.getCellset();
@@ -1079,7 +1079,7 @@ var PieChart;
     });
     //this.chartData = chartData;
     columnAxis.reset();
-    console.timeEnd("pie chart createChartDataTemplate");
+    //console.timeEnd("pie chart createChartDataTemplate");
     return chartData;
   },
   renderPieChartC3: function(id){
@@ -1120,7 +1120,7 @@ var PieChart;
     this.renderPieChartNVD3(id, data);
   },
   renderPieCharts: function(dataset, cell, pageAxisOrdinal, chapterAxisOrdinal) {
-    console.time("pie chart renderPieCharts");
+    //console.time("pie chart renderPieCharts");
     //measures
     var rowAxis = dataset.getRowAxis();
     var n = rowAxis.tupleCount(), i;
@@ -1150,13 +1150,13 @@ var PieChart;
       }, null, chartWrapper);
       this.renderPieChart(piechartId, data);
     }
-    console.timeEnd("pie chart renderPieCharts");
+    //console.timeEnd("pie chart renderPieCharts");
   },
   newChartId: function(){
     return PieChart.prefix + "chart" + (++PieChart.chartId);
   },
   renderDataset: function(dataset, queryDesigner){
-    console.time("pie chart renderDataset");
+    //console.time("pie chart renderDataset");
     this.clear();
     this.dataset = dataset;
     this.numCharts = 0;
@@ -1187,7 +1187,7 @@ var PieChart;
       //render Columns x chart
       this.renderPieCharts(dataset, this.getDom(), null, null);
     }
-    console.timeEnd("pie chart renderDataset");
+    //console.timeEnd("pie chart renderDataset");
   },
   doLayout: function(){
   }
@@ -1328,7 +1328,7 @@ var XavierChartTab;
     this.initQueryDesigner(dom);
     this.initPieChart(dom);
     return dom;
-  },
+  }
 };
 XavierChartTab.prefix = "xavier-chart-tab";
 
