@@ -680,6 +680,10 @@ var XmlaTreeView;
       success: function(xmla, options, rowset) {
         //for each dimension, add a treenode.
         rowset.eachRow(function(row){
+          //don't render invisible dimensions
+          if (row.DIMENSION_IS_VISIBLE === false) {
+            return;
+          }
           //if this dimension happens to be a measure dimension, don't render it.
           //We already have measures
           if (row.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
