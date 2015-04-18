@@ -86,6 +86,7 @@ var PivotTable;
     var dataset = this.dataset;
     var axes = [this.getPagesTableDom(), this.getColumnsTableDom()];
     var left = this.getCellsDom().scrollLeft;
+    var id = this.getId();
     for (i = 0; i < axes.length; i++) {
       var dom;
       if (!(dom = axes[i])) {
@@ -94,6 +95,7 @@ var PivotTable;
       var rows = dom.rows, n = rows.length, row, r = 0;
       var axis = dataset.getAxis(Xmla.Dataset[i ? "AXIS_COLUMNS" : "AXIS_PAGES"]);
       var tupleCount = axis.tupleCount();
+      var j = 0;
       axis.eachHierarchy(function(hierarchy){
         while ((row = rows[r++]) && !hCls(row, "new-hierarchy"));
         if (!row) {
@@ -102,15 +104,17 @@ var PivotTable;
         var className = (hierarchy.name === "Measures" ? "measures-header" : "hierarchy-header");
         row = dom.insertRow(row.rowIndex);
         var cell = row.insertCell(0);
+        cell.id = id + "-hierarchy-header-" + hierarchy.name;
         var style = cell.style;
         style.backgroundPosition = (2 + left) + "px 2px";
         style.paddingLeft = (20 + left) + "px";
 
         cell.colSpan = tupleCount;
         row.className = cell.className = className;
-        cell.innerHTML = hierarchy.Caption || hierarchy.name;
+        //cell.innerHTML = hierarchy.Caption || hierarchy.name;
+        cell.innerHTML = this.hierarchyLabels[axis.id][j++];
         r = row.rowIndex + 2;
-      });
+      }, this);
     }
   },
   removeHorizontalHierarchyHeaders: function(){
@@ -306,7 +310,9 @@ var PivotTable;
       var rows = colsTable.rows, n = rows.length, i, row, style;
       for (i = 0; i < n; i++) {
         row = rows[i];
-        if (row.className !== "hierarchy-header" && row.className != "measures-header") continue;
+        if (row.className !== "hierarchy-header" && row.className != "measures-header") {
+          continue;
+        }
         style = row.cells[0].style;
         style.backgroundPosition = (2 + left) + "px 2px";
         style.paddingLeft = (20 + left) + "px";
@@ -501,8 +507,18 @@ var PivotTable;
   getDataset: function(){
     return this.dataset;
   },
+  getHierarchyLabels: function(queryDesigner){
+    var labels = this.hierarchyLabels = [];
+    queryDesigner.eachAxis(function(i, axis) {
+      var hierarchies = labels[i] = [];
+      axis.eachHierarchy(function(hierarchy, i){
+        hierarchies.push(hierarchy.HIERARCHY_CAPTION);
+      }, this);
+    }, this);
+  },
   renderDataset: function (dataset, queryDesigner) {
     var me = this;
+    this.getHierarchyLabels(queryDesigner);
     //clear is being called by the tabpane.
     //this.clear();
     if (this.dataset) {
@@ -600,7 +616,9 @@ var PivotTable;
   renderRowHeadersTable: function(){
     this.getRowsHeadersDom().innerHTML = "";
     var dataset = this.dataset;
-    if (!dataset.hasRowAxis()) return;
+    if (!dataset.hasRowAxis()) {
+      return;
+    }
     var rowsHeadersTable = this._createAxisTable("rows-headers-table");
     this.getRowsHeadersDom().appendChild(rowsHeadersTable);
     rowsHeadersTableRow = rowsHeadersTable.insertRow(0);
@@ -608,12 +626,16 @@ var PivotTable;
     var axis = dataset.getAxis(Xmla.Dataset.AXIS_ROWS);
     var hierarchyCount = axis.hierarchyCount();
     var positionableRow1 = this.addPositionableRow(rowsHeadersTable, hierarchyCount, true);
+    var id = this.getId();
+    var j = 0;
     axis.eachHierarchy(function(hierarchy){
       var rowsHeadersTableRowCell = rowsHeadersTableRow.insertCell(rowsHeadersTableRow.cells.length);
+      rowsHeadersTableRowCell.id = id + "-hierarchy-header-" + hierarchy.name;
       rowsHeadersTableRowCell.colSpan = 1 + (hierarchy.maxLevel - hierarchy.minLevel);
-      rowsHeadersTableRowCell.textContent = hierarchy.Caption || hierarchy.name;
+      //rowsHeadersTableRowCell.textContent = hierarchy.Caption || hierarchy.name;
+      rowsHeadersTableRowCell.textContent = this.hierarchyLabels[1][j++]
       rowsHeadersTableRowCell.className = "new-hierarchy " + (hierarchy.name === "Measures" ? "measures-header" : "hierarchy-header");
-    });
+    }, this);
     return rowsHeadersTable;
   },
   renderAxisHorizontally: function(axis, table) {

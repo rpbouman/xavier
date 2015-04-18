@@ -315,10 +315,11 @@ var XmlaTreeView;
     }
     var classes = confCls(treeNode.conf.classes);
     className = classes[0];
+    var defaultMember;
     switch (className) {
-      case "measure":
       case "measures":
       case "hierarchy":
+      case "measure":
       case "level":
       case "member":
       case "property":
@@ -327,13 +328,18 @@ var XmlaTreeView;
       default:
         return false;
     }
-    return {
+    var treeNodeConf = treeNode.conf;
+    var info = {
       dragOrigin: this,
       label: treeNode.getTitle(),
-      metadata: treeNode.conf.metadata,
+      metadata: treeNodeConf.metadata,
       classes: classes,
       className: className
     };
+    if (treeNodeConf.defaultMember) {
+      info.defaultMember = treeNodeConf.defaultMember;
+    }
+    return info;
   },
   notifyEndDrag: function(event, dndHandler){
     this.getCubeTreePane().getDom().style.overflow = "";
@@ -373,7 +379,6 @@ var XmlaTreeView;
         me.fireEvent("error", error);
       }
     });
-
   },
   renderChildMemberNodes: function(conf){
     var me = this;
@@ -700,6 +705,54 @@ var XmlaTreeView;
       }
     });
   },
+  getHierarchyTreeNodeId: function(hierarchyUniqueName){
+    if (iObj(hierarchyUniqueName)){
+      hierarchyUniqueName = hierarchyUniqueName.HIERARCHY_UNIQUE_NAME;
+    }
+    return "hierarchy:" + hierarchyUniqueName;
+  },
+  getHierarchyTreeNode: function(hierarchyUniqueName){
+    var id = this.getHierarchyTreeNodeId(hierarchyUniqueName);
+    return TreeNode.getInstance("node:" + id);
+  },
+  getHierarchyMetadata: function(hierarchyUniqueName){
+    var hierarchyTreeNode = this.getHierarchyTreeNode(hierarchyUniqueName);
+    return hierarchyTreeNode.conf.metadata;
+  },
+  getDefaultMember: function(conf, defaultMemberQueue, defaultMemberQueueIndex){
+    if (defaultMemberQueueIndex >= defaultMemberQueue.length) {
+      return;
+    }
+    var me = this;
+    var url = conf.url;
+    var properties = {
+      DataSourceInfo: conf.dataSourceInfo,
+      Catalog: conf.catalog
+    };
+    var hierarchyTreeNode = defaultMemberQueue[defaultMemberQueueIndex];
+    var hierarchyTreeNodeConf = hierarchyTreeNode.conf;
+    var hierarchyMetadata = hierarchyTreeNodeConf.metadata;
+    var restrictions = {
+      CUBE_NAME: conf.cube,
+      HIERARCHY_UNIQUE_NAME: hierarchyMetadata.HIERARCHY_UNIQUE_NAME,
+      MEMBER_UNIQUE_NAME: hierarchyMetadata.DEFAULT_MEMBER
+    };
+    this.xmla.discoverMDMembers({
+      hierarchyTreeNodeConf: hierarchyTreeNodeConf,
+      url: url,
+      properties: properties,
+      restrictions: restrictions,
+      success: function(xmla, options, rowset){
+        //actually render the member tree nodes residing beneath the level tree nodes
+        rowset.eachRow(function(row){
+          hierarchyTreeNodeConf.defaultMember = row;
+        });
+        me.getDefaultMember(conf, defaultMemberQueue, ++defaultMemberQueueIndex);
+      },
+      error: function(xmla, options, error){
+      }
+    });
+  },
   renderHierarchyTreeNode: function(conf, row){
     var me = this;
     var dimensionNode = TreeNode.getInstance("node:dimension:" + row.DIMENSION_UNIQUE_NAME);
@@ -712,11 +765,11 @@ var XmlaTreeView;
       hierarchyTitle = "<span class=\"label label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
     }
 
-    new TreeNode({
+    var hierarchyTreeNode = new TreeNode({
       state: TreeNode.states.collapsed,
       parentTreeNode: dimensionNode,
       classes: ["hierarchy", "dimensiontype" + row.DIMENSION_TYPE],
-      id: "hierarchy:" + row.HIERARCHY_UNIQUE_NAME,
+      id: this.getHierarchyTreeNodeId(row),
       title: hierarchyTitle,
       tooltip: row.DESCRIPTION || row.HIERARCHY_CAPTION || row.HIERARCHY_NAME,
       metadata: row,
@@ -727,6 +780,7 @@ var XmlaTreeView;
         me.renderLevelTreeNodes(conf);
       }
     });
+    return hierarchyTreeNode;
   },
   renderHierarchyTreeNodes: function(conf){
     var me = this;
@@ -747,11 +801,18 @@ var XmlaTreeView;
       },
       success: function(xmla, options, rowset) {
         //for each hierarchy, add a treenode.
+        var defaultMemberQueue = [];
         rowset.eachRow(function(row){
           //if this hierarchy happens to be a measure hierarchy, don't render it.
           //We already have measures
           if (row.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
+            if (row.DEFAULT_MEMBER) {
+              defaultMemberQueue.push(conf.measuresTreeNode);
+            }
             conf.measuresTreeNode.conf.metadata = row;
+            conf.measuresTreeNode.setId(
+              me.getHierarchyTreeNodeId(row.HIERARCHY_UNIQUE_NAME)
+            );
             return;
           }
           else
@@ -760,10 +821,15 @@ var XmlaTreeView;
             return;
           }
           //actually add a treenode for the hierarchy.
-          me.renderHierarchyTreeNode(conf, row);
+          var hierarchyTreeNode = me.renderHierarchyTreeNode(conf, row);
+          if (row.DEFAULT_MEMBER) {
+            defaultMemberQueue.push(hierarchyTreeNode);
+          }
         });
+        me.getDefaultMember(conf, defaultMemberQueue, 0);
         //done rendering hierarchy treenodes
         me.fireEvent("done");
+        me.fireEvent("cubeLoaded");
       }
     });
   },
@@ -838,14 +904,36 @@ var XmlaTreeView;
       state: TreeNode.states.expanded,
       parentElement: this.cubeTreePane.getDom(),
       classes: ["hierarchy", "dimensiontype" + Xmla.Rowset.MD_DIMTYPE_MEASURE],
-      id: "measures",
+      id: "[Measures]",
       title: gMsg("Measures"),
       tooltip: gMsg("Measures")
     });
     this.renderMeasureNodes(conf);
   },
+  getCurrentCubeTreeNode: function(){
+    var cubeTreeNode = this.currentCubeTreeNode;
+    if (!cubeTreeNode) {
+      cubeTreeNode = null;
+    }
+    return cubeTreeNode;
+  },
+  getCurrentCatalogTreeNode: function(){
+    var cubeTreeNode = this.getCurrentCubeTreeNode();
+    if (!cubeTreeNode) {
+      return null;
+    }
+    return cubeTreeNode.getParentTreeNode();
+  },
+  getCurrentDatasourceTreeNode: function(){
+    var currentCatalogTreeNode = this.getCurrentCatalogTreeNode();
+    if (!currentCatalogTreeNode) {
+      return null;
+    }
+    return currentCatalogTreeNode.getParentTreeNode();
+  },
   loadCube: function(cubeTreeNode){
     this.collapseSchema();
+    this.currentCubeTreeNode = cubeTreeNode;
     var me = this;
     this.fireEvent("busy");
     var xmla = this.xmla;
@@ -854,7 +942,7 @@ var XmlaTreeView;
     var cubeTreePaneDom = cubeTreePane.getDom();
 
     var cube = cubeTreeNode.conf.metadata.CUBE_NAME;
-    me.fireEvent("cubeSelected", cubeTreeNode);
+    me.fireEvent("loadCube", cubeTreeNode);
     var catalogNode = cubeTreeNode.getParentTreeNode();
     var catalog = catalogNode.conf.metadata.CATALOG_NAME;
     var providerNode = catalogNode.getParentTreeNode();
@@ -916,7 +1004,7 @@ var XmlaTreeView;
   },
   collapseSchema: function(){
     this.getSplitPane().collapse(this.getSchemaTreePane().getDom());
-  }
+  },
 };
 
 adopt(XmlaTreeView, Observable);

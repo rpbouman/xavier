@@ -133,6 +133,38 @@ table.query-designer-axis {
   background-image: url('../images/level.png');
 }
 
+.query-designer-axis td span.levelunicity1,
+.query-designer-axis td span.levelunicity2,
+.query-designer-axis td span.levelunicity3 {
+  background-image: url('../images/unique-level.png');
+}
+
+.query-designer-axis td span.leveltype20 {
+  background-image: url('../images/year_level_16x16.png');
+}
+
+.query-designer-axis td span.leveltype36 {
+  background-image: url('../images/calendar_16x16.png');
+}
+
+.query-designer-axis td span.leveltype68 {
+  background-image: url('../images/quarter_level_16x16.png');
+}
+
+.query-designer-axis td span.leveltype32 {
+  background-image: url('../images/month_level_16x16.png');
+}
+
+.query-designer-axis td span.leveltype260 {
+  background-image: url('../images/week_level_16x16.png');
+}
+
+.query-designer-axis td span.leveltype516
+ {
+  background-image: url('../images/day_level_16x16.png');
+}
+
+
 .query-designer-axis td span.member {
   background-image: url('../images/member.png');
 }
@@ -148,18 +180,25 @@ table.query-designer-axis {
   font-weight: bold;
 }
 
-.query-designer-axis-header, .query-designer-axis td.hierarchy, .query-designer-axis td.measures{
+.query-designer-axis-header,
+.query-designer-axis td.hierarchy,
+.query-designer-axis td.measures {
   background-repeat: no-repeat;
   background-position: 2px 2px;
   text-indent: 20px;
 }
 
-.query-designer-axis td.hierarchy:after, .query-designer-axis td.measures:after {
+.query-designer-axis td.hierarchy:after,
+.query-designer-axis td.measures:after {
   content: ":"
 }
 
 .query-designer-axis td.hierarchy {
   background-image: url('../images/hierarchy.png');
+}
+
+.query-designer-axis td.dimensiontype1 {
+  background-image: url('../images/date_hierarchy_16x16.png');
 }
 
 .query-designer-axis1 .hierarchy {

@@ -121,13 +121,23 @@ xmlaTreeView.listen({
     showAlert("Unexpected Error", error.toString() || error.message);
     console.error(error.getStackTrace());
   },
-  cubeSelected: function(xmlaTreeView, event, cubeTreeNode){
+  loadCube: function(xmlaTreeView, event, cubeTreeNode){
+    mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
+  },
+  cubeLoaded: function(xmlaTreeView, event){
     mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
-    var catalogTreeNode = cubeTreeNode.getParentTreeNode();
-    var datasourceTreeNode = catalogTreeNode.getParentTreeNode();
-    workArea.setCube(cubeTreeNode.conf.metadata);
-    workArea.setCatalog(catalogTreeNode.conf.metadata);
-    workArea.setDatasource(datasourceTreeNode.conf.metadata);
+
+    var cubeTreeNode = xmlaTreeView.getCurrentCubeTreeNode();
+    var catalogTreeNode = xmlaTreeView.getCurrentCatalogTreeNode();
+    var datasourceTreeNode = xmlaTreeView.getCurrentDatasourceTreeNode();
+
+    var currentCube = {
+      cube: cubeTreeNode.conf.metadata,
+      catalog: catalogTreeNode.conf.metadata,
+      datasource: datasourceTreeNode.conf.metadata
+    };
+
+    workArea.setCube(currentCube);
   }
 });
 
@@ -137,6 +147,7 @@ xmlaTreeView.listen({
 var workArea = new XavierTabPane({
   dnd: dnd,
   xmla: xmla,
+  xmlaTreeView: xmlaTreeView,
   autorun: getAutoRunEnabled(),
   listeners: {
     tabClosed: function(tabPane, event, data){
@@ -467,9 +478,12 @@ function exportToExcel(){
       hierarchyCount = axis.getHierarchyCount();
       for (i = 0; i < hierarchyCount; i++){
         hierarchy = axis.getHierarchyByIndex(i);
-        if (axis.getHierarchyName(hierarchy) === "Measures") {
+        if (axis.getHierarchyName(hierarchy) === QueryDesigner.prototype.measuresHierarchyName) {
           measureAxis = id;
-          var j, setDef, setDefs = axis.setDefs["Measures"], n = setDefs.length;
+          var j, setDef,
+              setDefs = axis.setDefs[QueryDesigner.prototype.measuresHierarchyName],
+              n = setDefs.length
+          ;
           for (j = 0; j < n; j++) {
             setDef = setDefs[j];
             measureNames.push(axis.getMemberCaption(setDef.metadata));

@@ -32,6 +32,13 @@ var QueryDesigner;
     }
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
+  measuresHierarchyName: "[Measures]",
+  getXmlaTreeView: function(){
+    return this.conf.xmlaTreeView;
+  },
+  getXmla: function(){
+    return this.conf.xmla;
+  },
   fireEvents: function(flag){
     if (arguments.length) {
       this.eachAxis(function(id, axis){
@@ -204,7 +211,7 @@ var QueryDesigner;
     toAxis.importHierarchy(fromAxis, hierarchyName, toIndex);
   },
   moveMeasures: function(fromAxis, toAxis, toIndex){
-    return this.moveHierarchy("Measures", fromAxis, toAxis, toIndex);
+    return this.moveHierarchy(QueryDesigner.prototype.measuresHierarchyName, fromAxis, toAxis, toIndex);
   },
   addAxis: function(axis) {
     var id = axis.conf.id;
@@ -574,14 +581,22 @@ var QueryDesignerAxis;
   },
   updateDomSetDefs: function(hierarchyName, c) {
     var hierarchySetDefs = this.getSetDefs(hierarchyName),
-        j, m = hierarchySetDefs.length, setDef
+        j, m = hierarchySetDefs.length, setDef, metadata, classes
     ;
     for (j = 0; j < m; j++) {
       setDef = hierarchySetDefs[j];
-      var classes = [setDef.type, QueryDesignerAxis.prefix + "-item"];
-      if (iDef(setDef.metadata.MEASURE_AGGREGATOR)){
-        classes.push("aggregator" + setDef.metadata.MEASURE_AGGREGATOR);
+      metadata = setDef.metadata;
+      classes = [setDef.type];
+      if (iDef(metadata.MEASURE_AGGREGATOR)){
+        classes.push("aggregator" + metadata.MEASURE_AGGREGATOR);
       }
+      if (iDef(metadata.LEVEL_TYPE)){
+        classes.push("leveltype" + metadata.LEVEL_TYPE);
+      }
+      if (iDef(metadata.LEVEL_UNIQUE_SETTINGS)){
+        classes.push("levelunicity" + metadata.LEVEL_UNIQUE_SETTINGS);
+      }
+      classes.push(QueryDesignerAxis.prefix + "-item");
       var el = cEl("SPAN", {
         "class":  classes,
         title: setDef.expression,
@@ -591,7 +606,10 @@ var QueryDesignerAxis;
   },
   getHierarchyClassName: function(hierarchy) {
     var hierarchyName = this.getHierarchyName(hierarchy);
-    return hierarchyName === "Measures" ? "measures" : "hierarchy";
+    var className;
+    className = hierarchyName === QueryDesigner.prototype.measuresHierarchyName ? "measures" : "hierarchy";
+    className += " dimensiontype" + hierarchy.DIMENSION_TYPE;
+    return className;
   },
   updateDomVertical: function() {
     var hierarchies = this.hierarchies,
@@ -640,11 +658,12 @@ var QueryDesignerAxis;
       hierarchyName = this.getHierarchyName(hierarchy);
 
       r = dom.insertRow(rows.length);
-      r.className = "hierarchy";
+      var className = this.getHierarchyClassName(hierarchy);
+      r.className = className;
       c = r.insertCell(0);
       c.id = hierarchyName;
       c.innerHTML = this.getHierarchyCaption(hierarchy);
-      c.className = this.getHierarchyClassName(hierarchy);
+      c.className = className;
 
       c = r.insertCell(1);
       this.updateDomSetDefs(hierarchyName, c);
@@ -661,11 +680,11 @@ var QueryDesignerAxis;
     return this.getHierarchyIndex(hierarchy) !== -1;
   },
   hasMeasures: function(){
-    return this.hasHierarchy("Measures");
+    return this.hasHierarchy(QueryDesigner.prototype.measuresHierarchyName);
   },
   isMeasureHierarchy: function(hierarchy){
     var hierarchyName = this.getHierarchyName(hierarchy);
-    return hierarchyName === "Measures";
+    return hierarchyName === QueryDesigner.prototype.measuresHierarchyName;
   },
   getHierarchyIndex: function(name) {
     for (var h = this.hierarchies, i = 0, n = h.length; i < n; i++){
@@ -676,7 +695,7 @@ var QueryDesignerAxis;
     return -1;
   },
   getMeasuresIndex: function(){
-    return this.getHierarchyIndex("Measures");
+    return this.getHierarchyIndex(QueryDesigner.prototype.measuresHierarchyName);
   },
   getHierarchyIndexForTd: function(td) {
     td = gAnc(td, "TD");
@@ -807,41 +826,44 @@ var QueryDesignerAxis;
     }
     return true;
   },
-  getMemberExpression: function(metadata, className) {
+  getMemberUniqueName: function(metadata) {
+    var expression;
     if (metadata.MEMBER_UNIQUE_NAME) {
-      var exp = metadata.MEMBER_UNIQUE_NAME;
-      if (className === "member-drilldown") {
-        exp += ".Children";
-      }
-      return exp;
+      expression = metadata.MEMBER_UNIQUE_NAME;
     }
+    else
     if (metadata.MEASURE_UNIQUE_NAME) {
-      return metadata.MEASURE_UNIQUE_NAME;
+      expression = metadata.MEASURE_UNIQUE_NAME;
     }
-    if (metadata.LEVEL_UNIQUE_NAME) {
-      return metadata.LEVEL_UNIQUE_NAME + ".Members";
-    }
+    else
     if (metadata.DEFAULT_MEMBER) {
-      return metadata.DEFAULT_MEMBER;
+      expression = metadata.DEFAULT_MEMBER;
     }
+    else
     if (metadata.DEFAULT_MEASURE) {
-      return metadata.DEFAULT_MEASURE;
+      expression = metadata.DEFAULT_MEASURE;
     }
-    return null;
+    else {
+      expression = null;
+    }
+    return expression;
+  },
+  getMemberExpression: function(metadata, className) {
+    var expression = this.getMemberUniqueName(metadata);
+    if (expression === null && metadata.LEVEL_UNIQUE_NAME) {
+      expression = metadata.LEVEL_UNIQUE_NAME + ".Members";
+    }
+    else
+    if (className === "member-drilldown") {
+      expression += ".Children";
+    }
+    return expression;
   },
   stripBracesFromIdentifier: function(identifier){
     if (identifier.charAt(0) === "[" && identifier.charAt(identifier.length-1) === "]") {
       identifier = identifier.substr(1, identifier.length-2);
     }
     return identifier;
-  },
-  getDefaultMemberCaption: function(hierarchy) {
-    var defaultMember = hierarchy.DEFAULT_MEMBER;
-    if (!defaultMember || !defaultMember.indexOf(hierarchy.HIERARCHY_UNIQUE_NAME) + ".") {
-      defaultMember = defaultMember.substr(hierarchy.HIERARCHY_UNIQUE_NAME.length + 1);
-    }
-    defaultMember = this.stripBracesFromIdentifier(defaultMember);
-    return defaultMember;
   },
   getMemberCaption: function(metadata) {
     if (metadata.MEMBER_CAPTION) {
@@ -882,32 +904,33 @@ var QueryDesignerAxis;
       hierarchyName = hierarchy;
     }
     else
-    if (hierarchy.DIMENSION_TYPE && hierarchy.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
-      hierarchyName = "Measures";
-    }
-    else
     if (hierarchy.HIERARCHY_UNIQUE_NAME) {
       hierarchyName = hierarchy.HIERARCHY_UNIQUE_NAME;
     }
+    else
+    if (hierarchy.DIMENSION_TYPE && hierarchy.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
+      hierarchyName = QueryDesigner.prototype.measuresHierarchyName;
+    }
     else {
-      hierarchyName = "Measures";
+      hierarchyName = QueryDesigner.prototype.measuresHierarchyName;
     }
     return hierarchyName;
   },
   getDimensionName: function(hierarchy) {
-    if (!hierarchy){
-      debugger;
-    }
     var dimensionName;
-    if (hierarchy.DIMENSION_TYPE && hierarchy.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
-      dimensionName = "Measures";
-    }
-    else
     if (hierarchy.DIMENSION_UNIQUE_NAME) {
       dimensionName = hierarchy.DIMENSION_UNIQUE_NAME;
     }
+    else
+    if (hierarchy.HIERARCHY_UNIQUE_NAME) {
+      dimensionName = hierarchy.HIERARCHY_UNIQUE_NAME;
+    }
+    else
+    if (hierarchy.DIMENSION_TYPE && hierarchy.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
+      dimensionName = QueryDesigner.prototype.measuresHierarchyName;
+    }
     else {
-      dimensionName = "Measures";
+      dimensionName = QueryDesigner.prototype.measuresHierarchyName;
     }
     return dimensionName;
   },
@@ -1157,15 +1180,19 @@ var QueryDesignerAxis;
     return change;
   },
   getMemberInfo: function(requestType, metadata){
+    //TODO: query member
     var expression = this.getMemberExpression(metadata, requestType), caption;
+    var captionNeedsUpdate = false;
     switch (requestType) {
       case "measures":
         caption = this.getMemberCaption(metadata);
         requestType = "measure";
+        captionNeedsUpdate = true;
         break;
       case "hierarchy":
         caption = this.getMemberCaption(metadata);
         requestType = "member";
+        captionNeedsUpdate = true;
         break;
       case "level":
         caption = metadata.LEVEL_CAPTION;
@@ -1186,6 +1213,7 @@ var QueryDesignerAxis;
     return {
       expression: expression,
       caption: caption,
+      captionNeedsUpdate: captionNeedsUpdate,
       type: requestType,
       metadata: metadata
     };
@@ -1207,13 +1235,14 @@ var QueryDesignerAxis;
     this.fireEvent("changed");
   },
   _addHierarchy: function(hierarchyIndex, metadata) {
-    var hierarchyName = this.getHierarchyName(metadata),
-        layout = this.getLayout()
-    ;
+    var hierarchyName = this.getHierarchyName(metadata), layout = this.getLayout(), hierarchy;
+    var treeView = this.getQueryDesigner().getXmlaTreeView();
+    hierarchy = treeView.getHierarchyMetadata(hierarchyName);
+
     if (hierarchyIndex === -1) {
       hierarchyIndex = 0;
     }
-    this.hierarchies.splice(hierarchyIndex, 0, metadata);
+    this.hierarchies.splice(hierarchyIndex, 0, hierarchy);
     this.dimensions[this.getDimensionName(metadata)] = hierarchyName;
     this.setDefs[hierarchyName] = [];
   },
@@ -1311,7 +1340,7 @@ var QueryDesignerAxis;
   },
   itemDropped: function(target, dragInfo) {
     var requestType = dragInfo.className,
-        metadata = dragInfo.metadata,
+        metadata = dragInfo.defaultMember || dragInfo.metadata,
         hierarchyName = this.getHierarchyName(metadata),
         hierarchyIndex = this.getHierarchyIndex(hierarchyName),
         dropIndexes, dropHierarchyName,

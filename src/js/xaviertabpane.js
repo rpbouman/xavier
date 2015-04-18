@@ -63,6 +63,9 @@ var DataTable;
   getXmla: function(){
     return this.conf.xmla;
   },
+  getXmlaTreeView: function(){
+    return this.conf.xmlaTreeView;
+  },
   newPivotTableTab: function(){
     var pivotTableTab = new XavierPivotTableTab({
       tabPane: this
@@ -85,7 +88,14 @@ var DataTable;
     return pieChartTab;
   },
   setCube: function(metadata){
-    this.cube = metadata;
+    if (metadata.cube && metadata.catalog && metadata.datasource) {
+      this.setDatasource(metadata.datasource);
+      this.setCatalog(metadata.catalog);
+      this.setCube(metadata.cube);
+    }
+    else {
+      this.cube = metadata;
+    }
   },
   getCube: function(){
     return this.cube;
@@ -210,6 +220,9 @@ var XavierTab;
   getXmla: function(){
     return this.getTabPane().getXmla();
   },
+  getXmlaTreeView: function(){
+    return this.getTabPane().getXmlaTreeView();
+  },
   getDnd: function(){
     return this.getTabPane().getDnd();
   },
@@ -236,6 +249,7 @@ var XavierTab;
     }
   },
   executeQuery: function(){
+    var me = this;
     var queryDesigner = this.getQueryDesigner();
     if (!queryDesigner) {
       return false;
@@ -269,7 +283,8 @@ var XavierTab;
         url: datasource.URL,
         properties: {
           DataSourceInfo: datasource.DataSourceInfo,
-          Catalog: catalog.CATALOG_NAME
+          Catalog: catalog.CATALOG_NAME,
+          Format: Xmla.PROP_FORMAT_MULTIDIMENSIONAL
         },
         statement: mdx,
         success: function(xmla, options, dataset){
@@ -629,6 +644,8 @@ var XavierTableTab;
       container: cEl("DIV", {
       }, null, dom),
       dnd: this.getDnd(),
+      xmla: this.getXmla(),
+      xmlaTreeView: this.getXmlaTreeView(),
       axes: [
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
@@ -766,6 +783,8 @@ var XavierPivotTableTab;
     var queryDesigner = this.queryDesigner = new QueryDesigner({
       container: cEl("DIV", {}, null, dom),
       dnd: this.getDnd(),
+      xmla: this.getXmla(),
+      xmlaTreeView: this.getXmlaTreeView(),
       axes: [
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
@@ -1208,6 +1227,8 @@ var XavierPieChartTab;
     var queryDesigner = this.queryDesigner = new QueryDesigner({
       container: cEl("DIV", {}, null, dom),
       dnd: this.getDnd(),
+      xmla: this.getXmla(),
+      xmlaTreeView: this.getXmlaTreeView(),
       axes: [
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
