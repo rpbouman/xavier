@@ -70,11 +70,11 @@ limitations under the License.
 }
 
 .toolbar .show-column-hierarchy-headers {
-  background-image: url('../images/column-axis.png');
+  background-image: url('../images/pivot-table-show-column-headers.png');
 }
 
 .toolbar .show-row-hierarchy-headers {
-  background-image: url('../images/row-axis.png');
+  background-image: url('../images/pivot-table-show-row-headers.png');
 }
 
 .xavier-tabpane > .tabpane-components > IFRAME,
