@@ -22,8 +22,7 @@ if (!xmlaUrl) {
   return;
 }
 
-var title = gEls(head, "title", 0);
-title.innerHTML = gMsg("XML/A Visualizer");
+doc.title = gMsg("XML/A Visualizer");
 
 linkCss("../css/xavier.css");
 
@@ -48,8 +47,14 @@ mainToolbar.addButton([
   {"class": "refresh", tooltip: gMsg("Refresh metadata")},
   {"class": "separator"},
   {"class": "new-table", group: "vis", tooltip: gMsg("New Table")},
-  {"class": "new-pivot-table", group: "vis", tooltip: gMsg("New Pivot Table")},
-  {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")},
+  {"class": "new-pivot-table", group: "vis", tooltip: gMsg("New Pivot Table")}
+]);
+
+mainToolbar.addButton([
+  {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")}
+]);
+
+mainToolbar.addButton([
   {"class": "separator"},
   {"class": "run", group: "visaction", tooltip: gMsg("Run Query")},
   {"class": "auto-run", group: "visaction", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
@@ -58,6 +63,7 @@ mainToolbar.addButton([
   {"class": "separator"},
   {"class": "clear", group: "visaction", tooltip: gMsg("Discard this query and start over")}
 ]);
+
 mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
 mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
 mainToolbar.listen({
@@ -560,7 +566,7 @@ function exportToExcel(){
       name += " for a selection of " + axisDescription(slicer);
     }
 
-    xlsxExporter.export(name, visualizer, queryDesigner);
+    xlsxExporter.doExport(name, visualizer, queryDesigner);
   }
   catch (exception){
     showAlert("Export Error", exception);

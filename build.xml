@@ -21,8 +21,10 @@
   <property name="webapps.dir"  location="/home/roland/apache-tomcat-7.0.56/webapps"/>
   <property name="tomcat-deploy.dir"  location="${webapps.dir}/${ant.project.name}"/>
   <property name="jasper.webapps.dir"  location="/home/roland/jasperreports-server-cp-6.0.1/apache-tomcat/webapps"/>
-
+<!--
   <property name="icCube.dir"  location="/home/roland/icCube-4.8.2"/>
+-->
+  <property name="icCube.dir"  location="/home/roland/icCube/icCube-5.0.2"/>
   <property name="icCube.web.dir"  location="${icCube.dir}/web"/>
 <!--
   <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.1.0.0-752/biserver-ce"/>
@@ -30,9 +32,9 @@
   <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.2/biserver-ce"/>
   <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.3.0.0-213/biserver-ce"/>
 -->
-  <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.2-GA-209/biserver-ce"/>
+  <property name="pentaho-ce-5.2"  location="/home/roland/pentaho-ce/biserver-ce-5.2.0.0-209/biserver-ce"/>
 
-  <property name="bi-server-system.dir"  location="${bi-server.dir}/pentaho-solutions/system"/>
+  <property name="bi-server-system.dir"  location="/pentaho-solutions/system"/>
   <property name="tomcat.dir"  location="${bi-server.dir}/tomcat"/>
   <property name="tomcat.lib.dir"  location="${tomcat.dir}/lib"/>
   <property name="bi-server.lib.dir"  location="${tomcat.dir}/webapps/pentaho/WEB-INF/lib"/>
@@ -123,12 +125,12 @@
     </zip>
   </target>
 
-  <target name="undeploy" description="undeploy distribution">
-    <delete dir="${deploy.dir}"/>
+  <target name="undeploy-pentaho-5.2" description="undeploy distribution">
+    <delete dir="${pentaho-ce-5.2}${bi-server-system.dir}/${ant.project.name}"/>
   </target>
 
-  <target name="deploy" depends="dist,undeploy" description="deploy distribution">
-    <unzip src="${dist}/${ant.project.name}.zip" dest="${bi-server-system.dir}"/>
+  <target name="deploy-pentaho-5.2" depends="dist,undeploy-pentaho-5.2" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${pentaho-ce-5.2}${bi-server-system.dir}"/>
   </target>
 
   <target name="deploy-iccube" depends="dist" description="deploy distribution">
@@ -147,23 +149,6 @@
     <unzip src="${dist}/${ant.project.name}.zip" dest="${jasper.webapps.dir}"/>
   </target>
 
-  <target name="startup" depends="shutdown">
-    <echo message="Sleeping for ${sleep} seconds to allow the server to shutdown."/>
-    <sleep seconds="${sleep}"/>
-    <exec executable="${bi-server.dir}/start-pentaho.sh" spawn="true"/>
-  </target>
-
-  <target name="shutdown">
-    <exec executable="${bi-server.dir}/stop-pentaho.sh" spawn="true"/>
-  </target>
-
-  <target name="launch" depends="deploy,startup">
-    <echo message="Sleeping for ${sleep} seconds to allow the server to startup."/>
-    <sleep seconds="${sleep}"/>
-    <exec executable="${browser}" spawn="true">
-      <arg value="${bihome}"/>
-    </exec>
-  </target>
 
   <target name="clean" description="clean up" >
     <delete dir="${dist}"/>

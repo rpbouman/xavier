@@ -178,7 +178,7 @@ var XavierTab;
     }
 
     var visualizer = this.getVisualizer();
-    if (visualizer) {
+    if (visualizer && iFun(visualizer.destroy)) {
       visualizer.destroy();
     }
   },
@@ -205,7 +205,8 @@ var XavierTab;
     if (visualizer.dataset) {
       return visualizer.dataset;
     }
-    throw "Unsupported operation: getDataset";
+    //throw "Unsupported operation: getDataset";
+    return null;
   },
   getDom: function(){
     var el = gEl(this.getId());
@@ -270,10 +271,10 @@ var XavierTab;
       var cube = this.getCube();
       var mdx = queryDesigner.getMdx(cube.CUBE_NAME);
       if (mdx) {
-        console.log("MDX: " + mdx);
+        //console.log("MDX: " + mdx);
       }
       else {
-        console.log("No MDX, bailing out");
+        //console.log("No MDX, bailing out");
         //throw "Not a valid query";
         busy(false);
         return;
@@ -597,7 +598,7 @@ var XavierTableTab;
                       ").Properties(\"MEMBER_CAPTION\")"
         ;
         rowAxis.addMember(measures.length + i, "calculated-member", {
-          HIERARCHY_UNIQUE_NAME: "Measures",
+          HIERARCHY_UNIQUE_NAME: QueryDesigner.prototype.measuresHierarchyName,
           MEMBER_UNIQUE_NAME: "[Measures].[" + caption + "]",
           CAPTION: caption,
           calculation: expression
@@ -709,7 +710,7 @@ var XavierTableTab;
     var style = visualizerDom.style;
     style.top = queryDesignerDom.clientHeight + "px";
 
-    var width = dom.getClientWidth - scrollbarWidth;
+    var width = dom.clientWidth - scrollbarWidth;
     style.width = width + "px";
     style.left = 0 + "px";
 
@@ -1121,9 +1122,11 @@ var PieChart;
         .y(function(d){
           return d[1]
         })
-        .showLegend(false)
-        .showLabels(false)
-        .color(["red", "yellow", "blue"])
+        //.showLegend(false)
+        .showLegend(true)
+        //.showLabels(false)
+        .showLabels(true)
+        //.color(["red", "yellow", "blue"])
         ;
 
       d3.select("#" + id + " svg")
@@ -1333,10 +1336,56 @@ var XavierPieChartTab;
 };
 adopt(XavierPieChartTab, XavierTab);
 
-var XavierChartTab;
-(XavierChartTab = function(){
+var XavierVisualizer;
+(XavierVisualizer = function(conf){
   conf = conf || {};
-  this.classes = ["chart"];
+  this.conf = conf;
+  if (!conf.id) {
+    conf.id = arguments.callee.prefix + arguments.callee.id++;
+  }
+  if (!conf.classes) {
+    conf.classes = [];
+  }
+  conf.classes.push(arguments.callee.prefix);
+}).prototype = {
+  clear: function(){
+    dCh(this.getDom());
+  },
+  getContainer: function(){
+    return this.conf.container;
+  },
+  getId: function(){
+    return this.conf.id;
+  },
+  doLayout: function(){
+  },
+  createDom: function(){
+    var container = this.getContainer();
+    var dom = cEl("DIV", {
+      id: this.getId(),
+      "class": confCls(this.conf).join(" ")
+    }, null, container);
+    return dom;
+  },
+  getDom: function(){
+    var id = this.getId();
+    var el = gEl(id);
+    if (el) {
+      return el;
+    }
+    return this.createDom();
+  }
+};
+XavierVisualizer.prefix = "xavier-visalizer";
+XavierVisualizer.id = 0;
+
+var XavierChartTab;
+(XavierChartTab = function(conf){
+  conf = conf || {};
+  if (!conf.classes) {
+    conf.classes = [];
+  }
+  conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Generic Chart"),
@@ -1346,12 +1395,154 @@ var XavierChartTab;
       id: this.getId(),
       "class": ["chart", XavierChartTab.prefix]
     });
-    this.initQueryDesigner(dom);
-    this.initPieChart(dom);
+    this.queryDesigner = this.initQueryDesigner(dom);
+    this.visualizer = this.initChart(dom);
     return dom;
+  },
+  layoutChartArea: function() {
+    var queryDesigner = this.getQueryDesigner();
+    var queryDesignerDom = queryDesigner.getDom().firstChild;
+    var visualizer = this.getVisualizer();
+    var visualizerDom = visualizer.getDom();
+    var dom = this.getDom();
+    var width = dom.clientWidth - queryDesignerDom.clientWidth;
+
+    var style = visualizerDom.style;
+    style.top = 0 + "px";
+    style.width = width + "px";
+    style.left = queryDesignerDom.clientWidth + "px";
+    style.height = dom.clientHeight + "px";
+  },
+  doLayout: function(){
+    this.layoutChartArea();
+    XavierChartTab._super.prototype.doLayout.call(this);
   }
 };
 XavierChartTab.prefix = "xavier-chart-tab";
-
 adopt(XavierChartTab, XavierTab);
+
+var XavierPieChart;
+(XavierPieChart = function(conf){
+  conf = conf || {};
+  this.conf = conf;
+  if (!conf.classes) {
+    conf.classes = [];
+  }
+  conf.classes.push(arguments.callee.prefix);
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  renderPieCharts: function(measuresAxis, categoriesAxis()){
+
+  },
+  renderDataset: function(dataset, queryDesigner){
+    this.clear();
+    this.dataset = dataset;
+
+    if (dataset.hasChapterAxis()){
+      this.generateTrellisMatrix(dataset.hasChapterAxis(), dataset.hasPageAxis());
+    }
+    else
+    if (dataset.hasPageAxis()) {
+      this.generateTrellisList(dataset.hasPageAxis());
+    }
+    else {
+      this.renderPieCharts(dataset.getRowAxis(), dataset.getColumnAxis());
+    }
+  }
+};
+XavierPieChart.prefix = "xavier-pie-chart";
+adopt(XavierPieChart, XavierVisualizer);
+
+var XavierPieChartTab;
+(XavierPieChartTab = function(conf){
+  conf = conf || {};
+
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  text: gMsg("Pie Chart"),
+  initQueryDesigner: function(dom){
+    var queryDesigner = new QueryDesigner({
+      container: cEl("DIV", {}, null, dom),
+      dnd: this.getDnd(),
+      xmla: this.getXmla(),
+      xmlaTreeView: this.getXmlaTreeView(),
+      axes: [
+        {
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Categories"),
+          tooltip: gMsg("Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "levels",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
+          label: gMsg("Measures"),
+          tooltip: gMsg("Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "measures",
+          drop: {
+            include: "measure"
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_PAGES,
+          label: gMsg("Columns"),
+          tooltip: gMsg("For each unique combination of members, one column is layed out and filled with pie charts."),
+          canBeEmpty: false,
+          "class": "columns",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_CHAPTERS,
+          label: gMsg("Rows"),
+          tooltip: gMsg("For each unique combination of members, one row is layed out and its columns are filled with pie charts."),
+          canBeEmpty: false,
+          "class": "rows",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_SLICER,
+          label: gMsg("Slicer"),
+          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
+          "class": "slicer",
+          drop: {
+            include: "member"
+          }
+        }
+      ]
+    });
+    queryDesigner.listen({
+      changed: function(queryDesigner, event, data){
+        if (this.getAutoRunEnabled()) {
+          this.layoutChartArea();
+          this.executeQuery();
+        }
+        else {
+
+        }
+      },
+      scope: this
+    });
+    queryDesigner.render();
+    return queryDesigner;
+  },
+  initChart: function(dom){
+    var chart = new XavierPieChart({
+      container: dom
+    });
+    return chart;
+  }
+};
+XavierPieChartTab.prefix = "xavier-pie-chart-tab";
+adopt(XavierPieChartTab, XavierChartTab);
+
 })();

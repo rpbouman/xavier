@@ -376,7 +376,7 @@ var XlsxExporter;
     return "data:" + mimetype + ";base64," + encodeURIComponent(this.jsZip.generate());
     //window.open(this.getContent());
   },
-  export: function(name, visualizer, queryDesigner){
+  doExport: function(name, visualizer, queryDesigner){
     if (visualizer instanceof PivotTable) {
       this.exportPivotTable(visualizer, queryDesigner);
     }
