@@ -43,6 +43,8 @@ cEl("div", {
 var _scrollbars1 = gEl("_scrollbars1");
 var scrollbarWidth = (_scrollbars1.offsetWidth - _scrollbars1.clientWidth) + 2;
 var scrollbarHeight = (_scrollbars1.offsetHeight - _scrollbars1.clientHeight) + 2;
+//firefox 31 messes up
+scrollbarWidth = Math.max(scrollbarHeight, scrollbarWidth);
 }
 
 /***************************************************************
@@ -153,7 +155,7 @@ var PivotTable;
     this.renderRowHeadersTable();
   },
   removeVerticalHierarchyHeaders: function(){
-    this.getRowsHeadersDom().innerHTML = "";
+    dCh(this.getRowsHeadersDom());
   },
   getId: function() {
     return PivotTable.prefix + this.id;
@@ -558,7 +560,7 @@ var PivotTable;
     this.computeAxisLevels(columnAxis);
     var table = this._createAxisTable("columns-table");
     this.renderAxisHorizontally(columnAxis, table);
-    this.getColumnsDom().innerHTML = "";
+    dCh(this.getColumnsDom());
     this.getColumnsDom().appendChild(table);
     if (this.showHorizontalHierarchyHeaders()) {
       this.addHorizontalHierarchyHeaders();
@@ -569,7 +571,7 @@ var PivotTable;
     this.computeAxisLevels(pageAxis);
     var table = this._createAxisTable("page-table");
     this.renderAxisHorizontally(pageAxis, table);
-    this.getPagesDom().innerHTML = "";
+    dCh(this.getPagesDom());
     this.getPagesDom().appendChild(table);
   },
   renderRowAxis: function(){
@@ -577,7 +579,7 @@ var PivotTable;
     var table = this._createAxisTable("rows-table");
     this.columnOffset = this.computeAxisLevels(rowAxis);
     this.renderAxisVertically(rowAxis, table);
-    this.getRowsDom().innerHTML = "";
+    dCh(this.getRowsDom());
     this.getRowsDom().appendChild(table);
     if (this.showVerticalHierarchyHeaders()) {
       this.addVerticalHierarchyHeaders();
@@ -614,7 +616,7 @@ var PivotTable;
     return memberCell;
   },
   renderRowHeadersTable: function(){
-    this.getRowsHeadersDom().innerHTML = "";
+    dCh(this.getRowsHeadersDom());
     var dataset = this.dataset;
     if (!dataset.hasRowAxis()) {
       return;
@@ -948,7 +950,7 @@ var PivotTable;
     if (!dom) {
       return;
     }
-    dom.innerHTML = "";
+    dCh(dom);
     var style = dom.style;
     style.width = "0px";
     style.height = "0px";
