@@ -807,7 +807,9 @@ var XmlaTreeView;
           //We already have measures
           if (row.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
             if (row.DEFAULT_MEMBER) {
-              defaultMemberQueue.push(conf.measuresTreeNode);
+              //me.getMeasureTreeNode(row.DEFAULT_MEMBER);
+              //defaultMemberQueue.push(conf.measuresTreeNode);
+              me.setDefaultMeasure(row.DEFAULT_MEMBER)
             }
             conf.measuresTreeNode.conf.metadata = row;
             conf.measuresTreeNode.setId(
@@ -833,12 +835,28 @@ var XmlaTreeView;
       }
     });
   },
+  setDefaultMeasure: function(measureUniqueName){
+    var measureTreeNode = this.getMeasureTreeNode(measureUniqueName);
+    var measuresTreeNode = this.getMeasuresTreeNode();
+    measuresTreeNode.conf.defaultMember = measureTreeNode.conf.metadata;
+  },
+  getMeasureTreeNodeId: function(measureUniqueName){
+    return "measure:" + measureUniqueName;
+  },
+  getMeasureTreeNode: function(measureUniqueName){
+    var id = this.getMeasureTreeNodeId(measureUniqueName);
+    return TreeNode.getInstance("node:" + id);
+  },
+  getMeasuresTreeNode: function(){
+    var id = this.getMeasuresTreeNodeId();
+    return TreeNode.getInstance("node:" + id);
+  },
   renderMeasureNode: function(conf, row){
     new TreeNode({
       state: TreeNode.states.leaf,
       parentTreeNode: conf.measuresTreeNode,
       classes: ["measure", "aggregator" + row.MEASURE_AGGREGATOR],
-      id: "measure:" + row.MEASURE_UNIQUE_NAME,
+      id: this.getMeasureTreeNodeId(row.MEASURE_UNIQUE_NAME),
       title: row.MEASURE_CAPTION || row.MEASURE_NAME,
       tooltip: row.DESCRIPTION || row.MEASURE_CAPTION || row.MEASURE_NAME,
       metadata: row
@@ -847,6 +865,8 @@ var XmlaTreeView;
   renderMeasureNodes: function(conf){
     var me = this;
     var measuresTreeNode = conf.measuresTreeNode;
+    var measuresTreeNodeConf = measuresTreeNode.conf;
+    var measuresMetadata = measuresTreeNodeConf.metadata;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
@@ -899,12 +919,15 @@ var XmlaTreeView;
       }
     });
   },
+  getMeasuresTreeNodeId: function(){
+    return "[Measures]";
+  },
   renderMeasuresNode: function(conf){
     conf.measuresTreeNode = new TreeNode({
       state: TreeNode.states.expanded,
       parentElement: this.cubeTreePane.getDom(),
-      classes: ["hierarchy", "dimensiontype" + Xmla.Rowset.MD_DIMTYPE_MEASURE],
-      id: "[Measures]",
+      classes: ["measures", "hierarchy", "dimensiontype" + Xmla.Rowset.MD_DIMTYPE_MEASURE],
+      id: this.getMeasuresTreeNodeId(),
       title: gMsg("Measures"),
       tooltip: gMsg("Measures")
     });
