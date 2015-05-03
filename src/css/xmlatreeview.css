@@ -15,6 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
+.info-icon {
+  background-image: url('../mui/images/info_16x16.png');
+  background-repeat: no-repeat;
+  width: 20px;
+}
+
 .xmlatreeview {
   overflow: hidden;
 }

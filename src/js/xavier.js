@@ -113,37 +113,40 @@ function getAutoRunEnabled(){
 var xmlaTreeView = new XmlaTreeView({
   xmla: xmla,
   catalogNodesInitiallyFlattened: true,
-  dimensionNodesInitiallyFlattened: false
-});
-xmlaTreeView.listen({
-  busy: function(){
-    busy(true);
-  },
-  done: function(){
-    busy(false);
-  },
-  error: function(xmlaTreeView, event, error){
-    busy(false);
-    showAlert("Unexpected Error", error.toString() || error.message);
-    console.error(error.getStackTrace());
-  },
-  loadCube: function(xmlaTreeView, event, cubeTreeNode){
-    mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
-  },
-  cubeLoaded: function(xmlaTreeView, event){
-    mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
+  dimensionNodesInitiallyFlattened: false,
+  listeners: {
+    busy: function(){
+      busy(true);
+    },
+    done: function(){
+      busy(false);
+    },
+    error: function(xmlaTreeView, event, error){
+      busy(false);
+      showAlert("Unexpected Error", error.toString() || error.message);
+      console.error(error.getStackTrace());
+    },
+    loadCube: function(xmlaTreeView, event, cubeTreeNode){
+      mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
+    },
+    cubeLoaded: function(xmlaTreeView, event){
+      mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
 
-    var cubeTreeNode = xmlaTreeView.getCurrentCubeTreeNode();
-    var catalogTreeNode = xmlaTreeView.getCurrentCatalogTreeNode();
-    var datasourceTreeNode = xmlaTreeView.getCurrentDatasourceTreeNode();
+      var cubeTreeNode = xmlaTreeView.getCurrentCubeTreeNode();
+      var catalogTreeNode = xmlaTreeView.getCurrentCatalogTreeNode();
+      var datasourceTreeNode = xmlaTreeView.getCurrentDatasourceTreeNode();
 
-    var currentCube = {
-      cube: cubeTreeNode.conf.metadata,
-      catalog: catalogTreeNode.conf.metadata,
-      datasource: datasourceTreeNode.conf.metadata
-    };
+      var currentCube = {
+        cube: cubeTreeNode.conf.metadata,
+        catalog: catalogTreeNode.conf.metadata,
+        datasource: datasourceTreeNode.conf.metadata
+      };
 
-    workArea.setCube(currentCube);
+      workArea.setCube(currentCube);
+    },
+    requestinfo: function(xmlaTreeView, event, data){
+      workArea.newInfoTab(data);
+    }
   }
 });
 

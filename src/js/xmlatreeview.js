@@ -38,6 +38,7 @@ var XmlaTreeView;
   if (iDef(conf.dimensionNodesInitiallyFlattened)) {
     this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
   }
+  arguments.callee._super.apply(this, arguments);
 }).prototype = {
   //whether catalog nodes should initially be hidden
   catalogNodesInitiallyFlattened: true,
@@ -55,6 +56,49 @@ var XmlaTreeView;
       treeNode.removeFromParent();
     }
     treePane.clearAll();
+  },
+  getDescriptionContentType: function(description){
+    description = description.trim();
+    var type;
+    var len = description.length;
+    //https://gist.github.com/dperini/729294
+    if (/^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/i.test(description)) {
+      type = "url";
+    }
+    else
+    if (description.indexOf("<") === 0 && description.indexOf(len-1) === ">") {
+      type = "xml";
+    }
+    else
+    if (description === "") {
+      type = "empty";
+    }
+    else {
+      type = "text";
+    }
+    return type;
+  },
+  createNodeTooltipAndInfoLabel: function(description){
+    var type = this.getDescriptionContentType(description);
+    var tooltip = "", infoLabel = "";
+    switch (type) {
+      case "url":
+        tooltip = gMsg("Click on the information icon for a description.");
+        infoLabel = "<span class=\"info-icon\" data-url=\"" + description + "\">&#160;&#160;&#160;&#160;&#160;</span>"
+        break;
+      case "xml":
+      case "text":
+        tooltip = description;
+        infoLabel = "";
+        break;
+      case "empty":
+      default:
+        break;
+    }
+    return {
+      tooltip: tooltip,
+      infoLabel: infoLabel
+    };
   },
   init: function(){
     this.fireEvent("busy");
@@ -82,14 +126,16 @@ var XmlaTreeView;
         },
         success: function(xmla, options, rowset){
           rowset.eachRow(function(row){
+            var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
             var state = TreeNode.states.expanded;
             var treeNode = new TreeNode({
               classes: "catalog",
               state: state,
               id: conf.id + ":catalog:" + row.CATALOG_NAME,
               parentTreeNode: providerNode,
-              title: row.CATALOG_NAME,
-              tooltip: row.DESCRIPTION || row.CATALOG_NAME,
+              objectName: row.CATALOG_NAME,
+              title: tooltipAndInfoLabel.infoLabel + row.CATALOG_NAME,
+              tooltip: tooltipAndInfoLabel.tooltip || row.DESCRIPTION || row.CATALOG_NAME,
               metadata: row
             });
             cubeQueue.push(treeNode);
@@ -124,14 +170,17 @@ var XmlaTreeView;
           rowset.eachRow(function(row){
             var title = row.CUBE_CAPTION || row.CUBE_NAME;
             var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
+            var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+            catalogPrefix = tooltipAndInfoLabel.infoLabel + catalogPrefix;
             title = catalogPrefix + title;
             var treeNode = new TreeNode({
               classes: "cube",
               state: TreeNode.states.leaf,
               id: conf.id + ":cube:" + row.CUBE_NAME,
+              objectName: row.CUBE_CAPTION || row.CUBE_NAME,
               parentTreeNode: catalogNode,
               title: title,
-              tooltip: row.DESCRIPTION || row.CUBE_NAME,
+              tooltip: tooltipAndInfoLabel.tooltip || row.DESCRIPTION || row.CUBE_NAME,
               metadata: row
             });
           });
@@ -223,16 +272,39 @@ var XmlaTreeView;
     });
     this.schemaTreeListener = new TreeListener({container: this.schemaTreePane.getDom()});
     this.cubeSelection = new TreeSelection({treeListener: this.schemaTreeListener});
-    this.cubeSelection.listen("selectionChanged", function(cubeSelection, event, data){
-      if (!data.newSelection || !data.newSelection.length) return;
-      var selection = data.newSelection[0];
-      switch (selection.conf.classes) {
-        case "cube":
-          this.loadCube(selection);
-          break;
-        default:
+    this.cubeSelection.listen({
+      scope: this,
+      beforeChangeSelection: function(cubeSelection, event, data){
+        var d = data.data;
+        var event = d.event;
+        var target = event.getTarget();
+        var ret;
+        if (hCls(target, "info-icon")){
+          var url = gAtt(target, "data-url");
+          this.fireEvent("requestinfo", {
+            title: d.treeNode.conf.objectName,
+            url: url,
+          });
+          ret = false;
+        }
+        else {
+          ret = true;
+        }
+        return ret;
+      },
+      selectionChanged: function(cubeSelection, event, data){
+        if (!data.newSelection || !data.newSelection.length) {
+          return;
+        }
+        var selection = data.newSelection[0];
+        switch (selection.conf.classes) {
+          case "cube":
+            this.loadCube(selection);
+            break;
+          default:
+        }
       }
-    }, this);
+    });
     this.cubeTreeListener = new TreeListener({container: this.cubeTreePane.getDom()});
   },
   eachDatasourceNode: function(callback, scope){

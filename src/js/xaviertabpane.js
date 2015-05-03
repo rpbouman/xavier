@@ -33,7 +33,7 @@ var DataTable;
   if (!conf.tabs) {
     conf.tabs = [
       new XavierWelcomeTab({
-      tabPane: this
+        tabPane: this
       })
     ];
   }
@@ -65,6 +65,15 @@ var DataTable;
   },
   getXmlaTreeView: function(){
     return this.conf.xmlaTreeView;
+  },
+  newInfoTab: function(conf){
+    var infoTab = new XavierWelcomeTab({
+      tabPane: this,
+      text: conf.title,
+      url: conf.url
+    });
+    this.addTab(infoTab);
+    return infoTab;
   },
   newPivotTableTab: function(){
     var pivotTableTab = new XavierPivotTableTab({
@@ -329,13 +338,18 @@ XavierTab.prefix = "xavier-tab";
 var XavierWelcomeTab;
 (XavierWelcomeTab = function(conf){
   this.classes = ["welcome"];
+  if (conf.text) {
+    this.text = conf.text;
+  }
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Welcome!"),
   createDom: function(){
+    var conf = this.conf;
+    var url = conf.url || "../doc/" + gMsg("en/welcome.html");
     var dom = cEl("IFRAME", {
       id: this.getId(),
-      src: "../doc/" + gMsg("en/welcome.html"),
+      src: url,
       style: {
         "border-style": "none"
       },
@@ -1395,15 +1409,31 @@ var XavierChartTab;
       id: this.getId(),
       "class": ["chart", XavierChartTab.prefix]
     });
-    this.queryDesigner = this.initQueryDesigner(dom);
+    var queryDesigner = this.initQueryDesigner(dom);
+    this.queryDesigner = queryDesigner;
+    queryDesigner.listen({
+      changed: function(queryDesigner, event, data){
+        if (this.getAutoRunEnabled()) {
+          this.layoutChartArea();
+          this.executeQuery();
+        }
+        else {
+
+        }
+      },
+      scope: this
+    });
+    queryDesigner.render();
     this.visualizer = this.initChart(dom);
     return dom;
   },
   layoutChartArea: function() {
     var queryDesigner = this.getQueryDesigner();
     var queryDesignerDom = queryDesigner.getDom().firstChild;
+
     var visualizer = this.getVisualizer();
     var visualizerDom = visualizer.getDom();
+
     var dom = this.getDom();
     var width = dom.clientWidth - queryDesignerDom.clientWidth;
 
@@ -1431,7 +1461,7 @@ var XavierPieChart;
   conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
-  renderPieCharts: function(measuresAxis, categoriesAxis()){
+  renderPieCharts: function(measuresAxis, categoriesAxis){
 
   },
   renderDataset: function(dataset, queryDesigner){
@@ -1520,19 +1550,6 @@ var XavierPieChartTab;
         }
       ]
     });
-    queryDesigner.listen({
-      changed: function(queryDesigner, event, data){
-        if (this.getAutoRunEnabled()) {
-          this.layoutChartArea();
-          this.executeQuery();
-        }
-        else {
-
-        }
-      },
-      scope: this
-    });
-    queryDesigner.render();
     return queryDesigner;
   },
   initChart: function(dom){
