@@ -52,5 +52,10 @@ aMsg({
   //query designer
   "Columns": "Kolommen",
   "Rows": "Rijen",
-  "Slicer": "Selectie"
+  "Slicer": "Selectie",
+  //workarea
+  "This action will close all tab pages associated with the current cube. Do you want to continue?": "Deze actie zal alle tabbladen voor de huidige kubus afsluiten. Wilt u doorgaan?",
+  "Close tabs for current cube?": "Tabbladen voor de huidige kubus afsluiten?",
+  "Yes": "Ja",
+  "No": "Nee"
 });

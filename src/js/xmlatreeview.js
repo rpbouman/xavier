@@ -61,8 +61,7 @@ var XmlaTreeView;
     description = description.trim();
     var type;
     var len = description.length;
-    //https://gist.github.com/dperini/729294
-    if (/^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/i.test(description)) {
+    if (/^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(\w+\/)*([\w\.]+)(\?[\w\.=\&]*)?$/.test(description)) {
       type = "url";
     }
     else
@@ -128,14 +127,15 @@ var XmlaTreeView;
           rowset.eachRow(function(row){
             var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
             var state = TreeNode.states.expanded;
+            var objectName = row.CATALOG_NAME;
             var treeNode = new TreeNode({
               classes: "catalog",
               state: state,
               id: conf.id + ":catalog:" + row.CATALOG_NAME,
               parentTreeNode: providerNode,
-              objectName: row.CATALOG_NAME,
-              title: tooltipAndInfoLabel.infoLabel + row.CATALOG_NAME,
-              tooltip: tooltipAndInfoLabel.tooltip || row.DESCRIPTION || row.CATALOG_NAME,
+              objectName: objectName,
+              title: tooltipAndInfoLabel.infoLabel + objectName,
+              tooltip: tooltipAndInfoLabel.tooltip || objectName,
               metadata: row
             });
             cubeQueue.push(treeNode);
@@ -168,19 +168,21 @@ var XmlaTreeView;
         },
         success: function(xmla, options, rowset){
           rowset.eachRow(function(row){
-            var title = row.CUBE_CAPTION || row.CUBE_NAME;
+            var objectName = row.CUBE_CAPTION || row.CUBE_NAME;
+            var title = objectName;
             var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
             var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
             catalogPrefix = tooltipAndInfoLabel.infoLabel + catalogPrefix;
             title = catalogPrefix + title;
+            var tooltip = tooltipAndInfoLabel.tooltip || row.CUBE_NAME;
             var treeNode = new TreeNode({
               classes: "cube",
               state: TreeNode.states.leaf,
               id: conf.id + ":cube:" + row.CUBE_NAME,
-              objectName: row.CUBE_CAPTION || row.CUBE_NAME,
+              objectName: objectName,
               parentTreeNode: catalogNode,
               title: title,
-              tooltip: tooltipAndInfoLabel.tooltip || row.DESCRIPTION || row.CUBE_NAME,
+              tooltip: tooltip,
               metadata: row
             });
           });
@@ -272,6 +274,7 @@ var XmlaTreeView;
     });
     this.schemaTreeListener = new TreeListener({container: this.schemaTreePane.getDom()});
     this.cubeSelection = new TreeSelection({treeListener: this.schemaTreeListener});
+
     this.cubeSelection.listen({
       scope: this,
       beforeChangeSelection: function(cubeSelection, event, data){
@@ -288,7 +291,19 @@ var XmlaTreeView;
           ret = false;
         }
         else {
-          ret = true;
+          var selection = data.newSelection[0];
+          switch (selection.conf.classes) {
+            case "cube":
+              if (this.fireEvent("beforeLoadCube", selection) === false) {
+                ret = false;
+              }
+              else {
+                ret = true;
+              }
+              break;
+            default:
+              ret = true;
+          }
         }
         return ret;
       },
@@ -305,7 +320,23 @@ var XmlaTreeView;
         }
       }
     });
-    this.cubeTreeListener = new TreeListener({container: this.cubeTreePane.getDom()});
+    var cubeTreePaneDom = this.cubeTreePane.getDom();
+    this.cubeTreeListener = new TreeListener({
+      container: cubeTreePaneDom,
+      listeners: {
+        nodeClicked: function(treeListener, event, d){
+          var target = d.event.getTarget();
+          if (hCls(target, "info-icon")) {
+            var url = gAtt(target, "data-url");
+            this.fireEvent("requestinfo", {
+              title: d.treeNode.conf.objectName,
+              url: url,
+            });
+          }
+        },
+        scope: this
+      }
+    });
   },
   eachDatasourceNode: function(callback, scope){
     var schemaTreePane = this.schemaTreePane;
@@ -602,7 +633,6 @@ var XmlaTreeView;
     })
   },
   renderLevelPropertyNode: function(conf, row) {
-    var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     var idPostfix =  ":level:" + row.LEVEL_UNIQUE_NAME;
     var levelTreeNode = TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix);
@@ -611,11 +641,18 @@ var XmlaTreeView;
       //the level tree node might not have been created if it was marked as not visible
       return;
     }
+    var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+    var objectName = row.PROPERTY_CAPTION || row.PROPERTY_NAME;
+    var title = objectName;
+    var tooltip = tooltipAndInfoLabel.tooltip || title;
+    title = tooltipAndInfoLabel.infoLabel + title;
     new TreeNode({
       parentTreeNode: levelTreeNode,
       classes: "property",
       id: id + ":property:" + row.PROPERTY_NAME,
-      title: row.PROPERTY_CAPTION || row.PROPERTY_NAME,
+      objectName: objectName,
+      title: title,
+      tooltip: tooltip,
       state: TreeNode.states.leaf,
       metadata: row
     })
@@ -662,7 +699,6 @@ var XmlaTreeView;
     });
   },
   renderLevelTreeNode: function(conf, row){
-    var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     var id = hierarchyTreeNode.conf.id + ":level:" + row.LEVEL_UNIQUE_NAME;
     var levelCaption = row.LEVEL_CAPTION;
@@ -676,11 +712,18 @@ var XmlaTreeView;
       HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME,
       LEVEL_UNIQUE_NAME: row.LEVEL_UNIQUE_NAME
     };
+    var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+    var objectName = row.LEVEL_CAPTION || row.LEVEL_NAME;
+    var title = objectName;
+    var tooltip = tooltipAndInfoLabel.tooltip || title;
+    title = tooltipAndInfoLabel.infoLabel + title;
     new TreeNode({
       parentTreeNode: hierarchyTreeNode,
       classes: ["level", "leveltype" + row.LEVEL_TYPE, "levelunicity" + row.LEVEL_UNIQUE_SETTINGS],
       id: id,
-      title: row.LEVEL_CAPTION || row.LEVEL_NAME,
+      objectName: objectName,
+      title: title,
+      tooltip: tooltip,
       metadata: row,
       state: TreeNode.states.expanded
     });
@@ -725,15 +768,20 @@ var XmlaTreeView;
     });
   },
   renderDimensionTreeNode: function(conf, row){
-    var me = this;
     var classes = ["dimension", "dimensiontype" + row.DIMENSION_TYPE, TreeNode.states.flattened];
+    var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+    var objectName = row.DIMENSION_CAPTION || row.DIMENSION_NAME;
+    var title = objectName;
+    var tooltip = tooltipAndInfoLabel.tooltip || title;
+    title = tooltipAndInfoLabel.infoLabel + title;
     new TreeNode({
       state: TreeNode.states.expanded,
-      parentElement: me.cubeTreePane.getDom(),
+      parentElement: this.cubeTreePane.getDom(),
       classes: classes,
       id: "dimension:" + row.DIMENSION_UNIQUE_NAME,
-      title: row.DIMENSION_CAPTION,
-      tooltip: row.DESCRIPTION || row.DIMENSION_CAPTION || row.DIMENSION_NAME,
+      objectName: objectName,
+      title: title,
+      tooltip: tooltip,
       metadata: row
     });
   },
@@ -831,19 +879,24 @@ var XmlaTreeView;
     if (this.showDimensionNodesCheckbox.checked && dimensionNode.isFlattened() && dimensionNode.getChildNodeCount() >= 1) {
       dimensionNode.setState(TreeNode.states.unflattened);
     }
-    var dimensionTitle = dimensionNode.getTitle();
-    var hierarchyTitle = row.HIERARCHY_CAPTION;
+    var dimensionTitle = dimensionNode.conf.objectName;
+    var objectName = row.HIERARCHY_CAPTION || row.HIERARCHY_NAME;
+    var hierarchyTitle = objectName;
     if (dimensionTitle !== hierarchyTitle) {
       hierarchyTitle = "<span class=\"label label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
     }
+    var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+    var tooltip = tooltipAndInfoLabel.tooltip || hierarchyTitle;
+    title = tooltipAndInfoLabel.infoLabel + hierarchyTitle;
 
     var hierarchyTreeNode = new TreeNode({
       state: TreeNode.states.collapsed,
       parentTreeNode: dimensionNode,
       classes: ["hierarchy", "dimensiontype" + row.DIMENSION_TYPE],
       id: this.getHierarchyTreeNodeId(row),
-      title: hierarchyTitle,
-      tooltip: row.DESCRIPTION || row.HIERARCHY_CAPTION || row.HIERARCHY_NAME,
+      objectName: objectName,
+      title: title,
+      tooltip: tooltip,
       metadata: row,
       loadChildren: function(callback) {
         //get the level of the hierarchy.
@@ -924,13 +977,19 @@ var XmlaTreeView;
     return TreeNode.getInstance("node:" + id);
   },
   renderMeasureNode: function(conf, row){
+    var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+    var objectName = row.MEASURE_CAPTION || row.MEASURE_NAME;
+    var title = objectName;
+    var tooltip = tooltipAndInfoLabel.tooltip || title;
+    title = tooltipAndInfoLabel.infoLabel + title;
     new TreeNode({
       state: TreeNode.states.leaf,
       parentTreeNode: conf.measuresTreeNode,
       classes: ["measure", "aggregator" + row.MEASURE_AGGREGATOR],
       id: this.getMeasureTreeNodeId(row.MEASURE_UNIQUE_NAME),
-      title: row.MEASURE_CAPTION || row.MEASURE_NAME,
-      tooltip: row.DESCRIPTION || row.MEASURE_CAPTION || row.MEASURE_NAME,
+      objectName: objectName,
+      title: title,
+      tooltip: tooltip,
       metadata: row
     });
   },
@@ -1027,6 +1086,10 @@ var XmlaTreeView;
     return currentCatalogTreeNode.getParentTreeNode();
   },
   loadCube: function(cubeTreeNode){
+    this.cubeSelection._setSelection({
+      oldSelection: this.cubeSelection.getSelection(),
+      newSelection: [cubeTreeNode]
+    });
     this.collapseSchema();
     this.currentCubeTreeNode = cubeTreeNode;
     var me = this;

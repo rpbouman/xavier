@@ -1,1 +1,4 @@
 xavier: XML/A Visualizer
+
+#1 mandatory dimensions
+

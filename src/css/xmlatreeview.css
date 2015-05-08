@@ -19,6 +19,7 @@ limitations under the License.
   background-image: url('../mui/images/info_16x16.png');
   background-repeat: no-repeat;
   width: 20px;
+  cursor: pointer;
 }
 
 .xmlatreeview {
@@ -46,6 +47,10 @@ span.current-cube {
   white-space: nowrap;
   padding-left: 20px;
   margin: 2px;
+}
+
+.dragging > span.info-icon {
+  display: none
 }
 
 .tree .datasource > .head > .toggle {

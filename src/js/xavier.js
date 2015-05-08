@@ -51,7 +51,8 @@ mainToolbar.addButton([
 ]);
 
 mainToolbar.addButton([
-  {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")}
+  {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")},
+  {"class": "new-bar-chart", group: "vis", tooltip: gMsg("New Bar Chart")}
 ]);
 
 mainToolbar.addButton([
@@ -79,6 +80,9 @@ mainToolbar.listen({
         break;
       case "new-pie-chart":
         workArea.newPieChartTab();
+        break;
+      case "new-bar-chart":
+        workArea.newBarChartTab();
         break;
       case "run":
         workArea.executeQuery();
@@ -126,6 +130,30 @@ var xmlaTreeView = new XmlaTreeView({
       showAlert("Unexpected Error", error.toString() || error.message);
       console.error(error.getStackTrace());
     },
+    beforeLoadCube: function(xmlaTreeView, event, selection){
+      var ret;
+      if (workArea.hasTabsForCube()) {
+        showConfirm(
+          "This action will close all tab pages associated with the current cube. Do you want to continue?",
+          "Close tabs for current cube?",
+          function(){
+            workArea.closeTabsForCube();
+            xmlaTreeView.loadCube(selection);
+          },
+          function(){
+            return;
+          },
+          null,
+          "Yes",
+          "No"
+        );
+        ret = false;
+      }
+      else {
+        ret = true;
+      }
+      return ret;
+    },
     loadCube: function(xmlaTreeView, event, cubeTreeNode){
       mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
     },
@@ -144,6 +172,7 @@ var xmlaTreeView = new XmlaTreeView({
 
       workArea.setCube(currentCube);
     },
+    //called when an information icon is clicked.
     requestinfo: function(xmlaTreeView, event, data){
       workArea.newInfoTab(data);
     }

@@ -69,6 +69,15 @@ limitations under the License.
   background-image: url('../images/new-pie-chart.png');
 }
 
+/* bar chart */
+.xavier-tabpane > .pentaho-tab-bar > .bar-chart {
+  background-image: url('../images/bar-chart.png');
+}
+
+.toolbar > .new-bar-chart {
+  background-image: url('../images/new-bar-chart.png');
+}
+
 .toolbar .show-column-hierarchy-headers {
   background-image: url('../images/pivot-table-show-column-headers.png');
 }
@@ -104,3 +113,24 @@ ul.chart-container, ul.chart-container > li {
   text-align: right;
 }
 
+.xavier-visualizer {
+  position: absolute;
+}
+
+.xavier-pie-chart-instance {
+  position: absolute;
+}
+
+.xavier-chart-title {
+  font-weight: bold;
+  text-align: center;
+  left: 0px;
+  right: 0px;
+  margin-bottom: 5px;
+  position: absolute;
+  padding: 2px;
+}
+
+.xavier-chart-body {
+  position: absolute;
+}
