@@ -32,6 +32,7 @@ function showAlert(title, text){
   }
 }
 
+var confirmDialog;
 function showConfirm(message, title, onOk, onCancel, scope, acceptLabel, cancelLabel){
   if (!(message)) {
     message = "Please confirm";
@@ -40,47 +41,46 @@ function showConfirm(message, title, onOk, onCancel, scope, acceptLabel, cancelL
   if (!(scope)) {
     scope = null;
   }
-  if (top.gwtConfirm) {
-    if (!(title)) {
-      title = "Confirm";
-    }
-    title = gMsg(title);
-    if (!(cancelLabel)) {
-      cancelLabel = "Cancel";
-    }
-    cancelLabel = gMsg(cancelLabel);
-    if (!(acceptLabel)) {
-      acceptLabel = "Ok";
-    }
-    acceptLabel = gMsg(acceptLabel);
-    top.gwtConfirm(message, {
-      onOk: function(){
-        if (onOk) {
-          onOk.call(scope);
-        }
-      },
-      okOk: function(){
-        if (onOk) {
-          onOk.call(scope);
-        }
-      },
-      onCancel: function(){
-        if (onCancel) {
-          onCancel.call(scope);
-        }
-      }
-    }, {
-      title: title,
-      acceptLabel: acceptLabel,
-      cancelLabel: cancelLabel
-    });
+
+  if (!(title)) {
+    title = "Confirm";
   }
-  else {
-    if (confirm(message)) {
+  title = gMsg(title);
+  if (!(cancelLabel)) {
+    cancelLabel = "Cancel";
+  }
+  cancelLabel = gMsg(cancelLabel);
+  if (!(acceptLabel)) {
+    acceptLabel = "Ok";
+  }
+  acceptLabel = gMsg(acceptLabel);
+
+  var okHandler = function(){
+    if (onOk) {
       onOk.call(scope);
     }
-    else {
+  };
+
+  var cancelHandler = function(){
+    if (onCancel) {
       onCancel.call(scope);
     }
+  };
+
+  if (!confirmDialog) {
+    confirmDialog = new Dialog();
   }
+  confirmDialog.show({
+    title: title,
+    message: message,
+    scope: scope,
+    yes: {
+      label: acceptLabel,
+      handler: okHandler
+    },
+    cancel: {
+      label: cancelLabel,
+      handler: cancelHandler
+    }
+  });
 }
