@@ -379,7 +379,7 @@ var XlsxExporter;
     return "data:" + mimetype + ";base64," + encodeURIComponent(this.jsZip.generate());
     //window.open(this.getContent());
   },
-  createExportHeaders: function(title, visualizer, queryDesigner) {
+  createExportHeaders: function(title, catalogName, cubeName, visualizer, queryDesigner) {
     var rowsXml = this.rowsXml, line, n, ref, type = "s", style = 0;
     //title row
     line = "";
@@ -408,7 +408,7 @@ var XlsxExporter;
 
     ref = this.getColumnAddress(2) + String(n);
     line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
-    line += this.getSharedString("...");
+    line += this.getSharedString(catalogName);
     line += "</c>";
 
     rowsXml.push("<row>" + line + "</row>");
@@ -424,7 +424,7 @@ var XlsxExporter;
 
     ref = this.getColumnAddress(2) + String(n);
     line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
-    line += this.getSharedString("...");
+    line += this.getSharedString(cubeName);
     line += "</c>";
 
     rowsXml.push("<row>" + line + "</row>");
@@ -448,10 +448,10 @@ var XlsxExporter;
 
     rowsXml.push("<row>" + line + "</row>");
   },
-  doExport: function(name, visualizer, queryDesigner){
+  doExport: function(name, catalogName, cubeName, visualizer, queryDesigner){
     this.rowsXml = [];
     this.sharedStrings = [];
-    this.createExportHeaders(name, visualizer, queryDesigner);
+    this.createExportHeaders(name, catalogName, cubeName, visualizer, queryDesigner);
     if (visualizer instanceof PivotTable) {
       this.exportPivotTable(visualizer, queryDesigner);
     }

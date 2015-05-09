@@ -59,6 +59,7 @@ aMsg({
   "Yes": "Ja",
   "No": "Nee",
   //misc words to create names and labels for graphs, excel export etc.
+  "There is nothing to export. Please enter a query first.": "Er zijn geen gegevens die geexporteerd kunnen worden. Maak eerst een zoekopdracht.",
   "and": "en",
   "per": "per",
   "by": "per",

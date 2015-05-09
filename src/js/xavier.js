@@ -91,7 +91,7 @@ mainToolbar.listen({
         workArea.clear();
         break
       case "excel":
-        exportToExcel();
+        workArea.exportToExcel();
         break
       default:
         throw "Not implemented";
@@ -484,126 +484,6 @@ dnd.listen({
   whileDrag: whileDrag,
   endDrag: endDrag
 });
-
-/**
-* Excel Export
-*/
-var xlsxExporter;
-function exportToExcel(){
-  try {
-    var selectedTab = workArea.getSelectedTab();
-    if (!selectedTab) {
-      throw "No selected tab to export.";
-    }
-    var visualizer = selectedTab ? selectedTab.getVisualizer() : null;
-    var dataset = selectedTab ? selectedTab.getDataset() : null;
-    var queryDesigner = selectedTab ? selectedTab.getQueryDesigner() : null;
-    if (!selectedTab || !visualizer || !queryDesigner || !dataset) {
-      throw "There is nothing to export. Please enter a query first";
-    }
-
-    if (!xlsxExporter) {
-      xlsxExporter = new XlsxExporter();
-    }
-
-    var catalog = workArea.getCatalog();
-    var cube = workArea.getCube();
-    var name = catalog.CATALOG_NAME + " " + cube.CUBE_CAPTION + " - ";
-    var i, hierarchyCount, hierarchies, hierarchy, measures, measure, measureNames = [];
-    var measureAxis, axes = {};
-    queryDesigner.eachAxis(function(id, axis){
-      axes[id] = [];
-      hierarchyCount = axis.getHierarchyCount();
-      for (i = 0; i < hierarchyCount; i++){
-        hierarchy = axis.getHierarchyByIndex(i);
-        if (axis.getHierarchyName(hierarchy) === QueryDesigner.prototype.measuresHierarchyName) {
-          measureAxis = id;
-          var j, setDef,
-              setDefs = axis.setDefs[QueryDesigner.prototype.measuresHierarchyName],
-              n = setDefs.length
-          ;
-          for (j = 0; j < n; j++) {
-            setDef = setDefs[j];
-            measureNames.push(axis.getMemberCaption(setDef.metadata));
-          }
-        }
-        else {
-          axes[id].push(axis.getHierarchyCaption(hierarchy));
-        }
-      }
-    });
-
-    //TODO: localize file name for export.
-    var last;
-    if (measureNames.length) {
-      last = measureNames.pop();
-      name += measureNames.join(", ");
-      if (measureNames.length) {
-        name += " " + gMsg("and") + " ";
-      }
-      name += last;
-    }
-    function axisDescription(hierarchies){
-      var last, name = "";
-      last = hierarchies.pop();
-      name += hierarchies.join(",");
-      if (hierarchies.length) {
-        name += " " + gMsg("and") + " ";
-      }
-      name += last;
-      return name;
-    }
-
-    var by, hasBy, vs, slicer;
-    switch (measureAxis) {
-      case String(Xmla.Dataset.AXIS_COLUMNS):
-      case Xmla.Dataset.AXIS_SLICER:
-        by = Xmla.Dataset.AXIS_COLUMNS;
-        vs = Xmla.Dataset.AXIS_ROWS;
-        break;
-      case String(Xmla.Dataset.AXIS_ROWS):
-        by = Xmla.Dataset.AXIS_ROWS;
-        vs = Xmla.Dataset.AXIS_COLUMNS;
-        break;
-      //no measures specified
-      default:
-        by = Xmla.Dataset.AXIS_COLUMNS;
-        vs = Xmla.Dataset.AXIS_ROWS;
-    }
-
-    by = axes[by];
-    var hasBy = by.length;
-    if (hasBy) {
-      if (last) {
-        name += " " + gMsg("by") + " ";
-      }
-      name += axisDescription(by);
-    }
-
-    if (vs) {
-      vs = axes[vs];
-      if (vs && vs.length) {
-        if (hasBy) {
-          name += " " + gMsg("vs") + " ";
-        }
-        else {
-        name += " " + gMsg("by") + " ";
-        }
-        name += axisDescription(vs);
-      }
-    }
-
-    slicer = axes["SlicerAxis"];
-    if (slicer && slicer.length) {
-      name += " " + gMsg("for a selection of") + " " + axisDescription(slicer);
-    }
-
-    xlsxExporter.doExport(name, visualizer, queryDesigner);
-  }
-  catch (exception){
-    showAlert("Export Error", exception);
-  }
-}
 
 /**
 *   Resize window stuff
