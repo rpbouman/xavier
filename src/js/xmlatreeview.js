@@ -617,12 +617,13 @@ var XmlaTreeView;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     var idPostfix =  ":level:" + row.LEVEL_UNIQUE_NAME;
     var id = hierarchyTreeNode.conf.id + idPostfix;
+    var title = row.LEVEL_CARDINALITY + " " + gMsg("Members");
     new TreeNode({
       parentTreeNode: TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix),
       classes: "members",
       id: id + ":members",
-      title: gMsg("Members"),
-      tooltip: gMsg("Members"),
+      title: title,
+      tooltip: title,
       metadata: row,
       state: TreeNode.states.collapsed,
       loadChildren: function(callback){
