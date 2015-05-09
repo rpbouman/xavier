@@ -63,5 +63,8 @@ aMsg({
   "per": "per",
   "by": "per",
   "vs": "vs",
-  "for a selection of": "voor een selectie van"
+  "for a selection of": "voor een selectie van",
+  "Title": "Titel",
+  "Catalog": "Catalogus",
+  "Cube": "Kubus"
 });
