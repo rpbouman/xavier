@@ -57,5 +57,11 @@ aMsg({
   "This action will close all tab pages associated with the current cube. Do you want to continue?": "Deze actie zal alle tabbladen voor de huidige kubus afsluiten. Wilt u doorgaan?",
   "Close tabs for current cube?": "Tabbladen voor de huidige kubus afsluiten?",
   "Yes": "Ja",
-  "No": "Nee"
+  "No": "Nee",
+  //misc words to create names and labels for graphs, excel export etc.
+  "and": "en",
+  "per": "per",
+  "by": "per",
+  "vs": "vs",
+  "for a selection of": "voor een selectie van"
 });
