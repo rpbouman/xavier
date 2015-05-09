@@ -405,9 +405,8 @@ var XlsxExporter;
       n = rowsXml.length + 2;
 
       ref = this.getColumnAddress(1) + String(n);
-      var hierarchyName = slicerAxis.getHierarchyName(hierarchy);
       line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
-      line += this.getSharedString(hierarchyName + ":");
+      line += this.getSharedString(hierarchy.HIERARCHY_CAPTION + ":");
       line += "</c>";
 
       var memberList = "";
