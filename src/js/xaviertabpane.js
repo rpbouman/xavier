@@ -1093,6 +1093,55 @@ var XavierVisualizer;
     }
     return label;
   },
+  makeChartDom: function(dom, x, y, width, height, title, titlePosition){
+    var id = this.getChartId();
+
+    var children = [];
+    if (titlePosition) {
+      var chartTitle = cEl("DIV", {
+        id: id + "-title",
+        "class": "xavier-chart-title"
+      }, title);
+      children.push(chartTitle);
+    }
+
+    var chartBody = cEl("DIV", {
+      id: id + "-body",
+      "class": "xavier-chart-body"
+    });
+    children.push(chartBody);
+
+    var div = cEl("DIV", {
+      id: id,
+      style: {
+        position: "absolute",
+        top: y + "px",
+        left: x + "px",
+        width: width + "px",
+        height: height + "px"
+      }
+    }, children, dom);
+
+    if (chartTitle) {
+    /*
+      chartBody.style.width = (width - 2 * chartTitle.clientHeight) + "px";
+      chartBody.style.height = (height - chartTitle.clientHeight) + "px";
+      chartBody.style.left = chartTitle.clientHeight + "px";
+      switch (titlePosition) {
+        case "top":
+          chartTitle.style.top = "0px";
+          chartBody.style.top = chartTitle.clientHeight + "px";
+          break;
+        case "bottom":
+          chartBody.style.top = "0px";
+          chartTitle.style.top = chartBody.style.height;
+          break;
+      }
+    */
+      chartBody.style.margin = chartTitle.clientHeight + "px";
+    }
+    return div;
+  },
   createGridForTuples: function(dom, axis, titlePosition, callback, scope){
     var numTuples = axis.tupleCount();
     var w = dom.clientWidth;
@@ -1101,46 +1150,8 @@ var XavierVisualizer;
     var x = 0, y = 0;
     axis.eachTuple(function(tuple){
       var label = this.getLabelForTuple(tuple);
-      var children = [];
 
-      if (titlePosition) {
-        var chartTitle = cEl("DIV", {
-          "class": "xavier-chart-title"
-        }, label);
-        children.push(chartTitle);
-      }
-
-      var chartBody = cEl("DIV", {
-        "class": "xavier-chart-body"
-      });
-      children.push(chartBody);
-
-      var div = cEl("DIV", {
-        style: {
-          position: "absolute",
-          top: y + "px",
-          left: x + "px",
-          width: len + "px",
-          height: len + "px"
-        }
-      }, children, dom);
-
-      if (chartTitle) {
-        chartBody.style.width = len - 2*chartTitle.clientHeight + "px";
-        chartBody.style.height = chartBody.style.width;
-        chartBody.style.left = chartTitle.clientHeight + "px";
-        switch (titlePosition) {
-          case "top":
-            chartTitle.style.top = "0px";
-            chartBody.style.top = chartTitle.clientHeight + "px";
-            break;
-          case "bottom":
-            chartBody.style.top = "0px";
-            chartTitle.style.top = chartBody.style.height;
-            break;
-        }
-      }
-
+      var div = this.makeChartDom(dom, x, y, len, len, label, titlePosition);
       callback.call(scope, tuple, div, len);
 
       x += len;
@@ -1236,7 +1247,7 @@ var XavierChartTab;
     var visualizerDom = visualizer.getDom();
 
     var dom = this.getDom();
-    var width = dom.clientWidth - queryDesignerDom.clientWidth;
+    var width = dom.clientWidth - queryDesignerDom.clientWidth - scrollbarWidth;
     //horizontal distance from query designer.
     var distance = 10;
     width -= distance;
@@ -1245,7 +1256,7 @@ var XavierChartTab;
     style.top = 0 + "px";
     style.width = width + "px";
     style.left = queryDesignerDom.clientWidth + distance + "px";
-    style.height = dom.clientHeight + "px";
+    style.height = (dom.clientHeight - scrollbarHeight) + "px";
   },
   doLayout: function(){
     this.layoutChartArea();
@@ -1267,27 +1278,12 @@ var XavierPieChart;
 }).prototype = {
   renderCharts: function(dom, measuresAxis, categoriesAxis, cellset){
     this.createGridForTuples(dom, measuresAxis, "bottom", function(tuple, dom, len){
-      var id = this.getChartId();
-      dom.id = id;
-      var bodyId = id + "-body";
-      dom.lastChild.id = bodyId;
-
       var data = [];
       categoriesAxis.eachTuple(function(tuple){
-        var members = tuple.members, member;
-        var category = "";
-        var i, n = members.length;
-        for (i = 0; i < n; i++){
-          if (category) {
-            category += " - ";
-          }
-          member = members[i];
-          category += member.Caption;
-        }
-        var datum = {};
-        datum.category = category;
-        datum.measure = cellset.cellValue();
-        data.push(datum);
+        data.push({
+          category: this.getLabelForTuple(tuple),
+          measure: cellset.cellValue()
+        });
         cellset.nextCell();
       }, this);
 
@@ -1299,16 +1295,13 @@ var XavierPieChart;
         return d.measure;
       });
 
-      var chart = dc.pieChart("#" + bodyId);
+      var chart = dc.pieChart("#" + dom.lastChild.id);
+      var dim = Math.min(dom.lastChild.clientWidth, dom.lastChild.clientHeight);
       chart
-        .width(dom.lastChild.clientWidth).height(dom.lastChild.clientHeight)
+        .width(dim).height(dim)
         .dimension(dimension)
         .group(group)
       ;
-      //only add a legend for the first chart.
-      //if (tuple.index === 0){
-      //  chart.legend(dc.legend());
-      //}
       chart.render();
 
     }, this);
@@ -1414,7 +1407,7 @@ var XavierBarChart;
       var bodyId = id + "-body";
       dom.lastChild.id = bodyId;
 
-      var data = []
+      var data = [];
       categoriesAxis.eachTuple(function(tuple){
         var members = tuple.members, member;
         var category = "";
@@ -1454,6 +1447,87 @@ var XavierBarChart;
       chart.render();
 
     }, this);
+  },
+  renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
+    var data = [];
+
+    var yAxisLabel = "", xAxisLabel = "";
+    categoriesAxis.eachHierarchy(function(hierarchy){
+      if (xAxisLabel) {
+        xAxisLabel += " - ";
+      }
+      xAxisLabel += hierarchy.name;
+    });
+
+    var numMeasures = measuresAxis.tupleCount();
+    categoriesAxis.eachTuple(function(tuple){
+      var datum = {
+        category: this.getLabelForTuple(tuple),
+        values: []
+      };
+      measuresAxis.eachTuple(function(measure){
+        //construct the y axis label.
+        if (tuple.index === 0) {
+          if (yAxisLabel) {
+            if (numMeasures === measure.index + 1) {
+              yAxisLabel += " and ";
+            }
+            else {
+              yAxisLabel += ", ";
+            }
+          }
+          yAxisLabel += this.getLabelForTuple(measure);
+        }
+        datum.values.push(cellset.cellValue());
+        cellset.nextCell();
+      }, this);
+      data.push(datum);
+    }, this);
+
+
+    var xf = crossfilter(data);
+    var dimension = xf.dimension(function(d){
+      return d.category;
+    });
+
+    var title = yAxisLabel + " per " + xAxisLabel;
+    var div = this.makeChartDom(dom, 0, 0, dom.clientWidth, dom.clientHeight, title, "top");
+    var chart = dc.barChart("#" + div.lastChild.id);
+    chart
+      .xAxisLabel(xAxisLabel)
+      .gap(10)
+      .renderHorizontalGridLines(true)
+      .yAxisLabel(yAxisLabel)
+      .x(d3.scale.ordinal())
+      .margins({
+        left: 100,
+        right: 30,
+        top: 30,
+        bottom: 50
+      })
+      .xUnits(dc.units.ordinal)
+      .width(div.lastChild.clientWidth)
+      .height(div.lastChild.clientHeight)
+      .dimension(dimension)
+      .brushOn(true)
+      .centerBar(false)
+      .elasticX(true)
+      .xAxis().tickFormat()
+    ;
+
+    var groups = [];
+    categoriesAxis.eachTuple(function(tuple){
+      var group = dimension.group().reduceSum(function(d){
+        return d.values[tuple.index];
+      });
+      if (tuple.index) {
+        chart.stack(group, this.getLabelForTuple(tuple));
+      }
+      else {
+        chart.group(group);
+      }
+    }, this);
+    chart.render();
   }
 };
 XavierBarChart.prefix = "xavier-bar-chart";
@@ -1475,6 +1549,17 @@ var XavierBarChartTab;
       axes: [
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Measures"),
+          tooltip: gMsg("Each measure on this axis generates one group."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "measures",
+          drop: {
+            include: "measure"
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Categories"),
           tooltip: gMsg("Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy."),
           mandatory: true,
@@ -1482,17 +1567,6 @@ var XavierBarChartTab;
           "class": "levels",
           drop: {
             include: ["level", "member"]
-          }
-        },
-        {
-          id: Xmla.Dataset.AXIS_ROWS,
-          label: gMsg("Measures"),
-          tooltip: gMsg("Each measure on this axis generates one bar for that measure."),
-          mandatory: true,
-          canBeEmpty: false,
-          "class": "measures",
-          drop: {
-            include: "measure"
           }
         },
         {
