@@ -207,6 +207,7 @@ var XlsxExporter;
   },
   exportPivotTable: function(pivotTable){
     var rowsXml = this.rowsXml;
+    var line = "", l;
     var mergedCells = this.mergedCells = [];
     var dataset = pivotTable.getDataset();
     if (dataset) {
@@ -223,17 +224,18 @@ var XlsxExporter;
       if (dataset.hasColumnAxis()) {
         columnAxis = dataset.getColumnAxis();
         rowOffset += columnAxis.hierarchyCount();
+        l = rowsXml.length + 2;
         columnAxis.eachHierarchy(function(hierarchy){
-          rowsXml.push("<row>");
+          line = "";
           columnAxis.eachTuple(function(tuple){
             member = tuple.members[hierarchy.index];
             caption = member[Xmla.Dataset.Axis.MEMBER_CAPTION];
-            ref = this.getColumnAddress(columnsOffset + tuple.index) + String(hierarchy.index + 1);
-            rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-            rowsXml.push(this.getSharedString(caption));
-            rowsXml.push("</c>");
+            ref = this.getColumnAddress(columnsOffset + tuple.index) + String(hierarchy.index + l);
+            line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+            line += this.getSharedString(caption);
+            line += "</c>";
           }, this);
-          rowsXml.push("</row>");
+          rowsXml.push("<row>" + line + "</row>");
         }, this);
       }
 
@@ -248,45 +250,47 @@ var XlsxExporter;
             n = columnAxis.tupleCount()
         ;
         //multiple rows of cells.
+        l = rowsXml.length + 2;
         rowAxis.eachTuple(function(tuple){
+          line = "";
           type = "s";
           minOrdinal = tuple.index * n;
           maxOrdinal = minOrdinal + n;
-          rowsXml.push("<row>");
           rowAxis.eachHierarchy(function(hierarchy){
             member = tuple.members[hierarchy.index];
             caption = escXml(member[Xmla.Dataset.Axis.MEMBER_CAPTION]);
-            ref = this.getColumnAddress(hierarchy.index + 1) + String(rowOffset + tuple.index);
-            rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-            rowsXml.push(this.getSharedString(caption));
-            rowsXml.push("</c>");
+            ref = this.getColumnAddress(hierarchy.index + 1) + String(tuple.index + l);
+            line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+            line += this.getSharedString(caption);
+            line += "</c>";
           }, this);
           if (hasMoreCells && ordinal >= minOrdinal && ordinal < maxOrdinal) {
             do {
               ref = this.getColumnAddress(columnsOffset + (ordinal - minOrdinal));
-              ref += String(rowOffset + tuple.index);
+              ref += String(tuple.index + l);
               type = "n";
-              rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-              rowsXml.push("<v>" + cellSet.cellValue() + "</v>");
-              rowsXml.push("</c>");
+              line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+              line += "<v>" + cellSet.cellValue() + "</v>";
+              line += "</c>";
               ordinal = cellSet.nextCell();
             } while ((hasMoreCells = (ordinal !== -1)) && ordinal < maxOrdinal);
           }
-          rowsXml.push("</row>");
+          rowsXml.push("<row>" + line + "</row>");
         }, this);
       }
       else {
         //either a column axis, or no column axis.
         //in both cases, we have one row of cells
+        line = "";
+        l = rowsXml.length + 2;
         type = "n";
-        rowsXml.push("<row>");
         cellSet.eachCell(function(cell){
-          ref = this.getColumnAddress(columnsOffset + cell.ordinal) + String(rowOffset);
-          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-          rowsXml.push("<v>" + cell.Value + "</v>");
-          rowsXml.push("</c>");
+          ref = this.getColumnAddress(columnsOffset + cell.ordinal) + String(l);
+          line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+          line += "<v>" + cell.Value + "</v>";
+          line += "</c>";
         }, this);
-        rowsXml.push("</row>");
+        rowsXml.push("<row> " + line + "</row>");
       }
     }
   },
