@@ -206,9 +206,8 @@ var XlsxExporter;
     return address;
   },
   exportPivotTable: function(pivotTable){
-    var rowsXml = [];
+    var rowsXml = this.rowsXml;
     var mergedCells = this.mergedCells = [];
-    var sharedString = this.sharedStrings = [];
     var dataset = pivotTable.getDataset();
     if (dataset) {
       var columnsOffset = 1, rowOffset = 1;
@@ -290,34 +289,35 @@ var XlsxExporter;
         rowsXml.push("</row>");
       }
     }
-    this.rowsXml = rowsXml.join("");
   },
   exportDataTable: function(dataTable){
-    var rowsXml = [];
+    var rowsXml = this.rowsXml;
     var mergedCells = this.mergedCells = [];
-    var sharedString = this.sharedStrings = [];
     var dataset = dataTable.getDataset();
+    var line;
     if (dataset) {
       var columns = [];
       var dataGrid = dataTable.getDataGrid();
-      rowsXml.push("<row>");
+      line = "";
+      n = rowsXml.length + 2;
       dataGrid.eachColumn(function(i, column){
         columns.push(column);
-        var ref = this.getColumnAddress(i+1) + String(1), type = "s", style = "0";
-        rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-        rowsXml.push(this.getSharedString(column.label || column.name));
-        rowsXml.push("</c>");
+        var ref = this.getColumnAddress(i+1) + String(n), type = "s", style = "0";
+        line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+        line += this.getSharedString(column.label || column.name);
+        line += "</c>";
       }, this);
-      rowsXml.push("</row>");
+      rowsXml.push("<row>" + line + "</row>");
 
+      n = rowsXml.length + 2;
       dataGrid.eachRow(function(i, rowValues, cellValues){
-        rowsXml.push("<row>");
+        line = "";
         var numRowHeaders = rowValues ? rowValues.length.length : 0;
         for (j = 0; j < numRowHeaders; j++) {
-          var ref = this.getColumnAddress(j+1) + String(i+2), type = "s", style = "0";
-          rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-          rowsXml.push(this.getSharedString(rowValues[j]));
-          rowsXml.push("</c>");
+          var ref = this.getColumnAddress(j+1) + String(i+n), type = "s", style = "0";
+          line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+          line += this.getSharedString(rowValues[j]);
+          line += "</c>";
         }
         var value, column;
         for (j = 0; j < cellValues.length; j++) {
@@ -325,29 +325,28 @@ var XlsxExporter;
           if (iUnd(value)) {
             continue;
           }
-          var ref = this.getColumnAddress(numRowHeaders + j + 1) + String(numRowHeaders + 2 + i),
+          var ref = this.getColumnAddress(numRowHeaders + j + 1) + String(numRowHeaders + n + i),
               type,
               style = "0"
           ;
           column = dataGrid.getColumn(j)
           if (column.isMeasure){
             type = "n";
-            rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-            rowsXml.push("<v>" + value + "</v>");
-            rowsXml.push("</c>");
+            line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+            line += "<v>" + value + "</v>";
+            line += "</c>";
           }
           else {
             type = "s";
             value = this.getSharedString(value);
-            rowsXml.push("<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">");
-            rowsXml.push(value);
-            rowsXml.push("</c>");
+            line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+            line += value;
+            line += "</c>";
           }
         }
-        rowsXml.push("</row>");
+        rowsXml.push("<row>" +line + "</row>");
       }, this)
     }
-    this.rowsXml = rowsXml.join("");
   },
   getContentXml: function(){
     return [
@@ -376,7 +375,79 @@ var XlsxExporter;
     return "data:" + mimetype + ";base64," + encodeURIComponent(this.jsZip.generate());
     //window.open(this.getContent());
   },
+  createExportHeaders: function(title, visualizer, queryDesigner) {
+    var rowsXml = this.rowsXml, line, n, ref, type = "s", style = 0;
+    //title row
+    line = "";
+    n = rowsXml.length + 1;
+
+    ref = this.getColumnAddress(1) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString(gMsg("Title") + ":");
+    line += "</c>";
+
+    ref = this.getColumnAddress(2) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString(title);
+    line += "</c>";
+
+    rowsXml.push("<row>" + line + "</row>");
+
+    //catalog row
+    line = "";
+    n = rowsXml.length + 1;
+
+    ref = this.getColumnAddress(1) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString(gMsg("Catalog") + ":");
+    line += "</c>";
+
+    ref = this.getColumnAddress(2) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString("...");
+    line += "</c>";
+
+    rowsXml.push("<row>" + line + "</row>");
+
+    //cube row
+    line = "";
+    n = rowsXml.length + 1;
+
+    ref = this.getColumnAddress(1) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString(gMsg("Cube") + ":");
+    line += "</c>";
+
+    ref = this.getColumnAddress(2) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString("...");
+    line += "</c>";
+
+    rowsXml.push("<row>" + line + "</row>");
+
+    //export date row
+    line = "";
+    n = rowsXml.length + 1;
+
+    ref = this.getColumnAddress(1) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString(gMsg("Export Date") + ":");
+    line += "</c>";
+
+    //TODO: output this as a proper date. Example is here
+    //https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet.cellvalue(v=office.14).aspx
+    //for some reason it doesn't work at least not for OO Calc.
+    ref = this.getColumnAddress(2) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString(gMsg(isoDateTimeString()));
+    line += "</c>";
+
+    rowsXml.push("<row>" + line + "</row>");
+  },
   doExport: function(name, visualizer, queryDesigner){
+    this.rowsXml = [];
+    this.sharedStrings = [];
+    this.createExportHeaders(name, visualizer, queryDesigner);
     if (visualizer instanceof PivotTable) {
       this.exportPivotTable(visualizer, queryDesigner);
     }
@@ -387,6 +458,7 @@ var XlsxExporter;
     else {
       throw "Don't know how to export this type of object.";
     }
+    this.rowsXml = this.rowsXml.join("");
     this.pack();
     var content = this.jsZip.generate({type: "blob"});
     saveAs(content, name + "." + this.extension);

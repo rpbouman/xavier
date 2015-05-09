@@ -539,7 +539,7 @@ function exportToExcel(){
       last = measureNames.pop();
       name += measureNames.join(", ");
       if (measureNames.length) {
-        name += " and ";
+        name += " " + gMsg("and") + " ";
       }
       name += last;
     }
@@ -548,7 +548,7 @@ function exportToExcel(){
       last = hierarchies.pop();
       name += hierarchies.join(",");
       if (hierarchies.length) {
-        name += " and ";
+        name += " " + gMsg("and") + " ";
       }
       name += last;
       return name;
@@ -575,7 +575,7 @@ function exportToExcel(){
     var hasBy = by.length;
     if (hasBy) {
       if (last) {
-        name += " by ";
+        name += " " + gMsg("by") + " ";
       }
       name += axisDescription(by);
     }
@@ -584,10 +584,10 @@ function exportToExcel(){
       vs = axes[vs];
       if (vs && vs.length) {
         if (hasBy) {
-          name += " vs ";
+          name += " " + gMsg("vs") + " ";
         }
         else {
-          name += " by ";
+        name += " " + gMsg("by") + " ";
         }
         name += axisDescription(vs);
       }
@@ -595,7 +595,7 @@ function exportToExcel(){
 
     slicer = axes["SlicerAxis"];
     if (slicer && slicer.length) {
-      name += " for a selection of " + axisDescription(slicer);
+      name += " " + gMsg("for a selection of") + " " + axisDescription(slicer);
     }
 
     xlsxExporter.doExport(name, visualizer, queryDesigner);
