@@ -311,6 +311,15 @@ var XavierTab;
     if (visualizer && iFun(visualizer.clear)) {
       visualizer.clear();
     }
+    if (this.dataset) {
+      this.dataset.close();
+      this.dataset = null;
+    }
+    else
+    if (visualizer && visualizer.dataset) {
+      visualizer.dataset.close();
+      visualizer.dataset = null;
+    }
   },
   executeQuery: function(){
     var me = this;
@@ -388,7 +397,7 @@ var XavierTab;
       var dataset = this.getDataset();
       var queryDesigner = this.getQueryDesigner();
       if (!visualizer || !queryDesigner || !dataset) {
-        throw gMsg("There is nothing to export. Please enter a query first.");
+        throw "There is nothing to export. Please enter a query first.";
       }
       xlsxExporter = this.getXlsxExporter();
       var catalog = this.getCatalog();
@@ -418,7 +427,6 @@ var XavierTab;
         }
       });
 
-      //TODO: localize file name for export.
       var last;
       if (measureNames.length) {
         last = measureNames.pop();
@@ -486,7 +494,7 @@ var XavierTab;
       xlsxExporter.doExport(name, catalog.CATALOG_NAME, cube.CUBE_NAME, visualizer, queryDesigner);
     }
     catch (exception){
-      showAlert("Export Error", exception);
+      showAlert(gMsg("Export Error"), gMsg(exception));
     }
   }
 };

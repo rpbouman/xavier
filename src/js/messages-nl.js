@@ -59,6 +59,7 @@ aMsg({
   "Yes": "Ja",
   "No": "Nee",
   //misc words to create names and labels for graphs, excel export etc.
+  "Export Error": "Fout bij exporteren",
   "There is nothing to export. Please enter a query first.": "Er zijn geen gegevens die geexporteerd kunnen worden. Maak eerst een zoekopdracht.",
   "and": "en",
   "per": "per",
@@ -67,5 +68,6 @@ aMsg({
   "for a selection of": "voor een selectie van",
   "Title": "Titel",
   "Catalog": "Catalogus",
-  "Cube": "Kubus"
+  "Cube": "Kubus",
+  "Selection": "Selectie"
 });

@@ -379,6 +379,54 @@ var XlsxExporter;
     return "data:" + mimetype + ";base64," + encodeURIComponent(this.jsZip.generate());
     //window.open(this.getContent());
   },
+  createSlicerAxisHeaders: function(queryDesigner) {
+    if (!queryDesigner.hasSlicerAxis()) {
+      return;
+    }
+    var slicerAxis = queryDesigner.getSlicerAxis();
+    if (slicerAxis.getHierarchyCount() === 0) {
+      return;
+    }
+    var rowsXml = this.rowsXml;
+    var line, n, ref, type = "s", style = "0";
+
+    n = rowsXml.length + 2;
+    line = "";
+
+    ref = this.getColumnAddress(1) + String(n);
+    line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+    line += this.getSharedString(gMsg("Selection") + ":");
+    line += "</c>";
+
+    rowsXml.push("<row>" + line + "</row>");
+
+    line = "";
+    slicerAxis.eachHierarchy(function(hierarchy, hierarchyIndex){
+      n = rowsXml.length + 2;
+
+      ref = this.getColumnAddress(1) + String(n);
+      var hierarchyName = slicerAxis.getHierarchyName(hierarchy);
+      line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+      line += this.getSharedString(hierarchyName + ":");
+      line += "</c>";
+
+      var memberList = "";
+      slicerAxis.eachSetDef(function(setDef, setDefIndex){
+        if (setDefIndex){
+          memberList += ", ";
+        }
+        memberList += setDef.metadata.MEMBER_CAPTION;
+      }, this, hierarchy);
+
+      ref = this.getColumnAddress(2) + String(n);
+      line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
+      line += this.getSharedString(memberList);
+      line += "</c>";
+
+      rowsXml.push("<row>" + line + "</row>");
+    }, this);
+    rowsXml.push("");
+  },
   createExportHeaders: function(title, catalogName, cubeName, visualizer, queryDesigner) {
     var rowsXml = this.rowsXml, line, n, ref, type = "s", style = 0;
     //title row
@@ -451,7 +499,10 @@ var XlsxExporter;
   doExport: function(name, catalogName, cubeName, visualizer, queryDesigner){
     this.rowsXml = [];
     this.sharedStrings = [];
+
     this.createExportHeaders(name, catalogName, cubeName, visualizer, queryDesigner);
+    this.createSlicerAxisHeaders(queryDesigner);
+
     if (visualizer instanceof PivotTable) {
       this.exportPivotTable(visualizer, queryDesigner);
     }
