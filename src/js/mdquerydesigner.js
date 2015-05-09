@@ -528,7 +528,7 @@ var QueryDesignerAxis;
         break;
     }
 
-    var canBeEmpty = iDef(conf.canBeEmpty) ? conf.canBeEmpty : true;
+    var label, canBeEmpty = iDef(conf.canBeEmpty) ? conf.canBeEmpty : true;
     switch (this.conf.id) {
       case Xmla.Dataset.AXIS_COLUMNS:
         label = gMsg("Columns");
