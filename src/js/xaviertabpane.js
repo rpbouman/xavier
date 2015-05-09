@@ -1111,10 +1111,12 @@ var XavierVisualizer;
     });
     children.push(chartBody);
 
+    var position = dom.tagName === "TD" ? "relative" : "absolute";
     var div = cEl("DIV", {
       id: id,
+      "class": "xavier-chart",
       style: {
-        position: "absolute",
+        position: position,
         top: y + "px",
         left: x + "px",
         width: width + "px",
@@ -1123,7 +1125,6 @@ var XavierVisualizer;
     }, children, dom);
 
     if (chartTitle) {
-    /*
       chartBody.style.width = (width - 2 * chartTitle.clientHeight) + "px";
       chartBody.style.height = (height - chartTitle.clientHeight) + "px";
       chartBody.style.left = chartTitle.clientHeight + "px";
@@ -1137,15 +1138,24 @@ var XavierVisualizer;
           chartTitle.style.top = chartBody.style.height;
           break;
       }
-    */
-      chartBody.style.margin = chartTitle.clientHeight + "px";
+      chartBody.style.margin = "auto"; //chartTitle.clientHeight + "px";
     }
     return div;
   },
   createGridForTuples: function(dom, axis, titlePosition, callback, scope){
     var numTuples = axis.tupleCount();
-    var w = dom.clientWidth;
-    var h = dom.clientHeight;
+    var w, h;
+    if (dom.tagName !== "TD") {
+      w = dom.clientWidth;
+      h = dom.clientHeight;
+    }
+    else {
+      var row = dom.parentNode;
+      var tbody = row.parentNode;
+      var table = tbody.parentNode;
+      w = table.rows[0].cells[1].clientWidth;
+      h = row.cells[0].clientHeight;
+    }
     var len = divideRectangleIntoSquares(w, h, numTuples);
     var x = 0, y = 0;
     axis.eachTuple(function(tuple){
@@ -1164,7 +1174,41 @@ var XavierVisualizer;
   },
   generateTrellisList: function(dom, pageAxis, rowAxis, columnAxis, cellset) {
     this.createGridForTuples(dom, pageAxis, "top", function(tuple, dom, len){
-      this.renderCharts(dom.lastChild, rowAxis, columnAxis, cellset)
+      this.renderCharts(dom.lastChild, rowAxis, columnAxis, cellset);
+    }, this);
+  },
+  generateTrellisMatrix: function(dom, chapterAxis, pageAxis, rowAxis, columnAxis, cellset) {
+    var matrix = cEl("TABLE", {
+      "class": "xavier-chart xavier-trellis-matrix",
+      cellpadding: 2,
+      cellspacing: 2
+    }, null, dom);
+
+    //column header
+    var columnWidth = dom.clientWidth / (1 + pageAxis.tupleCount());
+    var tr = matrix.insertRow(matrix.rows.length);
+    var td = tr.insertCell(tr.cells.length);
+    td.className = "trellis-pivot";
+    pageAxis.eachTuple(function(tuple) {
+      td = tr.insertCell(tr.cells.length);
+      td.style.width = columnWidth + "px";
+      td.className = "trellis-header trellis-column-header";
+      td.innerHTML = this.getLabelForTuple(tuple);
+    }, this);
+
+    var rowHeight = (dom.clientHeight - tr.clientHeight) / chapterAxis.tupleCount();
+    chapterAxis.eachTuple(function(tuple){
+      //row header
+      tr = matrix.insertRow(matrix.rows.length);
+      td = tr.insertCell(tr.cells.length);
+      td.style.height = rowHeight + "px";
+      td.className = "trellis-header trellis-row-header";
+      td.innerHTML = this.getLabelForTuple(tuple);
+
+      pageAxis.eachTuple(function(tuple) {
+        td = tr.insertCell(tr.cells.length);
+        this.renderCharts(td, rowAxis, columnAxis, cellset);
+      }, this);
     }, this);
   },
   renderDataset: function(dataset, queryDesigner){
@@ -1178,7 +1222,10 @@ var XavierVisualizer;
       this.generateTrellisMatrix(
         dom,
         dataset.getChapterAxis(),
-        dataset.getPageAxis()
+        dataset.getPageAxis(),
+        dataset.getRowAxis(),
+        dataset.getColumnAxis(),
+        dataset.getCellset()
       );
     }
     else
@@ -1277,7 +1324,14 @@ var XavierPieChart;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   renderCharts: function(dom, measuresAxis, categoriesAxis, cellset){
-    this.createGridForTuples(dom, measuresAxis, "bottom", function(tuple, dom, len){
+    var titlePosition;
+    if (dom.tagName === "TD") {
+      titlePosition = false;
+    }
+    else {
+      titlePosition = "bottom";
+    }
+    this.createGridForTuples(dom, measuresAxis, titlePosition, function(tuple, dom, len){
       var data = [];
       categoriesAxis.eachTuple(function(tuple){
         data.push({
@@ -1400,54 +1454,6 @@ var XavierBarChart;
   conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
-  renderCharts: function(dom, measuresAxis, categoriesAxis, cellset){
-    this.createGridForTuples(dom, measuresAxis, "bottom", function(tuple, dom, len){
-      var id = this.getChartId();
-      dom.id = id;
-      var bodyId = id + "-body";
-      dom.lastChild.id = bodyId;
-
-      var data = [];
-      categoriesAxis.eachTuple(function(tuple){
-        var members = tuple.members, member;
-        var category = "";
-        var i, n = members.length;
-        for (i = 0; i < n; i++){
-          if (category) {
-            category += " - ";
-          }
-          member = members[i];
-          category += member.Caption;
-        }
-        var datum = {};
-        datum.category = category;
-        datum.measure = cellset.cellValue();
-        data.push(datum);
-        cellset.nextCell();
-      }, this);
-
-      var ndx = crossfilter(data);
-      var dimension = ndx.dimension(function(d){
-        return d.category;
-      });
-      var group = dimension.group().reduceSum(function(d){
-        return d.measure;
-      });
-
-      var chart = dc.rowChart("#" + bodyId);
-      chart
-        .width(dom.lastChild.clientWidth).height(dom.lastChild.clientHeight)
-        .dimension(dimension)
-        .group(group)
-      ;
-      //only add a legend for the first chart.
-      //if (tuple.index === 0){
-      //  chart.legend(dc.legend());
-      //}
-      chart.render();
-
-    }, this);
-  },
   renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
     var data = [];
 

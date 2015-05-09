@@ -137,4 +137,17 @@ ul.chart-container, ul.chart-container > li {
   right:0px;
   top: 0px;
   bottom: 0px;
+  margin: auto;
+}
+
+table.xavier-trellis-matrix td.trellis-header {
+  font-weight: bold;
+}
+
+table.xavier-trellis-matrix td.trellis-column-header {
+  text-align: center;
+}
+
+table.xavier-trellis-matrix {
+  table-layout: fixed;
 }
