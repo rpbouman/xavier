@@ -718,10 +718,9 @@ var XmlaTreeView;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = tooltipAndInfoLabel.infoLabel + title;
-    //dirty hacek: if the cardinality is 1, then this is most likely the "all" level
-    //typically we are not very interested in the level (although the all member can be useful sometimes)
-    //so, we flatten the level to make the tree tidier.
-    var state = row.LEVEL_CARDINALITY === 1 ? TreeNode.states.flattened : TreeNode.states.expanded;
+    //if this is the all level, then flatten it to make the tree tidier.
+    //typically we are not very interested in the "all" level (although the "all" member can be useful sometimes)
+    var state = row.LEVEL_TYPE === 1 ? TreeNode.states.flattened : TreeNode.states.expanded;
     new TreeNode({
       parentTreeNode: hierarchyTreeNode,
       classes: ["level", "leveltype" + row.LEVEL_TYPE, "levelunicity" + row.LEVEL_UNIQUE_SETTINGS],
