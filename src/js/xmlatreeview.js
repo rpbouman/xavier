@@ -717,6 +717,10 @@ var XmlaTreeView;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = tooltipAndInfoLabel.infoLabel + title;
+    //dirty hacek: if the cardinality is 1, then this is most likely the "all" level
+    //typically we are not very interested in the level (although the all member can be useful sometimes)
+    //so, we flatten the level to make the tree tidier.
+    var state = row.LEVEL_CARDINALITY === 1 ? TreeNode.states.flattened : TreeNode.states.expanded;
     new TreeNode({
       parentTreeNode: hierarchyTreeNode,
       classes: ["level", "leveltype" + row.LEVEL_TYPE, "levelunicity" + row.LEVEL_UNIQUE_SETTINGS],
@@ -725,7 +729,7 @@ var XmlaTreeView;
       title: title,
       tooltip: tooltip,
       metadata: row,
-      state: TreeNode.states.expanded
+      state: state
     });
   },
   renderLevelTreeNodes: function(conf){
@@ -876,7 +880,7 @@ var XmlaTreeView;
   renderHierarchyTreeNode: function(conf, row){
     var me = this;
     var dimensionNode = TreeNode.getInstance("node:dimension:" + row.DIMENSION_UNIQUE_NAME);
-    if (this.showDimensionNodesCheckbox.checked && dimensionNode.isFlattened() && dimensionNode.getChildNodeCount() >= 1) {
+    if (dimensionNode.isFlattened() && dimensionNode.getChildNodeCount() >= 1) {
       dimensionNode.setState(TreeNode.states.unflattened);
     }
     var dimensionTitle = dimensionNode.conf.objectName;
@@ -927,6 +931,7 @@ var XmlaTreeView;
       success: function(xmla, options, rowset) {
         //for each hierarchy, add a treenode.
         var defaultMemberQueue = [];
+        var hasMultipleHierarchies = false;
         rowset.eachRow(function(row){
           //if this hierarchy happens to be a measure hierarchy, don't render it.
           //We already have measures
@@ -949,10 +954,16 @@ var XmlaTreeView;
           }
           //actually add a treenode for the hierarchy.
           var hierarchyTreeNode = me.renderHierarchyTreeNode(conf, row);
+          if (hasMultipleHierarchies === false && hierarchyTreeNode.getParentTreeNode().getChildNodeCount() > 1) {
+            hasMultipleHierarchies = true;
+          }
           if (row.DEFAULT_MEMBER) {
             defaultMemberQueue.push(hierarchyTreeNode);
           }
         });
+        if (hasMultipleHierarchies) {
+          me.createShowDimensionNodesCheckbox();
+        }
         me.getDefaultMember(conf, defaultMemberQueue, 0);
         //done rendering hierarchy treenodes
         me.fireEvent("done");
@@ -1085,6 +1096,29 @@ var XmlaTreeView;
     }
     return currentCatalogTreeNode.getParentTreeNode();
   },
+  createShowDimensionNodesCheckbox: function(){
+    var cubeTreePane = this.cubeTreePane;
+    var cubeTreePaneDom = cubeTreePane.getDom();
+    //checkbox to show / hide dimension level
+    var showDimensionNodesCheckbox = this.showDimensionNodesCheckbox = cEl("INPUT", {
+      type: "checkbox"
+    });
+    showDimensionNodesCheckbox.checked = !this.dimensionNodesInitiallyFlattened;
+    listen(showDimensionNodesCheckbox, "click", this.showDimensionNodes, this);
+
+    var div = cEl("DIV", {
+      "class": "show-dimension-nodes",
+      id: "show-dimension-nodes"
+    }, [
+      cEl("DIV", {
+        "class": "tooltip"
+      }, gMsg("Check to show multi-hierarchy dimension nodes. Uncheck to hide all dimension nodes.")),
+      showDimensionNodesCheckbox,
+      cEl("SPAN", {
+      }, gMsg("Show dimension nodes"))
+    ]);
+    cubeTreePaneDom.insertBefore(div, cubeTreePaneDom.firstChild);
+  },
   loadCube: function(cubeTreeNode){
     this.cubeSelection._setSelection({
       oldSelection: this.cubeSelection.getSelection(),
@@ -1107,24 +1141,6 @@ var XmlaTreeView;
     var metadata = providerNode.conf.metadata;
     var url = metadata.URL;
     var dataSourceInfo = metadata.DataSourceInfo;
-
-    //checkbox to show / hide dimension level
-    var showDimensionNodesCheckbox = this.showDimensionNodesCheckbox = cEl("INPUT", {
-      type: "checkbox"
-    });
-    showDimensionNodesCheckbox.checked = !this.dimensionNodesInitiallyFlattened;
-    listen(showDimensionNodesCheckbox, "click", this.showDimensionNodes, this);
-
-    cEl("DIV", {
-      "class": "show-dimension-nodes"
-    }, [
-      cEl("DIV", {
-        "class": "tooltip"
-      }, gMsg("Check to show multi-hierarchy dimension nodes. Uncheck to hide all dimension nodes.")),
-      showDimensionNodesCheckbox,
-      cEl("SPAN", {
-      }, gMsg("Show dimension nodes"))
-    ], cubeTreePaneDom);
 
     //static indicator of the current catalog and cube
     cEl("DIV", {
