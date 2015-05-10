@@ -40,7 +40,7 @@ limitations under the License.
 
 /* table */
 .xavier-tabpane > .pentaho-tab-bar > .welcome {
-  background-image: url('../mui/images/info_16x16.png');
+  background-image: url('../images/info.png');
 }
 
 .xavier-tabpane > .pentaho-tab-bar > .table {

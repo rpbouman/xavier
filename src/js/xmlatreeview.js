@@ -83,7 +83,7 @@ var XmlaTreeView;
     switch (type) {
       case "url":
         tooltip = gMsg("Click on the information icon for a description.");
-        infoLabel = "<span class=\"info-icon\" data-url=\"" + description + "\">&#160;&#160;&#160;&#160;&#160;</span>"
+        infoLabel = "<span class=\"info-icon\" data-url=\"" + description + "\"/>"
         break;
       case "xml":
       case "text":
@@ -134,7 +134,7 @@ var XmlaTreeView;
               id: conf.id + ":catalog:" + row.CATALOG_NAME,
               parentTreeNode: providerNode,
               objectName: objectName,
-              title: tooltipAndInfoLabel.infoLabel + objectName,
+              title: objectName + tooltipAndInfoLabel.infoLabel,
               tooltip: tooltipAndInfoLabel.tooltip || objectName,
               metadata: row
             });
@@ -172,8 +172,7 @@ var XmlaTreeView;
             var title = objectName;
             var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
             var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
-            catalogPrefix = tooltipAndInfoLabel.infoLabel + catalogPrefix;
-            title = catalogPrefix + title;
+            title = catalogPrefix + title + tooltipAndInfoLabel.infoLabel;
             var tooltip = tooltipAndInfoLabel.tooltip || row.CUBE_NAME;
             var treeNode = new TreeNode({
               classes: "cube",
@@ -646,7 +645,7 @@ var XmlaTreeView;
     var objectName = row.PROPERTY_CAPTION || row.PROPERTY_NAME;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
-    title = tooltipAndInfoLabel.infoLabel + title;
+    title = title + tooltipAndInfoLabel.infoLabel;
     new TreeNode({
       parentTreeNode: levelTreeNode,
       classes: "property",
@@ -717,7 +716,7 @@ var XmlaTreeView;
     var objectName = row.LEVEL_CAPTION || row.LEVEL_NAME;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
-    title = tooltipAndInfoLabel.infoLabel + title;
+    title = title + tooltipAndInfoLabel.infoLabel;
     //if this is the all level, then flatten it to make the tree tidier.
     //typically we are not very interested in the "all" level (although the "all" member can be useful sometimes)
     var state = row.LEVEL_TYPE === 1 ? TreeNode.states.flattened : TreeNode.states.expanded;
@@ -732,6 +731,8 @@ var XmlaTreeView;
       state: state
     });
   },
+  //levels with 10 members or less will get their members folder flattened.
+  levelLowCardinality: 10,
   renderLevelTreeNodes: function(conf){
     var me = this;
     me.fireEvent("busy");
@@ -760,9 +761,10 @@ var XmlaTreeView;
           row.HIERARCHY_CAPTION = hierarchyCaption;
           me.renderLevelTreeNode(conf, row);
         });
+
         rowset.reset();
         conf.levelsRowset = rowset;
-        //render property nodes for the levels
+
         me.renderLevelPropertyNodes(conf);
       },
       error: function(xmla, options, error){
@@ -777,7 +779,7 @@ var XmlaTreeView;
     var objectName = row.DIMENSION_CAPTION || row.DIMENSION_NAME;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
-    title = tooltipAndInfoLabel.infoLabel + title;
+    title = title + tooltipAndInfoLabel.infoLabel;
     new TreeNode({
       state: TreeNode.states.expanded,
       parentElement: this.cubeTreePane.getDom(),
@@ -891,7 +893,7 @@ var XmlaTreeView;
     }
     var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
     var tooltip = tooltipAndInfoLabel.tooltip || hierarchyTitle;
-    title = tooltipAndInfoLabel.infoLabel + hierarchyTitle;
+    title = hierarchyTitle+ tooltipAndInfoLabel.infoLabel;
 
     var hierarchyTreeNode = new TreeNode({
       state: TreeNode.states.collapsed,
@@ -992,7 +994,7 @@ var XmlaTreeView;
     var objectName = row.MEASURE_CAPTION || row.MEASURE_NAME;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
-    title = tooltipAndInfoLabel.infoLabel + title;
+    title = title + tooltipAndInfoLabel.infoLabel;
     new TreeNode({
       state: TreeNode.states.leaf,
       parentTreeNode: conf.measuresTreeNode,
@@ -1133,32 +1135,61 @@ var XmlaTreeView;
     this.clearTreePane(cubeTreePane);
     var cubeTreePaneDom = cubeTreePane.getDom();
 
-    var cube = cubeTreeNode.conf.metadata.CUBE_NAME;
+    var cube = cubeTreeNode.conf.metadata;
+    var cubeName = cube.CUBE_NAME;
+
     me.fireEvent("loadCube", cubeTreeNode);
+
     var catalogNode = cubeTreeNode.getParentTreeNode();
-    var catalog = catalogNode.conf.metadata.CATALOG_NAME;
+    var catalog = catalogNode.conf.metadata;
+    var catalogName = catalog.CATALOG_NAME;
+
     var providerNode = catalogNode.getParentTreeNode();
     var metadata = providerNode.conf.metadata;
     var url = metadata.URL;
     var dataSourceInfo = metadata.DataSourceInfo;
 
     //static indicator of the current catalog and cube
-    cEl("DIV", {
+    var currentCatalog = cEl("SPAN", {
+      "class": "current-catalog",
+      "data-objectName": catalogName
+    });
+    var currentCube = cEl("SPAN", {
+      "class": "current-cube",
+      "data-objectName": cubeName
+    });
+    var currentCatalogAndCube =  cEl("DIV", {
       "class": "current-catalog-and-cube"
-    }, [
-      cEl("SPAN", {
-        "class": "current-catalog"
-      }, catalog),
-      cEl("SPAN", {
-        "class": "current-cube"
-      }, cube)
-    ], cubeTreePaneDom);
+    }, [currentCatalog, currentCube], cubeTreePaneDom);
+    listen(currentCatalogAndCube, "click", function(e){
+      var target = e.getTarget();
+      if (hCls(target, "info-icon")) {
+        this.fireEvent("requestinfo", {
+          title: gAtt(target.parentNode, "data-objectName"),
+          url: gAtt(target, "data-url"),
+        });
+      }
+    }, this);
+
+    var tooltipAndInfoLabel;
+
+    tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(catalog.DESCRIPTION);
+    currentCatalog.innerHTML = catalogName + tooltipAndInfoLabel.infoLabel;
+    cEl("DIV", {
+      "class": "tooltip"
+    }, tooltipAndInfoLabel.tooltip, currentCatalog);
+
+    tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(cube.DESCRIPTION);
+    currentCube.innerHTML = cubeName + tooltipAndInfoLabel.infoLabel;
+    cEl("DIV", {
+      "class": "tooltip"
+    }, tooltipAndInfoLabel.tooltip, currentCube);
 
     this.renderMeasuresNode({
       url: url,
       dataSourceInfo: dataSourceInfo,
-      catalog: catalog,
-      cube: cube
+      catalog: catalogName,
+      cube: cubeName
     });
   },
   getDom: function(){
