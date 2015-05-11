@@ -208,6 +208,7 @@ var XlsxExporter;
   exportPivotTable: function(pivotTable){
     var rowsXml = this.rowsXml;
     var line = "", l;
+    rowsXml.push("<row></row>");
     var mergedCells = this.mergedCells = [];
     var dataset = pivotTable.getDataset();
     if (dataset) {
@@ -224,7 +225,7 @@ var XlsxExporter;
       if (dataset.hasColumnAxis()) {
         columnAxis = dataset.getColumnAxis();
         rowOffset += columnAxis.hierarchyCount();
-        l = rowsXml.length + 2;
+        l = rowsXml.length + 1;
         columnAxis.eachHierarchy(function(hierarchy){
           line = "";
           columnAxis.eachTuple(function(tuple){
@@ -250,7 +251,7 @@ var XlsxExporter;
             n = columnAxis.tupleCount()
         ;
         //multiple rows of cells.
-        l = rowsXml.length + 2;
+        l = rowsXml.length + 1;
         rowAxis.eachTuple(function(tuple){
           line = "";
           type = "s";
@@ -282,7 +283,7 @@ var XlsxExporter;
         //either a column axis, or no column axis.
         //in both cases, we have one row of cells
         line = "";
-        l = rowsXml.length + 2;
+        l = rowsXml.length + 1;
         type = "n";
         cellSet.eachCell(function(cell){
           ref = this.getColumnAddress(columnsOffset + cell.ordinal) + String(l);
@@ -299,11 +300,12 @@ var XlsxExporter;
     var mergedCells = this.mergedCells = [];
     var dataset = dataTable.getDataset();
     var line;
+    rowsXml.push("<row></row>");
     if (dataset) {
       var columns = [];
       var dataGrid = dataTable.getDataGrid();
       line = "";
-      n = rowsXml.length + 2;
+      n = rowsXml.length + 1;
       dataGrid.eachColumn(function(i, column){
         columns.push(column);
         var ref = this.getColumnAddress(i+1) + String(n), type = "s", style = "0";
@@ -313,7 +315,7 @@ var XlsxExporter;
       }, this);
       rowsXml.push("<row>" + line + "</row>");
 
-      n = rowsXml.length + 2;
+      n = rowsXml.length + 1;
       dataGrid.eachRow(function(i, rowValues, cellValues){
         line = "";
         var numRowHeaders = rowValues ? rowValues.length.length : 0;
@@ -389,8 +391,8 @@ var XlsxExporter;
     }
     var rowsXml = this.rowsXml;
     var line, n, ref, type = "s", style = "0";
-
-    n = rowsXml.length + 2;
+    rowsXml.push("<row></row>");
+    n = rowsXml.length + 1;
     line = "";
 
     ref = this.getColumnAddress(1) + String(n);
@@ -402,7 +404,7 @@ var XlsxExporter;
 
     line = "";
     slicerAxis.eachHierarchy(function(hierarchy, hierarchyIndex){
-      n = rowsXml.length + 2;
+      n = rowsXml.length + 1;
 
       ref = this.getColumnAddress(1) + String(n);
       line += "<c r=\"" + ref + "\" s=\"" + style + "\" t=\"" + type + "\">";
@@ -424,7 +426,6 @@ var XlsxExporter;
 
       rowsXml.push("<row>" + line + "</row>");
     }, this);
-    rowsXml.push("");
   },
   createExportHeaders: function(title, catalogName, cubeName, visualizer, queryDesigner) {
     var rowsXml = this.rowsXml, line, n, ref, type = "s", style = 0;
