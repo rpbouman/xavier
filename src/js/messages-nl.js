@@ -23,24 +23,25 @@ aMsg({
   "The members on this axis form a selection of the total data set (a slice) or which data are shown.": "Lid-elementen op deze as vormen de selectie (slice) van de totale gegevensverzameling",
   //table
   "New Table": "Nieuwe Tabel",
+  "Table": "Tabel",
   //pivot table
   "Show column hierarchy headers": "Toon kolomkoppen",
   "Show row hierarchy headers": "Toon rijlabels",
   "New Pivot Table": "Nieuwe Draaitabel",
+  "Pivot Table": "Draaitabel",
   "Items on this axis are used to generate columns for the pivot table": "Elementen op deze as worden gebruikt om kolommen te genereren",
   "Items on this axis are used to generate rows for the pivot table": "Elementen op deze as worden gebruikt om rijen te genereren",
   //pie chart
+  "Pie Chart": "Taartdiagram",
   "New Pie Chart": "Nieuw Taartdiagram",
   "Categories": "Categorieën",
   "Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices.": "Elke meetwaarde op deze as wordt gebruikt om één taartdiagram te genereren. De meetwaarde bepaald de grootte van de taartpunten.",
   "Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy.": "Elke combinatie van lid-elementen vormt een categorie om een taartpunt van het diagram te genereren. Kies per hiërarchie één niveau, of een selectie van lid-elementen van een en hetzelfde niveau.",
   "For each unique combination of members, one column is layed out and filled with pie charts.": "Voor iedere unieke combinatie van lid-elementen wordt er een kolom opgemaakt en gevuld met taartdiagrammen.",
   "For each unique combination of members, one row is layed out and its columns are filled with pie charts.": "Voor iedere unieke combinatie van lid-elementen wordt er een rij aangemaakt en diens kolommen worden gevuld met taartdiagrammen.",
-  //excel
-  "Export to Microsoft Excel": "Naar Microsoft Excel uitvoeren",
-  "Nothing to export": "Niets om te exporteren",
-  "There is nothing to export. Please enter a query first": "Er kan niets geexporteerd worden. Stel eerst een zoekopdracht samen.",
-  "Export Error": "Fout bij exporteren",
+  //
+  "Bar Chart": "Staafdiagram",
+  "New Bar Chart": "Nieuw Staafdiagram",
   //query
   "Error executing query": "Fout bij uitvoering zoekopdracht",
   //treeview
@@ -58,7 +59,10 @@ aMsg({
   "Close tabs for current cube?": "Tabbladen voor de huidige kubus afsluiten?",
   "Yes": "Ja",
   "No": "Nee",
-  //misc words to create names and labels for graphs, excel export etc.
+  //excel
+  "Export to Microsoft Excel": "Naar Microsoft Excel uitvoeren",
+  "Nothing to export": "Niets om te exporteren",
+  "There is nothing to export. Please enter a query first": "Er kan niets geexporteerd worden. Stel eerst een zoekopdracht samen.",
   "Export Error": "Fout bij exporteren",
   "There is nothing to export. Please enter a query first.": "Er zijn geen gegevens die geexporteerd kunnen worden. Maak eerst een zoekopdracht.",
   "and": "en",
@@ -69,5 +73,6 @@ aMsg({
   "Title": "Titel",
   "Catalog": "Catalogus",
   "Cube": "Kubus",
-  "Selection": "Selectie"
+  "Selection": "Selectie",
+  "Export Date": "Exportdatum"
 });
