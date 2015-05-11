@@ -670,7 +670,7 @@ var XavierTableTab;
   this.classes = ["table"];
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
-  text: gMsg("New Table"),
+  text: gMsg("Table"),
   getMdx: function(cubeName) {
     //datagrid columns: this is what we will be using to render the result
     var dataGridColumns = this.dataGridColumns = [], dataGridColumn, cellIndex = 0, memberIndex = 0;
@@ -915,7 +915,7 @@ var XavierPivotTableTab;
   this.classes = ["pivot-table"];
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
-  text: gMsg("New Pivot Table"),
+  text: gMsg("Pivot Table"),
   initToolbar: function(dom){
     var conf = this.conf;
     var toolbar = this.toolbar = new Toolbar({
@@ -1388,6 +1388,12 @@ var XavierChartTab;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Generic Chart"),
+  initQueryDesigner: function(dom){
+    //noop. Override.
+  },
+  initChart: function(dom){
+    //noop. Override.
+  },
   createDom: function(){
     var me = this;
     var dom = cEl("DIV", {
@@ -1409,6 +1415,7 @@ var XavierChartTab;
       scope: this
     });
     queryDesigner.render();
+
     this.visualizer = this.initChart(dom);
     return dom;
   },
