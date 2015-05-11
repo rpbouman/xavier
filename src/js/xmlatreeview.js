@@ -565,7 +565,7 @@ var XmlaTreeView;
       LEVEL_UNIQUE_NAME: row.LEVEL_UNIQUE_NAME
     };
     var memberNodeId = membersTreeNode.conf.id  + ":" + row.MEMBER_UNIQUE_NAME;
-    new TreeNode({
+    return new TreeNode({
       parentTreeNode: membersTreeNode,
       classes: "member",
       id: memberNodeId,
@@ -617,7 +617,7 @@ var XmlaTreeView;
     var idPostfix =  ":level:" + row.LEVEL_UNIQUE_NAME;
     var id = hierarchyTreeNode.conf.id + idPostfix;
     var title = row.LEVEL_CARDINALITY + " " + gMsg("Members");
-    new TreeNode({
+    return new TreeNode({
       parentTreeNode: TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix),
       classes: "members",
       id: id + ":members",
@@ -646,7 +646,7 @@ var XmlaTreeView;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = title + tooltipAndInfoLabel.infoLabel;
-    new TreeNode({
+    return new TreeNode({
       parentTreeNode: levelTreeNode,
       classes: "property",
       id: id + ":property:" + row.PROPERTY_NAME,
@@ -720,7 +720,7 @@ var XmlaTreeView;
     //if this is the all level, then flatten it to make the tree tidier.
     //typically we are not very interested in the "all" level (although the "all" member can be useful sometimes)
     var state = row.LEVEL_TYPE === 1 ? TreeNode.states.flattened : TreeNode.states.expanded;
-    new TreeNode({
+    return new TreeNode({
       parentTreeNode: hierarchyTreeNode,
       classes: ["level", "leveltype" + row.LEVEL_TYPE, "levelunicity" + row.LEVEL_UNIQUE_SETTINGS],
       id: id,
@@ -780,7 +780,7 @@ var XmlaTreeView;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = title + tooltipAndInfoLabel.infoLabel;
-    new TreeNode({
+    return new TreeNode({
       state: TreeNode.states.expanded,
       parentElement: this.cubeTreePane.getDom(),
       classes: classes,
@@ -974,8 +974,36 @@ var XmlaTreeView;
     });
   },
   setDefaultMeasure: function(measureUniqueName){
-    var measureTreeNode = this.getMeasureTreeNode(measureUniqueName);
     var measuresTreeNode = this.getMeasuresTreeNode();
+    var measureTreeNode = this.getMeasureTreeNode(measureUniqueName);
+    //mondrian allows you to create a cube without expicitly defining any measures.
+    //in this case monrian will report the existence of a "fact count" as default member for the measures hierarchy
+    //even though the actual measure is not reported in the meausures or members rowset.
+    //so in this case we end up not finding the treenode for that measure.
+    //as workaround we will create that measure ourselves.
+    var factCountName = "[Measures].[Fact Count]";
+    if (!measureTreeNode && measureUniqueName === factCountName) {
+      var measuresConf = measuresTreeNode.conf;
+      var measuresMetadata = measuresConf.metadata;
+      metadata = {
+        CATALOG_NAME: measuresMetadata.CATALOG_NAME,
+        SCHEMA_NAME: measuresMetadata.SCHEMA_NAME,
+        CUBE_NAME: measuresMetadata.CUBE_NAME,
+        MEASURE_NAME: "Fact Count",
+        MEASURE_UNIQUE_NAME: factCountName,
+        MEASURE_CAPTION: "Fact Count",
+        MEASURE_GUID: null,
+        MEASURE_AGGREGATOR: 2,
+        DATA_TYPE: 3,
+        MEASURE_IS_VISIBLE: true,
+        LEVELS_LIST: null,
+        DESCRIPTION: "Tell your admin to fix the schema bruh. A schema should define at least one explicit measure.",
+        DEFAULT_FORMAT_STRING: null
+      };
+      measureTreeNode = this.renderMeasureNode({
+        measuresTreeNode: measuresTreeNode
+      }, metadata);
+    }
     measuresTreeNode.conf.defaultMember = measureTreeNode.conf.metadata;
   },
   getMeasureTreeNodeId: function(measureUniqueName){
@@ -995,7 +1023,7 @@ var XmlaTreeView;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = title + tooltipAndInfoLabel.infoLabel;
-    new TreeNode({
+    return new TreeNode({
       state: TreeNode.states.leaf,
       parentTreeNode: conf.measuresTreeNode,
       classes: ["measure", "aggregator" + row.MEASURE_AGGREGATOR],
@@ -1067,7 +1095,7 @@ var XmlaTreeView;
     return "[Measures]";
   },
   renderMeasuresNode: function(conf){
-    conf.measuresTreeNode = new TreeNode({
+    var measuresTreeNode = new TreeNode({
       state: TreeNode.states.expanded,
       parentElement: this.cubeTreePane.getDom(),
       classes: ["measures", "hierarchy", "dimensiontype" + Xmla.Rowset.MD_DIMTYPE_MEASURE],
@@ -1075,7 +1103,9 @@ var XmlaTreeView;
       title: gMsg("Measures"),
       tooltip: gMsg("Measures")
     });
+    conf.measuresTreeNode = measuresTreeNode;
     this.renderMeasureNodes(conf);
+    return measuresTreeNode;
   },
   getCurrentCubeTreeNode: function(){
     var cubeTreeNode = this.currentCubeTreeNode;
