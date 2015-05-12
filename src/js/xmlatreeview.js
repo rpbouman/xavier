@@ -204,7 +204,10 @@ var XmlaTreeView;
     }, [
       showCatalogNodesCheckbox,
       cEl("SPAN", {
-      }, gMsg("Show catalog nodes"))
+      }, gMsg("Show catalog nodes")),
+      cEl("DIV", {
+        "class": "tooltip"
+      }, gMsg("Check the box to display catalog nodes in the treeview. Uncheck to hide."))
     ], schemaTreePaneDom);
 
     xmla.discoverDataSources({

@@ -64,6 +64,7 @@ aMsg({
   "Measures": "Meetwaarden",
   "Show catalog nodes": "Schema's tonen",
   "Show dimension nodes": "Dimensies tonen",
+  "Check the box to display catalog nodes in the treeview. Uncheck to hide.": "Toon of verberg catalogussen.",
   "Check to show multi-hierarchy dimension nodes. Uncheck to hide all dimension nodes.": "Toon de dimensie indien deze meer dan 1 hierarchy heeft.",
   //query designer
   "Columns": "Kolommen",
