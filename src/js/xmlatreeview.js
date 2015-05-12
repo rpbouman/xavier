@@ -459,10 +459,11 @@ var XmlaTreeView;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog
+      Catalog: hierarchyMetaData.CATALOG_NAME
     };
     var restrictions = {
-      CUBE_NAME: conf.cube,
+      CATALOG_NAME: hierarchyMetaData.CATALOG_NAME,
+      CUBE_NAME: hierarchyMetaData.CUBE_NAME,
       HIERARCHY_UNIQUE_NAME: hierarchyMetaData.HIERARCHY_UNIQUE_NAME,
       MEMBER_UNIQUE_NAME: hierarchyMetaData.ALL_MEMBER
     };
@@ -490,7 +491,7 @@ var XmlaTreeView;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog,
+      Catalog: metadata.CATALOG_NAME,
       Format: "Multidimensional",
       AxisFormat: "TupleFormat",
     };
@@ -558,12 +559,13 @@ var XmlaTreeView;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog,
+      Catalog: row.CATALOG_NAME,
       Format: "Multidimensional",
       AxisFormat: "TupleFormat",
     };
     var restrictions = {
-      CUBE_NAME: conf.cube,
+      CATALOG_NAME: row.CATALOG_NAME,
+      CUBE_NAME: row.CUBE_NAME,
       HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME,
       LEVEL_UNIQUE_NAME: row.LEVEL_UNIQUE_NAME
     };
@@ -588,10 +590,11 @@ var XmlaTreeView;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog
+      Catalog: row.CATALOG_NAME
     };
     var restrictions = {
-      CUBE_NAME: conf.cube,
+      CATALOG_NAME: row.CATALOG_NAME,
+      CUBE_NAME: row.CUBE_NAME,
       HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME,
       LEVEL_UNIQUE_NAME: row.LEVEL_UNIQUE_NAME
     };
@@ -631,7 +634,7 @@ var XmlaTreeView;
       loadChildren: function(callback){
         conf.membersTreeNode = this;
         conf.callback = callback;
-        me.renderLevelMemberNodes(conf);
+        me.renderLevelMemberNodes(conf, this, callback);
       }
     })
   },
@@ -660,6 +663,28 @@ var XmlaTreeView;
       metadata: row
     })
   },
+  flattenLevelMembersNodes: function(levelMembersNodes, index, callback){
+    var me = this;
+    if (index < levelMembersNodes.length) {
+      var levelMembersNode = levelMembersNodes[index++];
+      var datasourceTreeNode = me.getCurrentDatasourceTreeNode();
+      var conf = datasourceTreeNode.conf;
+      var metadata = conf.metadata;
+      var conf = {
+        url: metadata.URL,
+        dataSourceInfo: metadata.DataSourceInfo,
+        membersTreeNode: levelMembersNode,
+        callback: function(){
+          this.membersTreeNode.setState(TreeNode.states.flattened);
+          me.flattenLevelMembersNodes(levelMembersNodes, index, callback);
+        }
+      };
+      this.renderLevelMemberNodes(conf);
+    }
+    else {
+      callback();
+    }
+  },
   renderLevelPropertyNodes: function(conf) {
     var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
@@ -667,10 +692,11 @@ var XmlaTreeView;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog
+      Catalog: hierarchyMetaData.CATALOG_NAME
     };
     var restrictions = {
-      CUBE_NAME: conf.cube,
+      CATALOG_NAME: hierarchyMetaData.CATALOG_NAME,
+      CUBE_NAME: hierarchyMetaData.CUBE_NAME,
       HIERARCHY_UNIQUE_NAME: hierarchyMetaData.HIERARCHY_UNIQUE_NAME
     };
     me.xmla.discoverMDProperties({
@@ -681,19 +707,27 @@ var XmlaTreeView;
         rowset.eachRow(function(row){
           me.renderLevelPropertyNode(conf, row);
         });
+        var levelMembersNodes = [];
         conf.levelsRowset.eachRow(function(row){
           if (!row.LEVEL_IS_VISIBLE) {
             return;
           }
-          if (row.LEVEL_TYPE === 1){  //All level
-            me.renderAllLevel(conf, row);
-          }
-          else {
-            me.renderLevelMembersNode(conf, row);
-          }
+//          if (row.LEVEL_TYPE === 1){  //All level
+//            me.renderAllLevel(conf, row);
+//          }
+//          else {
+            var membersNode = me.renderLevelMembersNode(conf, row);
+            if (row.LEVEL_CARDINALITY <= 10) {
+              levelMembersNodes.push(membersNode);
+            }
+//          }
         });
-        conf.callback();
-        me.fireEvent("done");
+
+        var callback = conf.callback;
+        me.flattenLevelMembersNodes(levelMembersNodes, 0, function(){
+          callback();
+          me.fireEvent("done");
+        });
       },
       error: function(xmla, options, error){
         conf.callback();
@@ -708,10 +742,11 @@ var XmlaTreeView;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog
+      Catalog: row.CATALOG_NAME
     };
     var restrictions = {
-      CUBE_NAME: conf.cube,
+      CATALOG_NAME: row.CATALOG_NAME,
+      CUBE_NAME: row.CUBE_NAME,
       HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME,
       LEVEL_UNIQUE_NAME: row.LEVEL_UNIQUE_NAME
     };
@@ -745,10 +780,11 @@ var XmlaTreeView;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog
+      Catalog: row.CATALOG_NAME
     };
     var restrictions = {
-      CUBE_NAME: conf.cube,
+      CATALOG_NAME: row.CATALOG_NAME,
+      CUBE_NAME: row.CUBE_NAME,
       HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME
     };
     me.xmla.discoverMDLevels({
@@ -802,6 +838,7 @@ var XmlaTreeView;
       Catalog: conf.catalog
     };
     var restrictions = {
+      CATALOG_NAME: conf.catalog,
       CUBE_NAME: conf.cube
     };
     this.xmla.discoverMDDimensions({
@@ -862,7 +899,8 @@ var XmlaTreeView;
     var hierarchyTreeNodeConf = hierarchyTreeNode.conf;
     var hierarchyMetadata = hierarchyTreeNodeConf.metadata;
     var restrictions = {
-      CUBE_NAME: conf.cube,
+      CATALOG_NAME: hierarchyMetadata.CATALOG_NAME,
+      CUBE_NAME: hierarchyMetadata.CUBE_NAME,
       HIERARCHY_UNIQUE_NAME: hierarchyMetadata.HIERARCHY_UNIQUE_NAME,
       MEMBER_UNIQUE_NAME: hierarchyMetadata.DEFAULT_MEMBER
     };
@@ -924,6 +962,7 @@ var XmlaTreeView;
       Catalog: conf.catalog
     };
     var restrictions = {
+      CATALOG_NAME: conf.catalog,
       CUBE_NAME: conf.cube
     };
     this.xmla.discoverMDHierarchies({
@@ -1048,6 +1087,7 @@ var XmlaTreeView;
       Catalog: conf.catalog
     };
     var restrictions = {
+      CATALOG_NAME: conf.catalog,
       CUBE_NAME: conf.cube
     };
     this.xmla.discoverMDMeasures({
