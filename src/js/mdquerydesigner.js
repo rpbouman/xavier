@@ -236,6 +236,17 @@ var QueryDesigner;
       queryDesigner: this,
       layout: QueryDesignerAxis.layouts.horizontal
     });
+    if (conf.id === Xmla.Dataset.AXIS_SLICER) {
+      conf = merge(conf, {
+        label: gMsg("Slicer"),
+        tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
+        hint: gMsg("Optionally, drag any members unto the slicer axis to control which selection of data will be visualized."),
+        "class": "slicer",
+        drop: {
+          include: "member"
+        }
+      });
+    }
     var axis = new QueryDesignerAxis(conf);
     axis.fireEvents(this.fireEvents());
     this.addAxis(axis);
@@ -326,6 +337,22 @@ var QueryDesigner;
   getId: function() {
     return QueryDesigner.prefix + this.id;
   },
+  getMessageAreaId: function(){
+    var id = this.getId();
+    return id + "-message-area";
+  },
+  getMessageArea: function(){
+    return gEl(getMessageAreaId());
+  },
+  hideMessageArea: function(){
+    Displayed.hide(this.getMessageAreaId());
+  },
+  showMessageArea: function(showOrHide){
+    if (iUnd(showOrHide)) {
+      showOrHide = true;
+    }
+    Displayed.setDisplayed(this.getMessageAreaId(), showOrHide);
+  },
   createDom: function() {
     var id = this.getId(),
         dom = this.dom = cEl("TABLE", {
@@ -334,22 +361,40 @@ var QueryDesigner;
             cellspacing: 0
         })
     ;
+    var rows = dom.rows;
     this.eachAxis(function(index, axis){
       var r, c, conf = axis.conf;
-      r = dom.insertRow(dom.rows.length);
+      r = dom.insertRow(rows.length);
       c = r.insertCell(r.cells.length);
       c.className = confCls(
         QueryDesignerAxis.prefix,
         QueryDesignerAxis.prefix + conf.id,
         conf
       ).join(" ");
-      c.setAttribute("colspan", "100%");
       c.appendChild(axis.getDom());
       if (conf.tooltip) {
         cEl("DIV", {
           "class": "tooltip"
         }, conf.tooltip, c);
       }
+
+      //message area
+      if (r.rowIndex === 0) {
+        c = r.insertCell(r.cells.length);
+        c.setAttribute("rowspan", "100%");
+        cEl("DIV", {
+          id: this.getMessageAreaId(),
+          "class": "message-area"
+        }, null, c);
+      }
+
+      //get the message area
+      c = rows[0].cells[1].firstChild;
+      //append a message area for each axis.
+      c.appendChild(cEl("DIV", {
+        "class": "axis-message-area axis-message-area-empty",
+        id: axis.getMessageAreaId()
+      }, conf.hint))
     }, this);
 
     return dom;
@@ -395,6 +440,33 @@ var QueryDesigner;
   },
   getContainer: function() {
     return gEl(this.conf.container);
+  },
+  checkValid: function(){
+    var valid = true, gap = false;
+    this.eachAxis(function(id, axis) {
+      var add, remove;
+      if (axis.isPopulated()) {
+        if (gap) {
+          add = "axis-message-area-invalid";
+          remove = ["axis-message-area-empty", "axis-message-area-populated"];
+        }
+        else {
+          add = "axis-message-area-populated";
+          remove = "axis-message-area-empty";
+        }
+      }
+      else {
+        gap = true;
+        add = "axis-message-area-empty";
+        remove = ["axis-message-area-invalid", "axis-message-area-populated"];
+        if (axis.conf.mandatory === true) {
+          valid = false;
+        }
+      }
+      rCls(axis.getMessageAreaId(), remove, add);
+    }, this);
+    this.showMessageArea(!valid);
+    return valid;
   },
   getMdx: function(cubeName){
     var mdx = "", withClauseMdx = "", gap = false, slicerMdx;
@@ -482,6 +554,11 @@ var QueryDesignerAxis;
   },
   getQueryDesigner: function() {
     return this.conf.queryDesigner;
+  },
+  getMessageAreaId: function(){
+    var queryDesignerId = this.getQueryDesigner().getId();
+    var axisId = this.conf.id;
+    return queryDesignerId + "-axis-message-area-" + axisId;
   },
   reset: function() {
     this.hierarchies = [];
@@ -1018,6 +1095,9 @@ var QueryDesignerAxis;
         }
     }
     return null;
+  },
+  isPopulated: function(){
+    return this.getHierarchyCount() !== 0;
   },
   getHierarchyCount: function(){
     return this.hierarchies.length;

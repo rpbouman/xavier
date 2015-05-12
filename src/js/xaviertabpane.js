@@ -335,22 +335,16 @@ var XavierTab;
     if (!xmla) {
       return false;
     }
-    busy(true);
     try {
       visualizer.clear();
+      if (!queryDesigner.checkValid()) {
+        return;
+      }
+      busy(true);
       var datasource = this.getDatasource();
       var catalog = this.getCatalog();
       var cube = this.getCube();
       var mdx = queryDesigner.getMdx(cube.CUBE_NAME);
-      if (mdx) {
-        //console.log("MDX: " + mdx);
-      }
-      else {
-        //console.log("No MDX, bailing out");
-        //throw "Not a valid query";
-        busy(false);
-        return;
-      }
       //console.time("executeQuery");
       xmla.execute({
         url: datasource.URL,
@@ -836,6 +830,7 @@ var XavierTableTab;
           label: gMsg("Columns"),
           classes: ["columns"],
           tooltip: gMsg("Items on this axis are used to generate columns for the table"),
+          hint: gMsg("Drag any levels, members or measures unto the columns axis to create columns in the data table."),
           mandatory: true,
           hasEmptyCheckBox: false,
           drop: {
@@ -843,13 +838,7 @@ var XavierTableTab;
           }
         },
         {
-          id: Xmla.Dataset.AXIS_SLICER,
-          label: gMsg("Slicer"),
-          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
-          "class": "slicer",
-          drop: {
-            include: "member"
-          }
+          id: Xmla.Dataset.AXIS_SLICER
         }
       ],
       getMdx: this.getMdx
@@ -974,6 +963,7 @@ var XavierPivotTableTab;
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Columns"),
           tooltip: gMsg("Items on this axis are used to generate columns for the pivot table"),
+          hint: gMsg("Drag any levels, members or measures unto the columns axis to create columns in the pivot table."),
           "class": "columns",
           mandatory: true,
           intrinsicProperties: intrinsicProperties
@@ -982,17 +972,12 @@ var XavierPivotTableTab;
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Rows"),
           tooltip: gMsg("Items on this axis are used to generate rows for the pivot table"),
+          hint: gMsg("Optionally, drag any levels, members or measures unto the row axis to create rows in the pivot table."),
           "class": "rows",
           intrinsicProperties: intrinsicProperties
         },
         {
-          id: Xmla.Dataset.AXIS_SLICER,
-          label: gMsg("Slicer"),
-          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
-          "class": "slicer",
-          drop: {
-            include: "member"
-          }
+          id: Xmla.Dataset.AXIS_SLICER
         }
       ]
     });
@@ -1515,6 +1500,7 @@ var XavierPieChartTab;
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Categories"),
           tooltip: gMsg("Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy."),
+          hint: gMsg("Drop levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided."),
           mandatory: true,
           canBeEmpty: false,
           "class": "levels",
@@ -1526,6 +1512,7 @@ var XavierPieChartTab;
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Measures"),
           tooltip: gMsg("Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices."),
+          hint: gMsg("Drop measures on the measures axis. A pie chart will be created for each measure, and the pie slices are sized according to the value of the measure."),
           mandatory: true,
           canBeEmpty: false,
           "class": "measures",
@@ -1536,7 +1523,8 @@ var XavierPieChartTab;
         {
           id: Xmla.Dataset.AXIS_PAGES,
           label: gMsg("Columns"),
-          tooltip: gMsg("For each unique combination of members, one column is layed out and filled with pie charts."),
+          tooltip: gMsg("For each unique combination of members, a list item is layed out and filled with pie charts."),
+          hint: gMsg("Optionally, drop levels or members on the columns axis to create a list of multiple pies."),
           canBeEmpty: false,
           "class": "columns",
           drop: {
@@ -1547,6 +1535,7 @@ var XavierPieChartTab;
           id: Xmla.Dataset.AXIS_CHAPTERS,
           label: gMsg("Rows"),
           tooltip: gMsg("For each unique combination of members, one row is layed out and its columns are filled with pie charts."),
+          hint: gMsg("Optionally, drop levels or members on the rows axis and on the column axis to create a matrix of multiple pies."),
           canBeEmpty: false,
           "class": "rows",
           drop: {
@@ -1554,13 +1543,7 @@ var XavierPieChartTab;
           }
         },
         {
-          id: Xmla.Dataset.AXIS_SLICER,
-          label: gMsg("Slicer"),
-          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
-          "class": "slicer",
-          drop: {
-            include: "member"
-          }
+          id: Xmla.Dataset.AXIS_SLICER
         }
       ]
     });
@@ -1690,6 +1673,7 @@ var XavierBarChartTab;
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Measures"),
           tooltip: gMsg("Each measure on this axis generates one group."),
+          hint: gMsg("Drag measures to the measures axis. The measure value determines the size of the bar."),
           mandatory: true,
           canBeEmpty: false,
           "class": "measures",
@@ -1701,6 +1685,7 @@ var XavierBarChartTab;
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Categories"),
           tooltip: gMsg("Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy."),
+          hint: gMsg("Drag levels or members to the categories axis to create categories for which bars are drawn."),
           mandatory: true,
           canBeEmpty: false,
           "class": "levels",
@@ -1711,7 +1696,8 @@ var XavierBarChartTab;
         {
           id: Xmla.Dataset.AXIS_PAGES,
           label: gMsg("Columns"),
-          tooltip: gMsg("For each unique combination of members, one column is layed out and filled with pie charts."),
+          tooltip: gMsg("For each unique combination of members, a bar chart is created."),
+          hint: gMsg("Optionally, drop levels or members on the columns axis to create a list of multiple bar charts."),
           canBeEmpty: false,
           "class": "columns",
           drop: {
@@ -1721,7 +1707,8 @@ var XavierBarChartTab;
         {
           id: Xmla.Dataset.AXIS_CHAPTERS,
           label: gMsg("Rows"),
-          tooltip: gMsg("For each unique combination of members, one row is layed out and its columns are filled with pie charts."),
+          tooltip: gMsg("For each unique combination of members, one row is layed out and each column is filled with a bar chart."),
+          hint: gMsg("Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts."),
           canBeEmpty: false,
           "class": "rows",
           drop: {
@@ -1729,13 +1716,7 @@ var XavierBarChartTab;
           }
         },
         {
-          id: Xmla.Dataset.AXIS_SLICER,
-          label: gMsg("Slicer"),
-          tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
-          "class": "slicer",
-          drop: {
-            include: "member"
-          }
+          id: Xmla.Dataset.AXIS_SLICER
         }
       ]
     });

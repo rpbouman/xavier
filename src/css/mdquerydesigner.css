@@ -303,3 +303,18 @@ input.show-empty:before {
   margin-left: 10px;
   white-space: nowrap;
 }
+
+.query-designer .message-area .axis-message-area {
+  padding-left: 20px;
+  background-repeat: no-repeat;
+}
+
+.query-designer .message-area .axis-message-area-populated {
+  padding-left: 20px;
+  background-image: url('../mui/images/checked_16x16.png');
+}
+
+.query-designer .message-area .axis-message-area-invalid {
+  padding-left: 20px;
+  background-image: url('../mui/images/remove_16x16.png');
+}

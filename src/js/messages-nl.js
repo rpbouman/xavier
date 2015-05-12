@@ -21,27 +21,42 @@ aMsg({
   "en/welcome.html": "nl/welcome.html",
   //slice
   "The members on this axis form a selection of the total data set (a slice) or which data are shown.": "Lid-elementen op deze as vormen de selectie (slice) van de totale gegevensverzameling",
+  "Optionally, drag any members unto the slicer axis to control which selection of data will be visualized.": "Sleep leden naar de selectie as om de data selectie te bepalen (optioneel).",
   //table
   "New Table": "Nieuwe Tabel",
   "Table": "Tabel",
+  "Items on this axis are used to generate columns for the table": "Elementen op deze as worden gebruikt om kolommen in de resultaat tabel te genereren.",
+  "Drag any levels, members or measures unto the columns axis to create columns in the data table.": "Sleep niveaus, leden, of meetwaarden naar de kolom as om kolommen in de data tabel te maken.",
   //pivot table
   "Show column hierarchy headers": "Toon kolomkoppen",
   "Show row hierarchy headers": "Toon rijlabels",
   "New Pivot Table": "Nieuwe Draaitabel",
   "Pivot Table": "Draaitabel",
   "Items on this axis are used to generate columns for the pivot table": "Elementen op deze as worden gebruikt om kolommen te genereren",
+  "Drag any levels, members or measures unto the columns axis to create columns in the pivot table.": "Sleep niveaus, leden, of meetwaarden naar de kolom as om kolommen in de draaitabel te maken.",
   "Items on this axis are used to generate rows for the pivot table": "Elementen op deze as worden gebruikt om rijen te genereren",
+  "Optionally, drag any levels, members or measures unto the row axis to create rows in the pivot table.": "Sleep niveaus, leden, of meetwaarden naar de rijen as om rijen in de draaitabel te maken (optioneel).",
   //pie chart
   "Pie Chart": "Taartdiagram",
   "New Pie Chart": "Nieuw Taartdiagram",
   "Categories": "Categorieën",
-  "Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices.": "Elke meetwaarde op deze as wordt gebruikt om één taartdiagram te genereren. De meetwaarde bepaald de grootte van de taartpunten.",
   "Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy.": "Elke combinatie van lid-elementen vormt een categorie om een taartpunt van het diagram te genereren. Kies per hiërarchie één niveau, of een selectie van lid-elementen van een en hetzelfde niveau.",
+  "Drop levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided.": "Sleep niveaus of leden naar de categorie as om categorieen te maken. Elke categorie resulteert in een taartpunt",
+  "Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices.": "Elke meetwaarde op deze as wordt gebruikt om één taartdiagram te genereren. De meetwaarde bepaald de grootte van de taartpunten.",
+  "Drop measures on the measures axis. A pie chart will be created for each measure, and the pie slices are sized according to the value of the measure.": "Sleep meetwaarden naar de meetwaarden as. Er wordt een taartdiagram gemaakt voor elke meetwaarde. De grootte van de taartpunten wordt bepaald door de waarde van de meetwaarde.",
   "For each unique combination of members, one column is layed out and filled with pie charts.": "Voor iedere unieke combinatie van lid-elementen wordt er een kolom opgemaakt en gevuld met taartdiagrammen.",
+  "Optionally, drop levels or members on the columns axis to create a list of multiple pies.": "Plaats niveaus of leden op de kolom as om een lijst van meerdere taartdiagrammen te maken (optioneel).",
   "For each unique combination of members, one row is layed out and its columns are filled with pie charts.": "Voor iedere unieke combinatie van lid-elementen wordt er een rij aangemaakt en diens kolommen worden gevuld met taartdiagrammen.",
-  //
+  "Optionally, drop levels or members on the rows axis and on the column axis to create a matrix of multiple pies.": "Plaats niveaus of leden op de rijen as en de kolom as om een matrix van taartdiagrammen te maken. (optioneel)",
+  //Bar chart
   "Bar Chart": "Staafdiagram",
   "New Bar Chart": "Nieuw Staafdiagram",
+  "Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy.": "Elke combinatie van leden vormt een categorie waarvoor staven in het staafdiagram worden gemaakt. Kies een niveau, of selecteer leden uit een enkel niveau van een hierarchy.",
+  "Drag levels or members to the categories axis to create categories for which bars are drawn.": "Sleep niveaus of leden naar de categorie as om categorieen te maken.",
+  "For each unique combination of members, a bar chart is created.": "Voor iedere unieke combinatie van leden wordt er 1 staafdiagram gemaakt.",
+  "Optionally, drop levels or members on the columns axis to create a list of multiple bar charts.": "Plaats niveaus of leden op de kolom as om een lijst van meerdere staafdiagrammen te maken.",
+  "For each unique combination of members, one row is layed out and each column is filled with a bar chart.": "Voor iedere unieke combintatie van laden wordt eenrij gemaakt, en iedere kolom bevat 1 staafdiagram.",
+  "Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts.": "Plaats niveaus en leden op de rijen as en kolom as om een matrix van staafdiagrammen te maken.",
   //query
   "Error executing query": "Fout bij uitvoering zoekopdracht",
   //treeview
@@ -74,5 +89,5 @@ aMsg({
   "Catalog": "Catalogus",
   "Cube": "Kubus",
   "Selection": "Selectie",
-  "Export Date": "Exportdatum"
+  "Export Date": "Exportdatum",
 });
