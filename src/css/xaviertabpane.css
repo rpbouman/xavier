@@ -129,6 +129,9 @@ ul.chart-container, ul.chart-container > li {
   margin-bottom: 5px;
   position: absolute;
   padding: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  position: absolute;
 }
 
 .xavier-chart-body {
