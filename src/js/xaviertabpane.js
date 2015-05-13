@@ -341,6 +341,7 @@ var XavierTab;
         return;
       }
       busy(true);
+      this.layoutChartArea();
       var datasource = this.getDatasource();
       var catalog = this.getCatalog();
       var cube = this.getCube();
@@ -1390,7 +1391,6 @@ var XavierChartTab;
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
         if (this.getAutoRunEnabled()) {
-          this.layoutChartArea();
           this.executeQuery();
         }
         else {
