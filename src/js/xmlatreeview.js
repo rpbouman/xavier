@@ -575,6 +575,7 @@ var XmlaTreeView;
       parentTreeNode: membersTreeNode,
       classes: "member",
       id: memberNodeId,
+      tooltip: row.MEMBER_UNIQUE_NAME,
       title: row.MEMBER_CAPTION || row.MEMBER_NAME,
       metadata: row,
       loadChildren: function(callback){
