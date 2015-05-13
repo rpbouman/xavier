@@ -341,7 +341,7 @@ var XavierTab;
         return;
       }
       busy(true);
-      this.layoutChartArea();
+      this.doLayout();
       var datasource = this.getDatasource();
       var catalog = this.getCatalog();
       var cube = this.getCube();
