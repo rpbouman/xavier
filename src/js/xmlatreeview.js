@@ -656,7 +656,7 @@ var XmlaTreeView;
     title = title + tooltipAndInfoLabel.infoLabel;
     return new TreeNode({
       parentTreeNode: levelTreeNode,
-      classes: "property",
+      classes: ["property", "property-datatype" + row.DATA_TYPE],
       id: id + ":property:" + row.PROPERTY_NAME,
       objectName: objectName,
       title: title,
