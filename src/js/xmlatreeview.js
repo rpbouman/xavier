@@ -487,18 +487,19 @@ var XmlaTreeView;
     });
   },
   renderChildMemberNodes: function(conf){
-    var me = this;
-    var url = conf.url;
+    var me = this,
+        url = conf.url,
+        parentNode = conf.parentNode,
+        parentNodeConf = parentNode.conf,
+        metadata = parentNodeConf.metadata
+    ;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
       Catalog: metadata.CATALOG_NAME,
       Format: "Multidimensional",
       AxisFormat: "TupleFormat",
     };
-    var parentNode = conf.parentNode,
-        parentNodeConf = parentNode.conf,
-        metadata = parentNodeConf.metadata,
-        mdx = "WITH MEMBER [Measures].numChildren " +
+    var mdx = "WITH MEMBER [Measures].numChildren " +
               "AS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count " +
               "SELECT CrossJoin(" + metadata.MEMBER_UNIQUE_NAME + ".Children," +
                       "[Measures].numChildren) ON COLUMNS " +
