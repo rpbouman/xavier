@@ -468,6 +468,7 @@ function dropOutsideAxis(dragInfo){
     case "member-drilldown":
     case "measure":
     case "level":
+    case "property":
       dragInfo.queryDesignerAxis.removeMember(dragInfo.metadata, dragInfo.className);
       break;
     default:

@@ -126,6 +126,7 @@ var QueryDesigner;
         break;
       case "measure":
       case "level":
+      case "property":
       case "member":
       case "member-drilldown":
         var member = queryDesignerAxis.getMember(target.id);
@@ -891,6 +892,7 @@ var QueryDesignerAxis;
       case "level":
       case "member":
       case "measure":
+      case "property":
         axis = queryDesigner.getAxisForHierarchy(hierarchyName);
         if (axis && axis !== this) {
           //if the item has a hierarchy and the hierarchy is already present on another axis
@@ -905,6 +907,10 @@ var QueryDesignerAxis;
   },
   getMemberUniqueName: function(metadata) {
     var expression;
+    if (metadata.PROPERTY_NAME) {
+      expression = metadata.LEVEL_UNIQUE_NAME + ".[" + metadata.PROPERTY_NAME + "]";
+    }
+    else
     if (metadata.MEMBER_UNIQUE_NAME) {
       expression = metadata.MEMBER_UNIQUE_NAME;
     }
@@ -1277,6 +1283,9 @@ var QueryDesignerAxis;
       case "level":
         caption = metadata.LEVEL_CAPTION;
         break;
+      case "property":
+        caption = metadata.PROPERTY_CAPTION;
+        break;
       case "member":
         caption = metadata.MEMBER_CAPTION;
         break;
@@ -1451,6 +1460,16 @@ var QueryDesignerAxis;
   },
   getIntrinsicPropertiesMdx: function(){
     var mdx = "";
+    this.eachSetDef(function(setDef, setDefIndex){
+      var type = setDef.type;
+      if (type !== "property") {
+        return;
+      }
+      if (mdx.length) {
+        mdx += ", ";
+      }
+      mdx += setDef.expression;
+    }, this);
     var myIntrinsicProperties = this.conf.intrinsicProperties;
     if (myIntrinsicProperties) {
       var intrinsicProperties;
@@ -1472,7 +1491,13 @@ var QueryDesignerAxis;
           intrinsicProperties += intrinsicProperty;
         }
       }
-      mdx += " DIMENSION PROPERTIES " + intrinsicProperties;
+      if (mdx.length) {
+        mdx += ", ";
+      }
+      mdx += intrinsicProperties;
+    }
+    if (mdx.length) {
+      mdx = " DIMENSION PROPERTIES " + mdx;
     }
     return mdx;
   },
@@ -1516,6 +1541,10 @@ var QueryDesignerAxis;
     this.eachHierarchy(function(hierarchy, hierarchyIndex){
       var members = "";
       this.eachSetDef(function(setDef, setDefIndex){
+        var type = setDef.type;
+        if (type === "property") {
+          return;
+        }
         if (members.length) {
           members += ", ";
         }
