@@ -1458,7 +1458,7 @@ var QueryDesignerAxis;
       }
     }
   },
-  getIntrinsicPropertiesMdx: function(){
+  getDimensionPropertiesMdx: function(){
     var mdx = "";
     this.eachSetDef(function(setDef, setDefIndex){
       var type = setDef.type;
@@ -1565,7 +1565,7 @@ var QueryDesignerAxis;
     }
     if (!this.isSlicerAxis() && mdx.length) {
       mdx = this.getNonEmptyClauseMdx() + mdx;
-      mdx += this.getIntrinsicPropertiesMdx();
+      mdx += this.getDimensionPropertiesMdx();
       mdx += this.getOnAxisClauseMdx();
     }
     return mdx;
