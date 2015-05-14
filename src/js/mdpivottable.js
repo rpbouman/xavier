@@ -528,10 +528,10 @@ var PivotTable;
     }
     this.dataset = dataset;
 
-    if (dataset.hasColumnAxis()) {
+    if (dataset.hasColumnAxis(queryDesigner.getColumnAxis())) {
       this.renderColumnAxis();
     }
-    if (dataset.hasRowAxis()) {
+    if (dataset.hasRowAxis(queryDesigner.getRowAxis())) {
       this.renderRowAxis();
     }
     if (dataset.hasPageAxis()) {
@@ -555,11 +555,11 @@ var PivotTable;
       cEl("THEAD")
     ]);
   },
-  renderColumnAxis: function(){
+  renderColumnAxis: function(queryDesignerAxis){
     var columnAxis = this.dataset.getColumnAxis();
     this.computeAxisLevels(columnAxis);
     var table = this._createAxisTable("columns-table");
-    this.renderAxisHorizontally(columnAxis, table);
+    this.renderAxisHorizontally(columnAxis, table, queryDesignerAxis);
     dCh(this.getColumnsDom());
     this.getColumnsDom().appendChild(table);
     if (this.showHorizontalHierarchyHeaders()) {
@@ -574,11 +574,11 @@ var PivotTable;
     dCh(this.getPagesDom());
     this.getPagesDom().appendChild(table);
   },
-  renderRowAxis: function(){
+  renderRowAxis: function(queryDesignerAxis){
     var rowAxis = this.dataset.getRowAxis();
     var table = this._createAxisTable("rows-table");
     this.columnOffset = this.computeAxisLevels(rowAxis);
-    this.renderAxisVertically(rowAxis, table);
+    this.renderAxisVertically(rowAxis, table, queryDesignerAxis);
     dCh(this.getRowsDom());
     this.getRowsDom().appendChild(table);
     if (this.showVerticalHierarchyHeaders()) {
@@ -640,13 +640,13 @@ var PivotTable;
     }, this);
     return rowsHeadersTable;
   },
-  renderAxisHorizontally: function(axis, table) {
-    this.renderAxis(axis, table, "horizontal");
+  renderAxisHorizontally: function(axis, table, queryDesignerAxis) {
+    this.renderAxis(axis, table, "horizontal", queryDesignerAxis);
   },
-  renderAxisVertically: function(axis, table) {
-    this.renderAxis(axis, table, "vertical");
+  renderAxisVertically: function(axis, table, queryDesignerAxis) {
+    this.renderAxis(axis, table, "vertical", queryDesignerAxis);
   },
-  renderAxis: function(axis, table, direction) {
+  renderAxis: function(axis, table, direction, queryDesignerAxis) {
     var tbody = table.tBodies[0] || cEl("TBODY", null, null, table),
         rows = tbody.rows, row, cells,
         tuples = axis.tuples, tuple, i, n = tuples.length, members,
