@@ -547,40 +547,6 @@ adopt(XavierDocumentTab, XavierTab);
   clear: function(){
     this.dataGrid.clear();
   },
-  getColumnInfo: function(queryDesignerAxis){
-    var columnLookup = [], index = 0;
-    queryDesignerAxis.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
-      var levels;
-      if (iUnd(columnLookup[hierarchyIndex])) {
-        columnLookup[hierarchyIndex] = levels = {};
-      }
-      else {
-        levels = columnLookup[hierarchyIndex];
-      }
-      var column = {
-        label: setDef.caption,
-        name: setDef.metadata.LEVEL_UNIQUE_NAME,
-        index: index++
-      };
-      if (iDef(setDef.metadata.LEVEL_NUMBER)) {
-        levels[setDef.metadata.LEVEL_NUMBER] = column;
-      }
-      else {
-        levels[setDef.metadata.MEASURE_NAME] = column;
-      }
-    }, this);
-    return columnLookup;
-  },
-  getColumns: function(columnInfo){
-    var columns = [], i, n = columnInfo.length, levels, column;
-    for (i = 0; i < n; i++) {
-      levels = columnInfo[i];
-      for (column in levels) {
-        columns.push(levels[column]);
-      }
-    }
-    return columns
-  },
   getDataset: function(){
     return this.dataset;
   },
@@ -707,16 +673,29 @@ var XavierTableTab;
           };
         }
 
-        var level = setDef.metadata.LEVEL_NUMBER;
+        var levelMetadata;
+        switch (setDef.type) {
+          case "level":
+            levelMetadata = setDef.metadata;
+            break;
+          case "property":
+            levelMetadata = setDef.levelMetadata;
+            break;
+        }
+        var levelNumber = levelMetadata.LEVEL_NUMBER;
+        var levelItems = hierarchyStat.setDefs[levelNumber];
+        if (!levelItems) {
+          hierarchyStat.setDefs[levelNumber] = levelItems = [];
+        }
         //store the setdef in its hierarchy.
-        hierarchyStat.setDefs[level] = setDef;
+        levelItems.push(setDef);
 
         //update level stats for the hierarchy
-        if (level > hierarchyStat.maxLevel) {
-          hierarchyStat.maxLevel = level;
+        if (levelNumber > hierarchyStat.maxLevel) {
+          hierarchyStat.maxLevel = levelNumber;
         }
-        if (level < hierarchyStat.minLevel) {
-          hierarchyStat.minLevel = level;
+        if (levelNumber < hierarchyStat.minLevel) {
+          hierarchyStat.minLevel = levelNumber;
         }
 
       }
@@ -724,24 +703,40 @@ var XavierTableTab;
 
     //now that we know what the lowest level is for each hierarchy,
     //divide the set of items on those that are lowest in the hierarchy, and all others.
-    var rowAxisItems = [], calculatedMeasures = [], hierarchyStat, setDefs, setDef, level;
+    var rowAxisItems = [], calculatedMeasures = [], hierarchyStat, setDefs, setDef, levelNumber, levelItems, n, i;
     for (hierarchy in hierarchies) {
       hierarchyStat = hierarchies[hierarchy];
       setDefs = hierarchyStat.setDefs;
 
-      //grab the lowest level
-      setDef = setDefs[hierarchyStat.maxLevel];
-      //push it to the row axis.
+      //grab the lowest level (that's the one at maxLevel)
+      levelItems = setDefs[hierarchyStat.maxLevel];
+
+      setDef = levelItems[0];
+
+      if (setDef.type === "property") {
+        var levelMetadata = setDef.levelMetadata;
+        setDef = {
+          caption: levelMetadata.LEVEL_CAPTION,
+          type: "level",
+          expression: levelMetadata.LEVEL_UNIQUE_NAME + ".Members",
+          metadata: levelMetadata
+        };
+      }
+
+      //push it to the row axis to force the grouping.
       rowAxisItems.push(setDef);
-      setDef.dataGridColumn.memberIndex = memberIndex++;
-      //remove it from the column axis.
-      delete setDefs[hierarchyStat.maxLevel];
 
       //create a calculated measure for the other levels
-      for (level in setDefs){
-        setDef = setDefs[level];
-        setDef.dataGridColumn.cellIndex = cellIndex++;
-        calculatedMeasures.push(setDef);
+      for (levelNumber in setDefs){
+        levelItems = setDefs[levelNumber];
+        for (i = 0, n = levelItems.length; i < n; i++) {
+          setDef = levelItems[i];
+          if (String(hierarchyStat.maxLevel) === levelNumber) {
+            setDef.isAtMaxLevel = true;
+          }
+          setDef.dataGridColumn.cellIndex = cellIndex++;
+          calculatedMeasures.push(setDef);
+        }
       }
     }
 
@@ -753,11 +748,12 @@ var XavierTableTab;
       this.updateDom(false);
       //create new dummy axis
       var rowAxis = this.createAxis({
-        id: Xmla.Dataset.AXIS_ROWS,
-        hasEmptyCheckBox: false
-      }),
+            id: Xmla.Dataset.AXIS_ROWS,
+            hasEmptyCheckBox: false
+          }),
           i, n = calculatedMeasures.length,
-          calculatedMeasure, metadata, hierarchyName, caption, expression
+          calculatedMeasure, metadata,
+          hierarchyName, caption, expression
       ;
       //move the measures to the new axis
       if (columnAxis.hasMeasures()) {
@@ -768,13 +764,22 @@ var XavierTableTab;
         metadata = calculatedMeasure.metadata;
         hierarchyName = rowAxis.getHierarchyName(metadata);
         hierarchyName = rowAxis.stripBracesFromIdentifier(hierarchyName);
-        caption = hierarchyName + "." + metadata.LEVEL_NAME;
-        expression =  "Ancestor(" +
-                      " [" + hierarchyName + "].CurrentMember" +
-                      ",[" + hierarchyName + "].[" + metadata.LEVEL_NAME + "]" +
-                      //use explicit full property, .Caption is not supported by everyone (http://issues.iccube.com/issue/ic3pub-146)
-                      ").Properties(\"MEMBER_CAPTION\")"
-        ;
+        caption = hierarchyName + "." + calculatedMeasure.caption;
+
+        expression = metadata.HIERARCHY_UNIQUE_NAME + ".CurrentMember";
+        if (calculatedMeasure.isAtMaxLevel !== true) {
+          expression =  "Ancestor(" + expression + ".CurrentMember" +
+                        "," + metadata.LEVEL_UNIQUE_NAME +
+                        ")"
+          ;
+        }
+        if (calculatedMeasure.type === "property") {
+          property = metadata.PROPERTY_NAME;
+        }
+        else {
+          property = "MEMBER_CAPTION";
+        }
+        expression += ".PROPERTIES(\"" + property + "\")";
         rowAxis.addMember(measures.length + i, "calculated-member", {
           HIERARCHY_UNIQUE_NAME: QueryDesigner.prototype.measuresHierarchyName,
           MEMBER_UNIQUE_NAME: "[Measures].[" + caption + "]",
@@ -835,7 +840,7 @@ var XavierTableTab;
           mandatory: true,
           hasEmptyCheckBox: false,
           drop: {
-            include: ["level", "measure"]
+            include: ["level", "property", "measure"]
           }
         },
         {
