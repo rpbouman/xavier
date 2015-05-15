@@ -54,9 +54,9 @@ aMsg({
   "Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy.": "Elke combinatie van leden vormt een categorie waarvoor staven in het staafdiagram worden gemaakt. Kies een niveau, of selecteer leden uit een enkel niveau van een hierarchy.",
   "Drag levels or members to the categories axis to create categories for which bars are drawn.": "Sleep niveaus of leden naar de categorie as om categorieen te maken.",
   "For each unique combination of members, a bar chart is created.": "Voor iedere unieke combinatie van leden wordt er 1 staafdiagram gemaakt.",
-  "Optionally, drop levels or members on the columns axis to create a list of multiple bar charts.": "Plaats niveaus of leden op de kolom as om een lijst van meerdere staafdiagrammen te maken.",
-  "For each unique combination of members, one row is layed out and each column is filled with a bar chart.": "Voor iedere unieke combintatie van laden wordt eenrij gemaakt, en iedere kolom bevat 1 staafdiagram.",
-  "Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts.": "Plaats niveaus en leden op de rijen as en kolom as om een matrix van staafdiagrammen te maken.",
+  "Optionally, drop levels or members on the columns axis to create a list of multiple bar charts.": "Plaats niveaus of leden op de kolom as om een lijst van meerdere staafdiagrammen te maken. (optioneel)",
+  "For each unique combination of members, one row is layed out and each column is filled with a bar chart.": "Voor iedere unieke combintatie van laden wordt eenrij gemaakt, en iedere kolom bevat 1 staafdiagram. (optioneel)",
+  "Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts.": "Plaats niveaus en leden op de rijen as en kolom as om een matrix van staafdiagrammen te maken. (optioneel)",
   //query
   "Error executing query": "Fout bij uitvoering zoekopdracht",
   //treeview
