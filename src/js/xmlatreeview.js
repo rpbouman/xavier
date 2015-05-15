@@ -453,11 +453,10 @@ var XmlaTreeView;
   },
   renderAllLevel: function(conf, level) {
     var me = this;
-    var hierarchyTreeNode = conf.hierarchyTreeNode;
-    var idPostfix =  ":level:" + level.LEVEL_UNIQUE_NAME;
-    var levelTreeNode = TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix);
+    var levelTreeNode = this.getLevelTreeNode(level.LEVEL_UNIQUE_NAME);
     conf.levelTreeNode = levelTreeNode;
-    var hierarchyMetaData = hierarchyTreeNode.conf.metadata;
+    var hierarchyTreeNode = conf.hierarchyTreeNode;
+    var hierarchyMetadata = hierarchyTreeNode.conf.metadata;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
@@ -624,13 +623,13 @@ var XmlaTreeView;
   renderLevelMembersNode: function(conf, row){
     var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
-    var idPostfix =  ":level:" + row.LEVEL_UNIQUE_NAME;
-    var id = hierarchyTreeNode.conf.id + idPostfix;
+    var levelTreeNode = this.getLevelTreeNode(row.LEVEL_UNIQUE_NAME);
+    var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME) + ":members";
     var title = row.LEVEL_CARDINALITY + " " + gMsg("Members");
     return new TreeNode({
-      parentTreeNode: TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix),
+      parentTreeNode: levelTreeNode,
       classes: "members",
-      id: id + ":members",
+      id: id,
       title: title,
       tooltip: title,
       metadata: row,
@@ -644,26 +643,48 @@ var XmlaTreeView;
   },
   renderLevelPropertyNode: function(conf, row) {
     var hierarchyTreeNode = conf.hierarchyTreeNode;
-    var idPostfix =  ":level:" + row.LEVEL_UNIQUE_NAME;
-    var levelTreeNode = TreeNode.getInstance(hierarchyTreeNode.getId() + idPostfix);
-    var id = hierarchyTreeNode.conf.id + idPostfix;
+    var levelTreeNode = this.getLevelTreeNode(row.LEVEL_UNIQUE_NAME);
     if (!levelTreeNode) {
       //the level tree node might not have been created if it was marked as not visible
       return;
     }
+    var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME);
     var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
     var objectName = row.PROPERTY_CAPTION || row.PROPERTY_NAME;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = title + tooltipAndInfoLabel.infoLabel;
+
+    var state = TreeNode.states.leaf;
+
+    var classes = ["property", "property-datatype" + row.DATA_TYPE];
+
+    if (row.PROPERTY_TYPE & Xmla.Rowset.MDPROP_MEMBER) {
+      classes.push("property-type-member");
+    }
+
+    if (row.PROPERTY_TYPE & Xmla.Rowset.MDPROP_CELL) {
+      classes.push("property-type-cell");
+    }
+
+    if (row.PROPERTY_TYPE & Xmla.Rowset.MDPROP_SYSTEM) {
+      classes.push("property-type-system");
+      //for now, simply hide any system properties.
+      state = TreeNode.states.flattened;
+    }
+
+    if (row.PROPERTY_TYPE & Xmla.Rowset.MDPROP_BLOB) {
+      classes.push("property-type-blob");
+    }
+
     return new TreeNode({
       parentTreeNode: levelTreeNode,
-      classes: ["property", "property-datatype" + row.DATA_TYPE],
+      classes: classes,
       id: id + ":property:" + row.PROPERTY_NAME,
       objectName: objectName,
       title: title,
       tooltip: tooltip,
-      state: TreeNode.states.leaf,
+      state: state,
       metadata: row
     })
   },
@@ -709,6 +730,14 @@ var XmlaTreeView;
       restrictions: restrictions,
       success: function(xmla, options, rowset){
         rowset.eachRow(function(row){
+          //don't render properties that aren't marked visible
+          if (iDef(row.PROPERTY_IS_VISIBLE) && row.PROPERTY_IS_VISIBLE === false) {
+            return;
+          }
+          //only render properties that are marked as member properties
+          if (iDef(row.PROPERTY_TYPE) && (row.PROPERTY_TYPE & Xmla.Rowset.MDPROP_MEMBER) !== Xmla.Rowset.MDPROP_MEMBER) {
+            return;
+          }
           me.renderLevelPropertyNode(conf, row);
         });
         var levelMembersNodes = [];
@@ -741,7 +770,7 @@ var XmlaTreeView;
   },
   renderLevelTreeNode: function(conf, row){
     var hierarchyTreeNode = conf.hierarchyTreeNode;
-    var id = hierarchyTreeNode.conf.id + ":level:" + row.LEVEL_UNIQUE_NAME;
+    var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME);
     var levelCaption = row.LEVEL_CAPTION;
     var url = conf.url;
     var properties = {
@@ -888,6 +917,20 @@ var XmlaTreeView;
   getHierarchyMetadata: function(hierarchyUniqueName){
     var hierarchyTreeNode = this.getHierarchyTreeNode(hierarchyUniqueName);
     return hierarchyTreeNode.conf.metadata;
+  },
+  getLevelTreeNodeId: function(levelUniqueName){
+    if (iObj(levelUniqueName)){
+      levelUniqueName = levelUniqueName.LEVEL_UNIQUE_NAME;
+    }
+    return "level:" + levelUniqueName;
+  },
+  getLevelTreeNode: function(levelUniqueName){
+    var id = this.getLevelTreeNodeId(levelUniqueName);
+    return TreeNode.getInstance("node:" + id);
+  },
+  getLevelMetadata: function(levelUniqueName){
+    var levelTreeNode = this.getLevelTreeNode(levelUniqueName);
+    return levelTreeNode.conf.metadata;
   },
   getDefaultMember: function(conf, defaultMemberQueue, defaultMemberQueueIndex){
     if (defaultMemberQueueIndex >= defaultMemberQueue.length) {
