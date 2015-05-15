@@ -433,6 +433,7 @@ function dragWithinAxis(dragInfo, queryDesignerAxis, target){
     case "member-drilldown":
     case "measure":
     case "level":
+    case "property":
       queryDesignerAxis.moveMember(dragInfo.metadata, dragInfo.className, queryDesignerAxis.getMemberIndexForSpan(target));
       break;
   }
