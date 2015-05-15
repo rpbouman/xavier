@@ -1638,17 +1638,19 @@ var XavierBarChart;
     ;
 
     var groups = [];
-    categoriesAxis.eachTuple(function(tuple){
+    measuresAxis.eachTuple(function(tuple){
       var group = dimension.group().reduceSum(function(d){
         return d.values[tuple.index];
       });
+      var label = this.getLabelForTuple(tuple);
       if (tuple.index) {
-        chart.stack(group, this.getLabelForTuple(tuple));
+        chart.stack(group, label);
       }
       else {
-        chart.group(group);
+        chart.group(group, label);
       }
     }, this);
+    chart.legend(dc.legend());
     chart.render();
   }
 };
