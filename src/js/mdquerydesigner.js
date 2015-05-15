@@ -1268,6 +1268,11 @@ var QueryDesignerAxis;
   getMemberInfo: function(requestType, metadata){
     //TODO: query member
     var expression = this.getMemberExpression(metadata, requestType), caption;
+    var memberInfo = {
+      expression: expression,
+      metadata: metadata,
+      type: requestType
+    };
     var captionNeedsUpdate = false;
     switch (requestType) {
       case "measures":
@@ -1285,6 +1290,9 @@ var QueryDesignerAxis;
         break;
       case "property":
         caption = metadata.PROPERTY_CAPTION;
+        var treeView = this.getQueryDesigner().getXmlaTreeView();
+        levelMetadata = treeView.getLevelMetadata(metadata.LEVEL_UNIQUE_NAME);
+        memberInfo.levelMetadata = levelMetadata;
         break;
       case "member":
         caption = metadata.MEMBER_CAPTION;
@@ -1299,13 +1307,9 @@ var QueryDesignerAxis;
         caption = metadata.CAPTION;
         break;
     }
-    return {
-      expression: expression,
-      caption: caption,
-      captionNeedsUpdate: captionNeedsUpdate,
-      type: requestType,
-      metadata: metadata
-    };
+    memberInfo.caption = caption;
+    memberInfo.captionNeedsUpdate = captionNeedsUpdate;
+    return memberInfo;
   },
   _addMember: function(memberIndex, requestType, metadata) {
     var hierarchyName = this.getHierarchyName(metadata),
