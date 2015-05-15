@@ -61,7 +61,7 @@ var XmlaTreeView;
     description = description.trim();
     var type;
     var len = description.length;
-    if (/^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(\w+\/)*([\w\.]+)(\?[\w\.=\&]*)?$/.test(description)) {
+    if (/^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(([\w\.]|%\d\d)+\/)*(([\w\.]|%\d\d)+)(\?([\w\.=\&]|%\d\d)*)?$/.test(description)) {
       type = "url";
     }
     else
@@ -78,21 +78,23 @@ var XmlaTreeView;
     return type;
   },
   createNodeTooltipAndInfoLabel: function(description){
-    var type = this.getDescriptionContentType(description);
     var tooltip = "", infoLabel = "";
-    switch (type) {
-      case "url":
-        tooltip = gMsg("Click on the information icon for a description.");
-        infoLabel = "<span class=\"info-icon\" data-url=\"" + description + "\"/>"
-        break;
-      case "xml":
-      case "text":
-        tooltip = description;
-        infoLabel = "";
-        break;
-      case "empty":
-      default:
-        break;
+    if (description) {
+      var type = this.getDescriptionContentType(description);
+      switch (type) {
+        case "url":
+          tooltip = gMsg("Click on the information icon for a description.");
+          infoLabel = "<span class=\"info-icon\" data-url=\"" + description + "\"/>"
+          break;
+        case "xml":
+        case "text":
+          tooltip = description;
+          infoLabel = "";
+          break;
+        case "empty":
+        default:
+          break;
+      }
     }
     return {
       tooltip: tooltip,
