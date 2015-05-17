@@ -1502,18 +1502,6 @@ var XavierPieChartTab;
       xmlaTreeView: this.getXmlaTreeView(),
       axes: [
         {
-          id: Xmla.Dataset.AXIS_COLUMNS,
-          label: gMsg("Categories"),
-          tooltip: gMsg("Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy."),
-          hint: gMsg("Drop levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided."),
-          mandatory: true,
-          canBeEmpty: false,
-          "class": "levels",
-          drop: {
-            include: ["level", "member"]
-          }
-        },
-        {
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Measures"),
           tooltip: gMsg("Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices."),
@@ -1523,6 +1511,18 @@ var XavierPieChartTab;
           "class": "measures",
           drop: {
             include: "measure"
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Categories"),
+          tooltip: gMsg("Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy."),
+          hint: gMsg("Drop levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "levels",
+          drop: {
+            include: ["level", "member"]
           }
         },
         {
