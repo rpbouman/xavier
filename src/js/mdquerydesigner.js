@@ -215,9 +215,9 @@ var QueryDesigner;
     return this.moveHierarchy(QueryDesigner.prototype.measuresHierarchyName, fromAxis, toAxis, toIndex);
   },
   addAxis: function(axis) {
-    var id = axis.conf.id;
+    var id = "Axis(" + String(axis.conf.id) + ")";
     if (this.hasAxis(id)) {
-      throw "Axis with id " + id + " already exists.";
+      throw "Axis with id \"" + axis.conf.id + "\" already exists.";
     }
     this.axes[id] = axis;
     axis.listen("changed", this.axisChanged, this);
@@ -256,8 +256,8 @@ var QueryDesigner;
   createAxes: function() {
     var conf = this.conf, axisConf;
     var axesConf = conf.axes || this.defaultAxesConf;
-    var i, n = axesConf.length;
-    for (i = 0; i < n; i++){
+    var i;
+    for (i in axesConf){
       axisConf = axesConf[i];
       this.createAxis(axisConf);
     }
@@ -443,11 +443,13 @@ var QueryDesigner;
     return gEl(this.conf.container);
   },
   checkValid: function(){
-    var valid = true, gap = false;
+    var valid = true, empty = false;
     this.eachAxis(function(id, axis) {
       var add, remove;
       if (axis.isPopulated()) {
-        if (gap) {
+        if (empty && !axis.isSlicerAxis()) {
+          //we have a gap; not valid.
+          valid = false;
           add = "axis-message-area-invalid";
           remove = ["axis-message-area-empty", "axis-message-area-populated"];
         }
@@ -457,7 +459,7 @@ var QueryDesigner;
         }
       }
       else {
-        gap = true;
+        empty = true;
         add = "axis-message-area-empty";
         remove = ["axis-message-area-invalid", "axis-message-area-populated"];
         if (axis.conf.mandatory === true) {
@@ -465,7 +467,7 @@ var QueryDesigner;
         }
       }
       rCls(axis.getMessageAreaId(), remove, add);
-    }, this);
+    }, this, true);
     this.showMessageArea(!valid);
     return valid;
   },
