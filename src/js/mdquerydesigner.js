@@ -214,8 +214,11 @@ var QueryDesigner;
   moveMeasures: function(fromAxis, toAxis, toIndex){
     return this.moveHierarchy(QueryDesigner.prototype.measuresHierarchyName, fromAxis, toAxis, toIndex);
   },
+  getAxisId: function(i){
+    return "Axis(" + String(i) + ")";
+  },
   addAxis: function(axis) {
-    var id = "Axis(" + String(axis.conf.id) + ")";
+    var id = this.getAxisId(axis.conf.id);
     if (this.hasAxis(id)) {
       throw "Axis with id \"" + axis.conf.id + "\" already exists.";
     }
@@ -263,6 +266,9 @@ var QueryDesigner;
     }
   },
   getAxis: function(id) {
+    if (iInt(id)) {
+      id = this.getAxisId(id);
+    }
     var axis = this.axes[id];
     if (!axis){
       throw "No such axis " + id;
@@ -270,7 +276,10 @@ var QueryDesigner;
     return axis;
   },
   hasAxis: function(axis){
-    if (iInt(axis) || iStr(axis)) {
+    if (iInt(axis)) {
+      axis = this.getAxisId(axis);
+    }
+    if (iStr(axis)) {
       return Boolean(this.axes[axis]);
     }
     else
@@ -443,27 +452,34 @@ var QueryDesigner;
     return gEl(this.conf.container);
   },
   checkValid: function(){
-    var valid = true, empty = false;
+    var valid = true, empty = [];
     this.eachAxis(function(id, axis) {
       var add, remove;
       if (axis.isPopulated()) {
-        if (empty && !axis.isSlicerAxis()) {
-          //we have a gap; not valid.
-          valid = false;
+        var n = empty.length;
+        if (!axis.isSlicerAxis() && n) {
+          valid = false;  //we have gap
+          var i;
           add = "axis-message-area-invalid";
           remove = ["axis-message-area-empty", "axis-message-area-populated"];
+          for (i = 0; i < n; i++) {
+            rCls(empty[i].getMessageAreaId(), remove, add);
+          }
+          empty.length = 0;
         }
-        else {
-          add = "axis-message-area-populated";
-          remove = "axis-message-area-empty";
-        }
+        add = "axis-message-area-populated";
+        remove = ["axis-message-area-empty", "axis-message-area-invalid"];
       }
       else {
-        empty = true;
-        add = "axis-message-area-empty";
-        remove = ["axis-message-area-invalid", "axis-message-area-populated"];
         if (axis.conf.mandatory === true) {
+          add = "axis-message-area-invalid";
+          remove = ["axis-message-area-empty", "axis-message-area-populated"];
           valid = false;
+        }
+        else {
+          empty.push(axis);
+          add = "axis-message-area-empty";
+          remove = ["axis-message-area-invalid", "axis-message-area-populated"];
         }
       }
       rCls(axis.getMessageAreaId(), remove, add);
