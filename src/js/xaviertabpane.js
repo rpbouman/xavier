@@ -1286,7 +1286,7 @@ var XavierVisualizer;
     if (chartTitle) {
       chartBody.style.width = (width - 2 * chartTitle.clientHeight) + "px";
       chartBody.style.height = (height - chartTitle.clientHeight) + "px";
-      chartBody.style.left = chartTitle.clientHeight + "px";
+      //chartBody.style.left = chartTitle.clientHeight + "px";
       switch (titlePosition) {
         case "top":
           chartTitle.style.top = "0px";
@@ -1499,7 +1499,8 @@ var XavierPieChart;
       var data = [], datum;
       categoriesAxis.eachTuple(function(tuple){
         datum = this.getCategoryAndLabelForTuple(tuple);
-        datum.measure = cellset.cellValue();
+        datum.value = cellset.cellValue();
+        datum.fmtValue = cellset.cellFmtValue();
         datum.index = data.length;
         data.push(datum);
         cellset.nextCell();
@@ -1510,7 +1511,7 @@ var XavierPieChart;
         return d.index;
       });
       var group = dimension.group().reduceSum(function(d){
-        return d.measure;
+        return d.value;
       });
 
       var chart = dc.pieChart("#" + dom.lastChild.id);
@@ -1527,8 +1528,9 @@ var XavierPieChart;
         .title(function(d){
           var key = d.key
           var datum = data[key];
-          return datum.label + ": " + datum.measure;
+          return datum.label + ": " + datum.fmtValue;
         })
+        //.legend(dc.legend())
       ;
       chart.render();
 
