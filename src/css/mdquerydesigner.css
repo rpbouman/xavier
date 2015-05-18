@@ -312,15 +312,16 @@ input.show-empty:before {
 
 .query-designer .message-area .axis-message-area {
   padding-left: 20px;
+  margin: 3px;
   background-repeat: no-repeat;
 }
 
 .query-designer .message-area .axis-message-area-populated {
   padding-left: 20px;
-  background-image: url('../mui/images/checked_16x16.png');
+  background-image: url('../images/ok.png');
 }
 
 .query-designer .message-area .axis-message-area-invalid {
   padding-left: 20px;
-  background-image: url('../mui/images/remove_16x16.png');
+  background-image: url('../images/error.png');
 }
