@@ -101,22 +101,40 @@ var XmlaTreeView;
       infoLabel: infoLabel
     };
   },
+  createProgressIndicator: function(){
+    var schemaTreePane = this.schemaTreePane;
+    var schemaTreePaneDom = schemaTreePane.getDom();
+    var progressIndicator = cEl("DIV", {
+      "class": "progress-indicator"
+    });
+    var dom = schemaTreePaneDom.parentNode;
+    dom.insertBefore(progressIndicator, schemaTreePaneDom);
+    this.progressIndicator = progressIndicator;
+  },
+  indicateProgress: function(text){
+    this.progressIndicator.innerHTML = text;
+  },
   init: function(){
     this.fireEvent("busy");
     var me = this;
-    var xmla = me.xmla;
-    var schemaTreePane = me.schemaTreePane;
+    var xmla = this.xmla;
+    var schemaTreePane = this.schemaTreePane;
     this.clearTreePane(schemaTreePane);
     var schemaTreePaneDom = schemaTreePane.getDom();
+    aCls(schemaTreePaneDom, "catalogs-hidden");
+    this.createProgressIndicator();
 
     var catalogQueueIndex = -1;
     var catalogQueue = [];
 
     function doCatalogQueue(){
-      if (!(++catalogQueueIndex < catalogQueue.length)) return false;
+      if (!(++catalogQueueIndex < catalogQueue.length)) {
+        return false;
+      }
       var providerNode = catalogQueue[catalogQueueIndex];
       var conf = providerNode.conf;
       var metadata = conf.metadata;
+      me.indicateProgress(gMsg("Loading catalogs for datasource ${1}", conf.title));
       xmla.discoverDBCatalogs({
         url: metadata.URL,
         properties: {
@@ -152,11 +170,14 @@ var XmlaTreeView;
     function doCubeQueue(){
       if (!(++cubeQueueIndex < cubeQueue.length)) {
         me.fireEvent("done");
+        aCls(this.progressIndicator, "catalogs-hidden");
+        rCls(schemaTreePaneDom, "catalogs-hidden", "catalogs-fade-in");
         return false;
       }
       var catalogNode = cubeQueue[cubeQueueIndex];
       var providerNode = catalogNode.getParentTreeNode();
       var conf = catalogNode.conf;
+      me.indicateProgress(gMsg("Loading cubes for catalog ${1}", conf.title));
       var catalog = conf.metadata.CATALOG_NAME;
       var metadata = providerNode.conf.metadata;
       xmla.discoverMDCubes({
@@ -212,6 +233,7 @@ var XmlaTreeView;
       }, gMsg("Check the box to display catalog nodes in the treeview. Uncheck to hide."))
     ], schemaTreePaneDom);
 
+    this.indicateProgress(gMsg("Loading datasources..."));
     xmla.discoverDataSources({
       error: function(xmla, options, error){
         me.fireEvent("error", error);

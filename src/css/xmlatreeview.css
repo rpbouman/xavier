@@ -15,6 +15,162 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
+@-webkit-keyframes catalogs-fadein {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.10;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes catalogs-fadein {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.10;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-o-keyframes catalogs-fadein {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.10;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes catalogs-fadein {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.10;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.catalogs-hidden {
+  display: none;
+}
+
+.catalogs-fade-in {
+  -webkit-animation-name: catalogs-fadein;
+  -webkit-animation-duration: 1s;
+  -moz-animation-name: catalogs-fadein;
+  -moz-animation-duration: 1s;
+  -o-animation-name: catalogs-fadein;
+  -o-animation-duration: 1s;
+  animation-name: catalogs-fadein;
+  animation-duration: 1s;
+}
+
 .info-icon {
   background-image: url('../images/info.png');
   background-repeat: no-repeat;
