@@ -512,7 +512,8 @@ var PivotTable;
   getHierarchyLabels: function(queryDesigner){
     var labels = this.hierarchyLabels = [];
     queryDesigner.eachAxis(function(i, axis) {
-      var hierarchies = labels[i] = [];
+      var id = axis.conf.id;
+      var hierarchies = labels[id] = [];
       axis.eachHierarchy(function(hierarchy, i){
         hierarchies.push(hierarchy.HIERARCHY_CAPTION);
       }, this);
@@ -646,6 +647,8 @@ var PivotTable;
   renderAxisVertically: function(axis, table, queryDesignerAxis) {
     this.renderAxis(axis, table, "vertical", queryDesignerAxis);
   },
+  getPropertiesMap: function(queryDesignerAxis){
+  },
   renderAxis: function(axis, table, direction, queryDesignerAxis) {
     var tbody = table.tBodies[0] || cEl("TBODY", null, null, table),
         rows = tbody.rows, row, cells,
@@ -655,6 +658,7 @@ var PivotTable;
         positionCells, positionCellsLast, span1, span2, horizontal, vertical,
         dimensionNameIncluded
     ;
+    var propertiesmap = this.getPropertiesMap(queryDesignerAxis);
     switch (direction) {
       case "horizontal":
         horizontal = true;
@@ -675,6 +679,7 @@ var PivotTable;
         throw "Unsupported direction: " + direction;
     }
     table.className += " " + PivotTable.prefix + "-axis-" + direction;
+    //for each tuple
     for (i = 0; i < n; i++) {
       tupleNameIndex = 0;
       tuple = tuples[i];
@@ -684,6 +689,7 @@ var PivotTable;
         row = tbody.insertRow(rows.length);
         cells = row.cells;
       }
+      //for each hierarchy in the tuple
       axis.eachHierarchy(function(hierarchy){
         var j,
             minLevel = hierarchy.minLevel,
@@ -694,6 +700,7 @@ var PivotTable;
         ;
         uName = member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
         lNum = member[Xmla.Dataset.Axis.MEMBER_LEVEL_NUMBER];
+        //for each level present in this hierarchy (across all tuples)
         for (j = minLevel; j <= maxLevel; j++, tupleNameIndex++) {
           isNewHierarchy = j === minLevel;
           if (horizontal) {
