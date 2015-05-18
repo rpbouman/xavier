@@ -40,6 +40,8 @@ var XmlaTreeView;
   }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
+  //maximum number of members to allow auto-loading of a level's members
+  maxLowCardinalityLevelMembers: 10,
   //whether catalog nodes should initially be hidden
   catalogNodesInitiallyFlattened: true,
   //whether dimension nodes should initially be hidden
@@ -610,7 +612,7 @@ var XmlaTreeView;
       }
     });
   },
-  renderLevelMemberNodes: function(conf){
+  renderLevelMemberNodes: function(conf, callback, scope){
     var me = this;
     var membersTreeNode = conf.membersTreeNode;
     var row = membersTreeNode.conf.metadata;
@@ -635,11 +637,15 @@ var XmlaTreeView;
           me.renderLevelMemberNode(conf, row);
         });
         //done rendering member treenodes
-        conf.callback();
+        if (callback) {
+          callback.call(scope);
+        }
         me.fireEvent("done");
       },
       error: function(xmla, options, error){
-        conf.callback();
+        if (callback) {
+          callback.call(scope);
+        }
         me.fireEvent("error", error);
       }
     });
@@ -661,7 +667,7 @@ var XmlaTreeView;
       loadChildren: function(callback){
         conf.membersTreeNode = this;
         conf.callback = callback;
-        me.renderLevelMemberNodes(conf, this, callback);
+        me.renderLevelMemberNodes(conf, callback, this);
       }
     })
   },
@@ -717,18 +723,17 @@ var XmlaTreeView;
     if (index < levelMembersNodes.length) {
       var levelMembersNode = levelMembersNodes[index++];
       var datasourceTreeNode = me.getCurrentDatasourceTreeNode();
-      var conf = datasourceTreeNode.conf;
-      var metadata = conf.metadata;
+      var datasourceTreeNodeConf = datasourceTreeNode.conf;
+      var datasourceMetadata = datasourceTreeNodeConf.metadata;
       var conf = {
-        url: metadata.URL,
-        dataSourceInfo: metadata.DataSourceInfo,
+        url: datasourceMetadata.URL,
+        dataSourceInfo: datasourceMetadata.DataSourceInfo,
         membersTreeNode: levelMembersNode,
-        callback: function(){
-          this.membersTreeNode.setState(TreeNode.states.flattened);
-          me.flattenLevelMembersNodes(levelMembersNodes, index, callback);
-        }
       };
-      this.renderLevelMemberNodes(conf);
+      this.renderLevelMemberNodes(conf, function(){
+        levelMembersNode.setState(TreeNode.states.flattened);
+        this.flattenLevelMembersNodes(levelMembersNodes, index, callback);
+      }, this);
     }
     else {
       callback();
@@ -769,22 +774,20 @@ var XmlaTreeView;
           if (!row.LEVEL_IS_VISIBLE) {
             return;
           }
-//          if (row.LEVEL_TYPE === 1){  //All level
-//            me.renderAllLevel(conf, row);
-//          }
-//          else {
-            var membersNode = me.renderLevelMembersNode(conf, row);
-            if (row.LEVEL_CARDINALITY <= 10) {
-              levelMembersNodes.push(membersNode);
-            }
-//          }
+          var membersNode = me.renderLevelMembersNode(conf, row);
+          if (row.LEVEL_CARDINALITY <= me.maxLowCardinalityLevelMembers) {
+            levelMembersNodes.push(membersNode);
+          }
         });
 
         var callback = conf.callback;
+        delete conf.callback;
+
         me.flattenLevelMembersNodes(levelMembersNodes, 0, function(){
           callback();
           me.fireEvent("done");
         });
+
       },
       error: function(xmla, options, error){
         conf.callback();
