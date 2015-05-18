@@ -1039,7 +1039,8 @@ var XavierPivotTableTab;
   drillMember: function (drillEventData, drillDirection){
     var queryDesigner = this.getQueryDesigner();
     var xmla = this.getXmla();
-    var axis = queryDesigner.getAxis(drillEventData.axis);
+    var axisId = queryDesigner.getAxisId(drillEventData.axis);
+    var axis = queryDesigner.getAxis(axisId);
     if (!axis) {
       throw "Invalid axis " + drillEventData.axis;
     }
@@ -1218,16 +1219,38 @@ var XavierVisualizer;
     }
     return this.createDom();
   },
-  getLabelForTuple: function(tuple) {
+  tupleToString: function(tuple, property, separator) {
     var members = tuple.members, i, n = members.length, member, label = "";
     for (i = 0; i < n; i++){
       member = members[i];
       if (i) {
-        label += " - ";
+        label += separator;
       }
-      label += member.Caption;
+      label += member[property];
     }
     return label;
+  },
+  getCategoryForTuple: function(tuple) {
+    return this.tupleToString(tuple, Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME, ".");
+  },
+  getLabelForTuple: function(tuple) {
+    return this.tupleToString(tuple, Xmla.Dataset.Axis.MEMBER_CAPTION, " - ");
+  },
+  getCategoryAndLabelForTuple: function(tuple){
+    var members = tuple.members, i, n = members.length, member, label = "", category = "";
+    for (i = 0; i < n; i++){
+      member = members[i];
+      if (i) {
+        label += " - ";
+        category += ".";
+      }
+      category += member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
+      label += member[Xmla.Dataset.Axis.MEMBER_CAPTION];
+    }
+    return {
+      category: category,
+      label: label
+    };
   },
   makeChartDom: function(dom, x, y, width, height, title, titlePosition){
     var id = this.getChartId();
@@ -1473,18 +1496,18 @@ var XavierPieChart;
       titlePosition = "bottom";
     }
     this.createGridForTuples(dom, measuresAxis, titlePosition, function(tuple, dom, len){
-      var data = [];
+      var data = [], datum;
       categoriesAxis.eachTuple(function(tuple){
-        data.push({
-          category: this.getLabelForTuple(tuple),
-          measure: cellset.cellValue()
-        });
+        datum = this.getCategoryAndLabelForTuple(tuple);
+        datum.measure = cellset.cellValue();
+        datum.index = data.length;
+        data.push(datum);
         cellset.nextCell();
       }, this);
 
       var ndx = crossfilter(data);
       var dimension = ndx.dimension(function(d){
-        return d.category;
+        return d.index;
       });
       var group = dimension.group().reduceSum(function(d){
         return d.measure;
@@ -1496,6 +1519,16 @@ var XavierPieChart;
         .width(dim).height(dim)
         .dimension(dimension)
         .group(group)
+        .label(function(d){
+          var key = d.key
+          var datum = data[key];
+          return datum.label;
+        })
+        .title(function(d){
+          var key = d.key
+          var datum = data[key];
+          return datum.label + ": " + datum.measure;
+        })
       ;
       chart.render();
 
@@ -1613,10 +1646,8 @@ var XavierBarChart;
     var numMeasures = measuresAxis.tupleCount();
     var yAxisLabel = "";
     categoriesAxis.eachTuple(function(tuple){
-      var datum = {
-        category: this.getLabelForTuple(tuple),
-        values: []
-      };
+      datum = this.getCategoryAndLabelForTuple(tuple);
+      datum.values = [];
       measuresAxis.eachTuple(function(measure){
         //construct the y axis label.
         if (tuple.index === 0) {
@@ -1656,6 +1687,9 @@ var XavierBarChart;
         right: 30,
         top: 30,
         bottom: 50
+      })
+      .label(function(d){
+        return d.label;
       })
       .xUnits(dc.units.ordinal)
       .width(div.lastChild.clientWidth)
