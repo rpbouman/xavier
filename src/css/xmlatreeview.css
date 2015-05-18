@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-@-webkit-keyframes catalogs-fadein {
+@-webkit-keyframes treepane-fadein {
   0% {
     opacity: 0;
   }
@@ -50,7 +50,7 @@ limitations under the License.
     opacity: 1;
   }
 }
-@-moz-keyframes catalogs-fadein {
+@-moz-keyframes treepane-fadein {
   0% {
     opacity: 0;
   }
@@ -85,7 +85,7 @@ limitations under the License.
     opacity: 1;
   }
 }
-@-o-keyframes catalogs-fadein {
+@-o-keyframes treepane-fadein {
   0% {
     opacity: 0;
   }
@@ -120,7 +120,7 @@ limitations under the License.
     opacity: 1;
   }
 }
-@keyframes catalogs-fadein {
+@keyframes treepane-fadein {
   0% {
     opacity: 0;
   }
@@ -156,18 +156,18 @@ limitations under the License.
   }
 }
 
-.catalogs-hidden {
+.treepane-hidden {
   display: none;
 }
 
-.catalogs-fade-in {
-  -webkit-animation-name: catalogs-fadein;
+.treepane-fade-in {
+  -webkit-animation-name: treepane-fadein;
   -webkit-animation-duration: 1s;
-  -moz-animation-name: catalogs-fadein;
+  -moz-animation-name: treepane-fadein;
   -moz-animation-duration: 1s;
-  -o-animation-name: catalogs-fadein;
+  -o-animation-name: treepane-fadein;
   -o-animation-duration: 1s;
-  animation-name: catalogs-fadein;
+  animation-name: treepane-fadein;
   animation-duration: 1s;
 }
 
@@ -188,6 +188,10 @@ limitations under the License.
 
 .xmlatreeview .cube .leaf .label {
   cursor: grab;
+}
+
+.node > .head {
+  height: 20px;
 }
 
 .cube-contents {
