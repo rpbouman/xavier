@@ -1198,7 +1198,8 @@ var XavierVisualizer;
   },
   getChartId: function(){
     var ctor = XavierVisualizer;
-    return ctor.prefix + ctor.instanceId++;
+    var id = this.getId()
+    return id + "-instance-" + ctor.instanceId++;
   },
   clear: function(){
     dCh(this.getBody());
@@ -1859,7 +1860,6 @@ var XavierBarChartTab;
 XavierBarChartTab.prefix = "xavier-bar-chart-tab";
 adopt(XavierBarChartTab, XavierChartTab);
 
-
 var XavierGroupedBarChart;
 (XavierGroupedBarChart = function(conf){
   conf = conf || {};
@@ -1870,6 +1870,12 @@ var XavierGroupedBarChart;
   conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  margins: {
+    left: 100,
+    right: 30,
+    top: 30,
+    bottom: 30
+  },
   generateTitleText: function(dataset, queryDesigner){
     var xAxisLabel = "";
     var categoriesAxis = queryDesigner.getRowAxis();
@@ -1898,7 +1904,6 @@ var XavierGroupedBarChart;
   renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
     var data = [];
 
-    var numMeasures = measuresAxis.tupleCount();
     var yAxisLabel = "";
     categoriesAxis.eachTuple(function(tuple){
       datum = this.getCategoryAndLabelForTuple(tuple);
@@ -1921,25 +1926,29 @@ var XavierGroupedBarChart;
     var div = this.makeChartDom(dom, 0, 0, dom.clientWidth, dom.clientHeight);
     var composite = dc.compositeChart("#" + div.lastChild.id);
 
-    var barCharts = [], group;
+    var width = div.lastChild.clientWidth
+    var height = div.lastChild.clientHeight;
+    var margins = this.margins;
+    var barCharts = [], group, colors, mod;
+    var barsPerCategory = measuresAxis.tupleCount();
+    if (barsPerCategory <= 10) {
+      mod = 10;
+      colors = d3.scale.category10();
+    }
+    else
+    if (barsPerCategory <= 20) {
+      mod = 20;
+      colors = d3.scale.category20();
+    }
     measuresAxis.eachTuple(function(tuple){
-      var color;
-      switch (tuple.index) {
-        case 0:
-          color = "green";
-          break;
-        case 1:
-          color = "red";
-          break;
-        case 2:
-          color = "blue";
-          break;
-      }
+      var color = colors(tuple.index % mod);
       group = dimension.group().reduceSum(function(d){
         return d.values[tuple.index];
       });
       var barChart = dc.barChart(composite)
-        .gap(100)
+        .margins(margins)
+        .width(width)
+        .height(height)
         .group(group)
         .colors(color)
       ;
@@ -1947,27 +1956,48 @@ var XavierGroupedBarChart;
     }, this);
 
     composite
-      .margins({
-        left: 100,
-        right: 30,
-        top: 30,
-        bottom: 50
-      })
-      .width(div.lastChild.clientWidth)
-      .height(div.lastChild.clientHeight)
-      .x(d3.scale.ordinal())
+      .margins(margins)
+      .width(width)
+      .height(height)
       .xAxisLabel(this.xAxisLabel)
+      .yAxisLabel(this.yAxisLabel)
       .group(group)
       .renderHorizontalGridLines(true)
-      .yAxisLabel(this.yAxisLabel)
+      .x(d3.scale.ordinal())
       .xUnits(dc.units.ordinal)
-      .compose(barCharts)
-      .brushOn(true)
-      .renderlet(function (chart) {
-        chart.selectAll("g._1").attr("transform", "translate(" + 50 + ", 0)");
+      .dimension(dimension)
+      .elasticX(true)
+      .xAxis().tickFormat(function(index){
+        return data[index].label;
       })
     ;
-console.log(dc.units.ordinal);
+    composite.legend(dc.legend())
+
+    var availableLength = composite.xAxisLength();
+    var numCategories = categoriesAxis.tupleCount();
+    var categoryWidth = availableLength / (numCategories + 2);
+    var barWidth = categoryWidth / barsPerCategory;
+    var gap = categoryWidth - barWidth;
+    console.log("available length: " + availableLength);
+    console.log("num bars: " + numCategories);
+    console.log("group width: " + categoryWidth);
+    console.log("bar width: " + barWidth);
+    console.log("gap: " + gap);
+
+    gap  = (availableLength - (barWidth * numCategories)) / (numCategories - 1);
+
+    var barChart;
+    for (i = 0; i < barCharts.length; i++){
+      barChart = barCharts[i]
+      barChart.gap(gap);
+    }
+    composite.compose(barCharts);
+    composite.renderlet(function (chart) {
+      for (i = 0; i < barCharts.length; i++){
+        var displacement = (i*barWidth) - (barWidth * (barsPerCategory-1) / 2);
+        chart.selectAll("g._" + i).attr("transform", "translate(" + displacement + ", 0)");
+      }
+    });
     composite.render();
   }
 };
