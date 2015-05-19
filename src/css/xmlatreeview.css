@@ -156,6 +156,16 @@ limitations under the License.
   }
 }
 
+.node > .head > .toggle {
+  background-position: 14px;
+}
+
+.node > .head > .toggle:before {
+  font-family: monospace;
+  font-size: 11pt;
+  padding-left: 5px;
+}
+
 .treepane-hidden {
   display: none;
 }
@@ -241,7 +251,7 @@ span.current-cube,
 
 .hierarchy-dragging,
 .tree .hierarchy > .head > .toggle {
-  background-image: url('../images/hierarchy.png');
+  background-image: url('../images/hierarchy1.png');
 }
 
 
@@ -369,12 +379,13 @@ span.current-cube,
 
 .members-dragging,
 .tree .members > .head > .toggle {
-  background-image: url('../mui/images/folder16x16.png');
+/*  background-image: url('../mui/images/folder16x16.png'); */
+  background-image: url('../images/folder2.png');
 }
 
 .member-dragging,
 .tree .member > .head > .toggle {
-  background-image: url('../images/member.png');
+  background-image: url('../images/member1.png');
 }
 
 /* MDLEVEL_TYPE_TIME_YEARS 0x0014*/
