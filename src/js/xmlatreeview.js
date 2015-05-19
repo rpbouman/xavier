@@ -1007,7 +1007,7 @@ var XmlaTreeView;
     }
     var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
     var tooltip = tooltipAndInfoLabel.tooltip || hierarchyTitle;
-    title = hierarchyTitle+ tooltipAndInfoLabel.infoLabel;
+    var title = hierarchyTitle+ tooltipAndInfoLabel.infoLabel;
 
     var hierarchyTreeNode = new TreeNode({
       state: TreeNode.states.collapsed,
