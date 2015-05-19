@@ -78,6 +78,14 @@ limitations under the License.
   background-image: url('../images/new-bar-chart.png');
 }
 
+.xavier-tabpane > .pentaho-tab-bar > .grouped-bar-chart {
+  background-image: url('../images/bar-chart.png');
+}
+
+.toolbar > .new-grouped-bar-chart {
+  background-image: url('../images/new-bar-chart.png');
+}
+
 .toolbar .show-column-hierarchy-headers {
   background-image: url('../images/pivot-table-show-column-headers.png');
 }
@@ -119,6 +127,9 @@ ul.chart-container, ul.chart-container > li {
 
 .xavier-pie-chart-instance {
   position: absolute;
+}
+
+.xavier-chart {
 }
 
 .xavier-chart-title {

@@ -123,6 +123,13 @@ var DataTable;
     this.newTab(barChartTab);
     return barChartTab;
   },
+  newGroupedBarChartTab: function(){
+    var groupedBarChartTab = new XavierGroupedBarChartTab({
+      tabPane: this
+    });
+    this.newTab(groupedBarChartTab);
+    return groupedBarChartTab;
+  },
   setCube: function(metadata){
     if (metadata.cube && metadata.catalog && metadata.datasource) {
       this.setDatasource(metadata.datasource);
@@ -1181,6 +1188,7 @@ var XavierVisualizer;
   }
   conf.classes.push(arguments.callee.prefix);
 }).prototype = {
+  titlePosition: "top",
   padding: 5,
   getTab: function(){
     return this.conf.tab;
@@ -1193,7 +1201,8 @@ var XavierVisualizer;
     return ctor.prefix + ctor.instanceId++;
   },
   clear: function(){
-    dCh(this.getDom());
+    dCh(this.getBody());
+    dCh(this.getTitle());
   },
   getContainer: function(){
     return this.conf.container;
@@ -1203,12 +1212,33 @@ var XavierVisualizer;
   },
   doLayout: function(){
   },
+  generateTitleText: function(dataset, queryDesigner) {
+    return "Please implement me: generateTitleText";
+  },
+  getTitle: function(){
+    var id = this.getId();
+    return gEl(id + "-title");
+  },
+  getBody: function(){
+    var id = this.getId();
+    return gEl(id + "-body");
+  },
+  hasTitle: function(){
+    return this.getTitle() !== null;
+  },
+  setTitleText: function(text){
+    var title = this.getTitle();
+    title.innerHTML = text;
+  },
+  getTitleText: function(){
+    var title = this.getTitle();
+    var text = title ? title.textContent : null;
+    return text;
+  },
   createDom: function(){
     var container = this.getContainer();
-    var dom = cEl("DIV", {
-      id: this.getId(),
-      "class": confCls(this.conf).join(" ")
-    }, null, container);
+    var dom = this.makeChartDom(container, 0, 0, container.clientWidth, container.clientHeight, "", this.titlePosition, this.getId());
+    dom.className = confCls(this.conf).join(" ");
     return dom;
   },
   getDom: function(){
@@ -1252,15 +1282,17 @@ var XavierVisualizer;
       label: label
     };
   },
-  makeChartDom: function(dom, x, y, width, height, title, titlePosition){
-    var id = this.getChartId();
+  makeChartDom: function(dom, x, y, width, height, title, titlePosition, id){
+    if (!id) {
+      id = this.getChartId();
+    }
 
     var children = [];
     if (titlePosition) {
       var chartTitle = cEl("DIV", {
         id: id + "-title",
         "class": "xavier-chart-title"
-      }, title);
+      }, title || String.fromCharCode(160));
       children.push(chartTitle);
     }
 
@@ -1284,8 +1316,8 @@ var XavierVisualizer;
     }, children, dom);
 
     if (chartTitle) {
-      chartBody.style.width = (width - 2 * chartTitle.clientHeight) + "px";
-      chartBody.style.height = (height - chartTitle.clientHeight) + "px";
+      //chartBody.style.width = (width - 2 * chartTitle.clientHeight) + "px";
+      //chartBody.style.height = (height - chartTitle.clientHeight) + "px";
       //chartBody.style.left = chartTitle.clientHeight + "px";
       switch (titlePosition) {
         case "top":
@@ -1294,7 +1326,7 @@ var XavierVisualizer;
           break;
         case "bottom":
           chartBody.style.top = "0px";
-          chartTitle.style.top = chartBody.style.height;
+          chartTitle.style.top = chartBody.clientHeight + "px";
           break;
       }
       chartBody.style.margin = "auto"; //chartTitle.clientHeight + "px";
@@ -1373,8 +1405,11 @@ var XavierVisualizer;
   renderDataset: function(dataset, queryDesigner){
     this.clear();
     this.dataset = dataset;
-
-    var dom = this.getDom();
+    if (this.hasTitle()) {
+      var generatedTitleText = this.generateTitleText(dataset, queryDesigner);
+      this.setTitleText(generatedTitleText);
+    }
+    var dom = this.getBody();
     this.charts = [];
     this.chartDivs = [];
     if (dataset.hasChapterAxis()){
@@ -1487,6 +1522,31 @@ var XavierPieChart;
   conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  generateTitleText: function(dataset, queryDesigner){
+    var xAxisLabel = "";
+    var categoriesAxis = queryDesigner.getColumnAxis();
+    var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+    categoriesAxis.eachHierarchy(function(hierarchy, i){
+      if (xAxisLabel) {
+        xAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
+      }
+      xAxisLabel += hierarchy.HIERARCHY_CAPTION;
+    }, this);
+    this.xAxisLabel = xAxisLabel;
+
+    var yAxisLabel = "";
+    var measuresAxis = dataset.getRowAxis();
+    var lastTuple = measuresAxis.tupleCount() - 1;
+    measuresAxis.eachTuple(function(measure){
+      if (yAxisLabel) {
+        yAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
+      }
+      yAxisLabel += this.getLabelForTuple(measure);
+    }, this);
+    this.yAxisLabel = yAxisLabel;
+
+    return yAxisLabel + " " + gMsg("per") + " " + xAxisLabel;
+  },
   renderCharts: function(dom, measuresAxis, categoriesAxis, cellset){
     var titlePosition;
     if (dom.tagName === "TD") {
@@ -1517,7 +1577,7 @@ var XavierPieChart;
       var chart = dc.pieChart("#" + dom.lastChild.id);
       var dim = Math.min(dom.lastChild.clientWidth, dom.lastChild.clientHeight);
       chart
-        .width(dim).height(dim)
+        .width(dim - 5).height(dim - 5)
         .dimension(dimension)
         .group(group)
         .label(function(d){
@@ -1558,7 +1618,7 @@ var XavierPieChartTab;
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Measures"),
           tooltip: gMsg("Each measure on this axis generates one pie chart for that measure. Its value determines the size of the pie chart slices."),
-          hint: gMsg("Drop measures on the measures axis. A pie chart will be created for each measure, and the pie slices are sized according to the value of the measure."),
+          hint: gMsg("Drag measures to the measures axis. A pie chart will be created for each measure, and the pie slices are sized according to the value of the measure."),
           mandatory: true,
           canBeEmpty: false,
           "class": "measures",
@@ -1570,7 +1630,7 @@ var XavierPieChartTab;
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Categories"),
           tooltip: gMsg("Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy."),
-          hint: gMsg("Drop levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided."),
+          hint: gMsg("Drag levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided."),
           mandatory: true,
           canBeEmpty: false,
           "class": "levels",
@@ -1629,81 +1689,79 @@ var XavierBarChart;
   conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  generateTitleText: function(dataset, queryDesigner){
+    var xAxisLabel = "";
+    var categoriesAxis = queryDesigner.getRowAxis();
+    var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+    categoriesAxis.eachHierarchy(function(hierarchy, i){
+      if (xAxisLabel) {
+        xAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
+      }
+      xAxisLabel += hierarchy.HIERARCHY_CAPTION;
+    }, this);
+    this.xAxisLabel = xAxisLabel;
+
+    var yAxisLabel = "";
+    var measuresAxis = dataset.getColumnAxis();
+    var lastTuple = measuresAxis.tupleCount() - 1;
+    measuresAxis.eachTuple(function(measure){
+      if (yAxisLabel) {
+        yAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
+      }
+      yAxisLabel += this.getLabelForTuple(measure);
+    }, this);
+    this.yAxisLabel = yAxisLabel;
+
+    return yAxisLabel + " " + gMsg("per") + " " + xAxisLabel;
+  },
   renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
     var data = [];
-
-    var queryDesigner = this.getQueryDesigner();
-
-    var queryDesignerCategoriesAxis = queryDesigner.getAxis(categoriesAxis.id);
-    var hierarchyIndex = 0, hierarchyMetadata;
-    var xAxisLabel = "";
-    categoriesAxis.eachHierarchy(function(hierarchy){
-      hierarchyMetadata = queryDesignerCategoriesAxis.getHierarchyByIndex(hierarchyIndex++);
-      if (xAxisLabel) {
-        xAxisLabel += " - ";
-      }
-      xAxisLabel += hierarchyMetadata.HIERARCHY_CAPTION;
-    });
 
     var numMeasures = measuresAxis.tupleCount();
     var yAxisLabel = "";
     categoriesAxis.eachTuple(function(tuple){
       datum = this.getCategoryAndLabelForTuple(tuple);
+      datum.index = tuple.index;
       datum.values = [];
+      datum.fmtValues = [];
       measuresAxis.eachTuple(function(measure){
-        //construct the y axis label.
-        if (tuple.index === 0) {
-          if (yAxisLabel) {
-            if (numMeasures === measure.index + 1) {
-              yAxisLabel += " and ";
-            }
-            else {
-              yAxisLabel += ", ";
-            }
-          }
-          yAxisLabel += this.getLabelForTuple(measure);
-        }
         datum.values.push(cellset.cellValue());
+        datum.fmtValues.push(cellset.cellFmtValue());
         cellset.nextCell();
       }, this);
       data.push(datum);
     }, this);
 
-
     var xf = crossfilter(data);
     var dimension = xf.dimension(function(d){
-      return d.category;
+      return d.index;
     });
 
-    var title = yAxisLabel + " per " + xAxisLabel;
-    var div = this.makeChartDom(dom, 0, 0, dom.clientWidth, dom.clientHeight, title, "top");
+    var div = this.makeChartDom(dom, 0, 0, dom.clientWidth, dom.clientHeight);
     var chart = dc.barChart("#" + div.lastChild.id);
     chart
-      .xAxisLabel(xAxisLabel)
-      .gap(10)
-      .renderHorizontalGridLines(true)
-      .yAxisLabel(yAxisLabel)
-      .x(d3.scale.ordinal())
       .margins({
         left: 100,
         right: 30,
         top: 30,
         bottom: 50
       })
-      .label(function(d){
-        return d.label;
-      })
-      .xUnits(dc.units.ordinal)
       .width(div.lastChild.clientWidth)
       .height(div.lastChild.clientHeight)
+      .gap(10)
+      .xAxisLabel(this.xAxisLabel)
+      .renderHorizontalGridLines(true)
+      .yAxisLabel(this.yAxisLabel)
+      .x(d3.scale.ordinal())
+      .xUnits(dc.units.ordinal)
       .dimension(dimension)
-      .brushOn(true)
       .centerBar(false)
       .elasticX(true)
-      .xAxis().tickFormat()
+      .xAxis().tickFormat(function(index){
+        return data[index].label;
+      })
     ;
 
-    var groups = [];
     measuresAxis.eachTuple(function(tuple){
       var group = dimension.group().reduceSum(function(d){
         return d.values[tuple.index];
@@ -1801,5 +1859,197 @@ var XavierBarChartTab;
 XavierBarChartTab.prefix = "xavier-bar-chart-tab";
 adopt(XavierBarChartTab, XavierChartTab);
 
+
+var XavierGroupedBarChart;
+(XavierGroupedBarChart = function(conf){
+  conf = conf || {};
+  this.conf = conf;
+  if (!conf.classes) {
+    conf.classes = [];
+  }
+  conf.classes.push(arguments.callee.prefix);
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  generateTitleText: function(dataset, queryDesigner){
+    var xAxisLabel = "";
+    var categoriesAxis = queryDesigner.getRowAxis();
+    var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+    categoriesAxis.eachHierarchy(function(hierarchy, i){
+      if (xAxisLabel) {
+        xAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
+      }
+      xAxisLabel += hierarchy.HIERARCHY_CAPTION;
+    }, this);
+    this.xAxisLabel = xAxisLabel;
+
+    var yAxisLabel = "";
+    var measuresAxis = dataset.getColumnAxis();
+    var lastTuple = measuresAxis.tupleCount() - 1;
+    measuresAxis.eachTuple(function(measure){
+      if (yAxisLabel) {
+        yAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
+      }
+      yAxisLabel += this.getLabelForTuple(measure);
+    }, this);
+    this.yAxisLabel = yAxisLabel;
+
+    return yAxisLabel + " " + gMsg("per") + " " + xAxisLabel;
+  },
+  renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
+    var data = [];
+
+    var numMeasures = measuresAxis.tupleCount();
+    var yAxisLabel = "";
+    categoriesAxis.eachTuple(function(tuple){
+      datum = this.getCategoryAndLabelForTuple(tuple);
+      datum.index = tuple.index;
+      datum.values = [];
+      datum.fmtValues = [];
+      measuresAxis.eachTuple(function(measure){
+        datum.values.push(cellset.cellValue());
+        datum.fmtValues.push(cellset.cellFmtValue());
+        cellset.nextCell();
+      }, this);
+      data.push(datum);
+    }, this);
+
+    var xf = crossfilter(data);
+    var dimension = xf.dimension(function(d){
+      return d.index;
+    });
+
+    var div = this.makeChartDom(dom, 0, 0, dom.clientWidth, dom.clientHeight);
+    var composite = dc.compositeChart("#" + div.lastChild.id);
+
+    var barCharts = [], group;
+    measuresAxis.eachTuple(function(tuple){
+      var color;
+      switch (tuple.index) {
+        case 0:
+          color = "green";
+          break;
+        case 1:
+          color = "red";
+          break;
+        case 2:
+          color = "blue";
+          break;
+      }
+      group = dimension.group().reduceSum(function(d){
+        return d.values[tuple.index];
+      });
+      var barChart = dc.barChart(composite)
+        .gap(100)
+        .group(group)
+        .colors(color)
+      ;
+      barCharts.push(barChart);
+    }, this);
+
+    composite
+      .margins({
+        left: 100,
+        right: 30,
+        top: 30,
+        bottom: 50
+      })
+      .width(div.lastChild.clientWidth)
+      .height(div.lastChild.clientHeight)
+      .x(d3.scale.ordinal())
+      .xAxisLabel(this.xAxisLabel)
+      .group(group)
+      .renderHorizontalGridLines(true)
+      .yAxisLabel(this.yAxisLabel)
+      .xUnits(dc.units.ordinal)
+      .compose(barCharts)
+      .brushOn(true)
+      .renderlet(function (chart) {
+        chart.selectAll("g._1").attr("transform", "translate(" + 50 + ", 0)");
+      })
+    ;
+console.log(dc.units.ordinal);
+    composite.render();
+  }
+};
+XavierGroupedBarChart.prefix = "xavier-grouped-bar-chart";
+adopt(XavierGroupedBarChart, XavierVisualizer);
+
+var XavierGroupedBarChartTab;
+(XavierGroupedBarChartTab = function(conf){
+  conf = conf || {};
+  this.classes = ["grouped-bar-chart"];
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  text: gMsg("Grouped Bar Chart"),
+  initQueryDesigner: function(dom, tab){
+    var queryDesigner = new QueryDesigner({
+      container: cEl("DIV", {}, null, dom),
+      dnd: this.getDnd(),
+      xmla: this.getXmla(),
+      xmlaTreeView: this.getXmlaTreeView(),
+      axes: [
+        {
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Measures"),
+          tooltip: gMsg("Each measure on this axis generates one group."),
+          hint: gMsg("Drag measures to the measures axis. The measure value determines the size of the bar."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "measures",
+          drop: {
+            include: "measure"
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
+          label: gMsg("Categories"),
+          tooltip: gMsg("Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy."),
+          hint: gMsg("Drag levels or members to the categories axis to create categories for which bars are drawn."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "levels",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_PAGES,
+          label: gMsg("Columns"),
+          tooltip: gMsg("For each unique combination of members, a bar chart is created."),
+          hint: gMsg("Optionally, drop levels or members on the columns axis to create a list of multiple bar charts."),
+          canBeEmpty: false,
+          "class": "columns",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_CHAPTERS,
+          label: gMsg("Rows"),
+          tooltip: gMsg("For each unique combination of members, one row is layed out and each column is filled with a bar chart."),
+          hint: gMsg("Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts."),
+          canBeEmpty: false,
+          "class": "rows",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_SLICER
+        }
+      ]
+    });
+    return queryDesigner;
+  },
+  initChart: function(dom, tab){
+    var chart = new XavierGroupedBarChart({
+      container: dom,
+      tab: tab
+    });
+    return chart;
+  }
+};
+XavierGroupedBarChartTab.prefix = "xavier-grouped-bar-chart-tab";
+adopt(XavierGroupedBarChartTab, XavierChartTab);
 
 })();
