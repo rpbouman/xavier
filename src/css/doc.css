@@ -54,12 +54,16 @@ dfn.pie-chart {
   background-image: url('../images/pie-chart.png');
 }
 
+dfn.bar-chart {
+  background-image: url('../images/bar-chart.png');
+}
+
 dfn.measure {
   background-image: url('../images/measure.png');
 }
 
 dfn.hierarchy {
-  background-image: url('../images/hierarchy.png');
+  background-image: url('../images/hierarchy1.png');
 }
 
 dfn.level {
@@ -67,9 +71,17 @@ dfn.level {
 }
 
 dfn.member {
-  background-image: url('../images/member.png');
+  background-image: url('../images/member1.png');
+}
+
+dfn.property {
+  background-image: url('../images/property1.png');
 }
 
 dfn.excel {
   background-image: url('../images/excel.png');
+}
+
+dfn.info {
+  background-image: url('../images/info.png');
 }

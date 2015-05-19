@@ -140,7 +140,7 @@ table.query-designer-axis {
 }
 
 .query-designer-axis td span.leveltype20 {
-  background-image: url('../images/year_level_16x16.png');
+  background-image: url('../images/year-level1.png');
 }
 
 .query-designer-axis td span.leveltype36 {
@@ -148,25 +148,25 @@ table.query-designer-axis {
 }
 
 .query-designer-axis td span.leveltype68 {
-  background-image: url('../images/quarter_level_16x16.png');
+  background-image: url('../images/quarter-level1.png');
 }
 
 .query-designer-axis td span.leveltype32 {
-  background-image: url('../images/month_level_16x16.png');
+  background-image: url('../images/month-level1.png');
 }
 
 .query-designer-axis td span.leveltype260 {
-  background-image: url('../images/week_level_16x16.png');
+  background-image: url('../images/week-level1.png');
 }
 
 .query-designer-axis td span.leveltype516
  {
-  background-image: url('../images/day_level_16x16.png');
+  background-image: url('../images/day-level1.png');
 }
 
 
 .query-designer-axis td span.member {
-  background-image: url('../images/member.png');
+  background-image: url('../images/member1.png');
 }
 
 .member-drilldown-dragging,
@@ -176,7 +176,7 @@ table.query-designer-axis {
 
 .property-dragging,
 .query-designer-axis td span.property {
-  background-image: url('../images/property.png');
+  background-image: url('../images/property1.png');
 }
 
 
@@ -200,11 +200,11 @@ table.query-designer-axis {
 }
 
 .query-designer-axis td.hierarchy {
-  background-image: url('../images/hierarchy.png');
+  background-image: url('../images/hierarchy1.png');
 }
 
 .query-designer-axis td.dimensiontype1 {
-  background-image: url('../images/date_hierarchy_16x16.png');
+  background-image: url('../images/date-hierarchy2.png');
 }
 
 .query-designer-axis1 .hierarchy {

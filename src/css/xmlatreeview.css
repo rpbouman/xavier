@@ -348,11 +348,11 @@ span.current-cube,
 **/
 .dimensiontype1-dragging,
 .tree > div.dimensiontype1 > div.head > span.toggle {
-  background-image: url('../images/date_dimension_16x16.png');
+  background-image: url('../images/date-dimension1.png');
 }
 
 .tree > div.dimensiontype1 > div.body > div.dimensiontype1 > div.head > span.toggle {
-  background-image: url('../images/date_hierarchy_16x16.png');
+  background-image: url('../images/date-hierarchy2.png');
 }
 
 
@@ -374,7 +374,7 @@ span.current-cube,
 
 .property-dragging,
 .tree .property > .head > .toggle {
-  background-image: url('../images/property.png');
+  background-image: url('../images/property1.png');
 }
 
 .members-dragging,
@@ -391,7 +391,7 @@ span.current-cube,
 /* MDLEVEL_TYPE_TIME_YEARS 0x0014*/
 .leveltype20-dragging,
 .tree .leveltype20 > .head > .toggle {
-  background-image: url('../images/year_level_16x16.png');
+  background-image: url('../images/year-level1.png');
 }
 
 /* MDLEVEL_TYPE_TIME_HALF_YEAR 0x0024*/
@@ -403,25 +403,25 @@ span.current-cube,
 /* MDLEVEL_TYPE_TIME_QUARTERS 0x0044*/
 .leveltype68-dragging,
 .tree .leveltype68 > .head > .toggle {
-  background-image: url('../images/quarter_level_16x16.png');
+  background-image: url('../images/quarter-level1.png');
 }
 
 /* MDLEVEL_TYPE_TIME_MONTHS 0x0084*/
 .leveltype132-dragging,
 .tree .leveltype132 > .head > .toggle {
-  background-image: url('../images/month_level_16x16.png');
+  background-image: url('../images/month-level1.png');
 }
 
 /* MDLEVEL_TYPE_TIME_WEEKS 0x0104*/
 .leveltype260-dragging,
 .tree .leveltype260 > .head > .toggle {
-  background-image: url('../images/week_level_16x16.png');
+  background-image: url('../images/week-level1.png');
 }
 
 /* MDLEVEL_TYPE_TIME_DAYS 0x0204*/
 .leveltype516-dragging,
 .tree .leveltype516 > .head > .toggle {
-  background-image: url('../images/day_level_16x16.png');
+  background-image: url('../images/day-level1.png');
 }
 
 div.show-catalog-nodes {
