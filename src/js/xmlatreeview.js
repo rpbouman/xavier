@@ -103,6 +103,12 @@ var XmlaTreeView;
       infoLabel: infoLabel
     };
   },
+  hideProgressIndicator: function(){
+    aCls(this.progressIndicator, "treepane-hidden");
+  },
+  showProgressIndicator: function(){
+    rCls(this.progressIndicator, "treepane-hidden", "");
+  },
   createProgressIndicator: function(){
     var schemaTreePane = this.schemaTreePane;
     var schemaTreePaneDom = schemaTreePane.getDom();
@@ -116,15 +122,34 @@ var XmlaTreeView;
   indicateProgress: function(text){
     this.progressIndicator.innerHTML = text;
   },
+  hideTreePane: function(treePane) {
+    var dom = treePane.getDom();
+    rCls(dom, "treepane-fade-in", "");
+    aCls(dom, "treepane-hidden");
+  },
+  fadeInTreePane: function(treePane) {
+    rCls(treePane.getDom(), "treepane-hidden", "treepane-fade-in");
+  },
+  hideSchemaTreePane: function(){
+    this.hideTreePane(this.schemaTreePane);
+  },
+  fadeInSchemaTreePane: function(){
+    this.fadeInTreePane(this.schemaTreePane);
+  },
+  hideCubeTreePane: function(){
+    this.hideTreePane(this.cubeTreePane);
+  },
+  fadeInCubeTreePane: function(){
+    this.fadeInTreePane(this.cubeTreePane);
+  },
   init: function(){
     this.fireEvent("busy");
     var me = this;
     var xmla = this.xmla;
+    this.hideSchemaTreePane();
     var schemaTreePane = this.schemaTreePane;
     this.clearTreePane(schemaTreePane);
     var schemaTreePaneDom = schemaTreePane.getDom();
-    rCls(schemaTreePaneDom, "treepane-fade-in", "");
-    aCls(schemaTreePaneDom, "treepane-hidden");
     if (!this.progressIndicator) {
       this.createProgressIndicator();
     }
@@ -174,8 +199,8 @@ var XmlaTreeView;
     function doCubeQueue(){
       if (!(++cubeQueueIndex < cubeQueue.length)) {
         me.fireEvent("done");
-        aCls(this.progressIndicator, "treepane-hidden");
-        rCls(schemaTreePaneDom, "treepane-hidden", "treepane-fade-in");
+        me.hideProgressIndicator();
+        me.fadeInSchemaTreePane();
         return false;
       }
       var catalogNode = cubeQueue[cubeQueueIndex];
@@ -1267,9 +1292,7 @@ var XmlaTreeView;
   },
   doneLoadingCube: function(){
     this.collapseSchema();
-    var cubeTreePane = this.cubeTreePane;
-    var cubeTreePaneDom = cubeTreePane.getDom();
-    rCls(cubeTreePaneDom, "treepane-hidden", "treepane-fade-in");
+    this.fadeInCubeTreePane();
     this.fireEvent("done");
     this.fireEvent("cubeLoaded");
   },
@@ -1285,8 +1308,7 @@ var XmlaTreeView;
     var cubeTreePane = this.cubeTreePane;
     this.clearTreePane(cubeTreePane);
     var cubeTreePaneDom = cubeTreePane.getDom();
-    rCls(cubeTreePaneDom, "treepane-fade-in", "");
-    aCls(cubeTreePaneDom, "treepane-hidden");
+    this.hideCubeTreePane();
 
     var cube = cubeTreeNode.conf.metadata;
     var cubeName = cube.CUBE_NAME;
