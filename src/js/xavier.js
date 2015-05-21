@@ -52,7 +52,6 @@ mainToolbar.addButton([
 
 mainToolbar.addButton([
   {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")},
-  {"class": "new-bar-chart", group: "vis", tooltip: gMsg("New Bar Chart")},
   {"class": "new-grouped-bar-chart", group: "vis", tooltip: gMsg("New Grouped Bar Chart")}
 ]);
 
@@ -81,9 +80,6 @@ mainToolbar.listen({
         break;
       case "new-pie-chart":
         workArea.newPieChartTab();
-        break;
-      case "new-bar-chart":
-        workArea.newBarChartTab();
         break;
       case "new-grouped-bar-chart":
         workArea.newGroupedBarChartTab();
