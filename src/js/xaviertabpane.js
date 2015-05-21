@@ -1512,7 +1512,7 @@ var XavierChartTab;
 };
 XavierChartTab.prefix = "xavier-chart-tab";
 adopt(XavierChartTab, XavierTab);
-
+/*
 var XavierPieChart;
 (XavierPieChart = function(conf){
   conf = conf || {};
@@ -1595,6 +1595,75 @@ var XavierPieChart;
       ;
       chart.render();
 
+    }, this);
+  }
+};
+XavierPieChart.prefix = "xavier-pie-chart";
+adopt(XavierPieChart, XavierVisualizer);
+*/
+var XavierPieChart;
+(XavierPieChart = function(conf){
+  conf = conf || {};
+  this.conf = conf;
+  if (!conf.classes) {
+    conf.classes = [];
+  }
+  conf.classes.push(arguments.callee.prefix);
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  generateTitleText: function(dataset, queryDesigner){
+    var categoriesAxisLabel = "";
+    var categoriesAxis = queryDesigner.getColumnAxis();
+    var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+    categoriesAxis.eachHierarchy(function(hierarchy, i){
+      if (categoriesAxisLabel) {
+        categoriesAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
+      }
+      categoriesAxisLabel += hierarchy.HIERARCHY_CAPTION;
+    }, this);
+    this.categoriesAxisLabel = categoriesAxisLabel;
+
+    var measuresAxisLabel = "";
+    var measuresAxis = dataset.getRowAxis();
+    var lastTuple = measuresAxis.tupleCount() - 1;
+    measuresAxis.eachTuple(function(measure){
+      if (measuresAxisLabel) {
+        measuresAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
+      }
+      measuresAxisLabel += this.getLabelForTuple(measure);
+    }, this);
+    this.measuresAxisLabel = measuresAxisLabel;
+
+    return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+  },
+  renderCharts: function(dom, measuresAxis, categoriesAxis, cellset){
+    var categoriesAxisLabel = this.categoriesAxisLabel;
+    var titlePosition;
+    if (dom.tagName === "TD") {
+      titlePosition = false;
+    }
+    else {
+      titlePosition = "bottom";
+    }
+    this.createGridForTuples(dom, measuresAxis, titlePosition, function(tuple, dom, len){
+      var data = [];
+      var measure = this.getLabelForTuple(tuple);
+      categoriesAxis.eachTuple(function(tuple){
+        var category = this.getLabelForTuple(tuple);
+        var datum = {};
+        datum[categoriesAxisLabel] = category;
+        datum[measure] = cellset.cellValue();
+        data.push(datum);
+        cellset.nextCell();
+      }, this);
+
+      var body = dom.lastChild;
+      var svg = dimple.newSvg("#" + body.id, body.clientWidth, body.clientHeight);
+      var chart = new dimple.chart(svg, data);
+      chart.addMeasureAxis("p", measure);
+      chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
+      var legend = chart.addLegend(10, 10, dom.clientWidth, 20, "left");
+      chart.draw();
     }, this);
   }
 };
@@ -1951,7 +2020,12 @@ var XavierGroupedBarChart;
         .height(height)
         .group(group)
         .colors(color)
-      ;
+        //.centerBar(true)
+        .title(function(object, index){
+          var datum = data[index];
+          return datum.fmtValues[tuple.index];
+        });
+
       barCharts.push(barChart);
     }, this);
 
@@ -1967,10 +2041,10 @@ var XavierGroupedBarChart;
       .xUnits(dc.units.ordinal)
       .dimension(dimension)
       .elasticX(true)
-      .xAxis().tickFormat(function(index){
-        return data[index].label;
-      })
     ;
+    composite.xAxis().tickFormat(function(index){
+      return data[index].label;
+    });
     composite.legend(dc.legend())
 
     var availableLength = composite.xAxisLength();
@@ -1984,7 +2058,12 @@ var XavierGroupedBarChart;
     console.log("bar width: " + barWidth);
     console.log("gap: " + gap);
 
-    gap  = (availableLength - (barWidth * numCategories)) / (numCategories - 1);
+    if (numCategories > 1) {
+      gap  = (availableLength - (barWidth * numCategories)) / (numCategories - 1);
+    }
+    else {
+      gap = 0;
+    }
 
     var barChart;
     for (i = 0; i < barCharts.length; i++){
@@ -1994,11 +2073,204 @@ var XavierGroupedBarChart;
     composite.compose(barCharts);
     composite.renderlet(function (chart) {
       for (i = 0; i < barCharts.length; i++){
-        var displacement = (i*barWidth) - (barWidth * (barsPerCategory-1) / 2);
+        var displacement;
+        //displacement = (i*barWidth) - (barWidth * (barsPerCategory-1) / 2);
+        //displacement = (i*barWidth) - ((barWidth * barsPerCategory) / 2);
+        displacement = (i*barWidth);
         chart.selectAll("g._" + i).attr("transform", "translate(" + displacement + ", 0)");
       }
     });
+
     composite.render();
+  }
+};
+XavierGroupedBarChart.prefix = "xavier-grouped-bar-chart";
+adopt(XavierGroupedBarChart, XavierVisualizer);
+
+var XavierGroupedBarChartTab;
+(XavierGroupedBarChartTab = function(conf){
+  conf = conf || {};
+  this.classes = ["grouped-bar-chart"];
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  text: gMsg("Grouped Bar Chart"),
+  initQueryDesigner: function(dom, tab){
+    var queryDesigner = new QueryDesigner({
+      container: cEl("DIV", {}, null, dom),
+      dnd: this.getDnd(),
+      xmla: this.getXmla(),
+      xmlaTreeView: this.getXmlaTreeView(),
+      axes: [
+        {
+          id: Xmla.Dataset.AXIS_COLUMNS,
+          label: gMsg("Measures"),
+          tooltip: gMsg("Each measure on this axis generates one group."),
+          hint: gMsg("Drag measures to the measures axis. The measure value determines the size of the bar."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "measures",
+          drop: {
+            include: "measure"
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_ROWS,
+          label: gMsg("Categories"),
+          tooltip: gMsg("Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy."),
+          hint: gMsg("Drag levels or members to the categories axis to create categories for which bars are drawn."),
+          mandatory: true,
+          canBeEmpty: false,
+          "class": "levels",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_PAGES,
+          label: gMsg("Columns"),
+          tooltip: gMsg("For each unique combination of members, a bar chart is created."),
+          hint: gMsg("Optionally, drop levels or members on the columns axis to create a list of multiple bar charts."),
+          canBeEmpty: false,
+          "class": "columns",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_CHAPTERS,
+          label: gMsg("Rows"),
+          tooltip: gMsg("For each unique combination of members, one row is layed out and each column is filled with a bar chart."),
+          hint: gMsg("Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts."),
+          canBeEmpty: false,
+          "class": "rows",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_SLICER
+        }
+      ]
+    });
+    return queryDesigner;
+  },
+  initChart: function(dom, tab){
+    var chart = new XavierGroupedBarChart({
+      container: dom,
+      tab: tab
+    });
+    return chart;
+  }
+};
+XavierGroupedBarChartTab.prefix = "xavier-grouped-bar-chart-tab";
+adopt(XavierGroupedBarChartTab, XavierChartTab);
+
+
+var XavierGroupedBarChart;
+(XavierGroupedBarChart = function(conf){
+  conf = conf || {};
+  this.conf = conf;
+  if (!conf.classes) {
+    conf.classes = [];
+  }
+  conf.classes.push(arguments.callee.prefix);
+  arguments.callee._super.apply(this, [conf]);
+}).prototype = {
+  margins: {
+    left: 100,
+    right: 30,
+    top: 30,
+    bottom: 30
+  },
+  generateTitleText: function(dataset, queryDesigner){
+    var categoriesAxisLabel = "";
+    var categoriesAxis = queryDesigner.getRowAxis();
+    var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+    categoriesAxis.eachHierarchy(function(hierarchy, i){
+      if (categoriesAxisLabel) {
+        categoriesAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
+      }
+      categoriesAxisLabel += hierarchy.HIERARCHY_CAPTION;
+    }, this);
+    this.categoriesAxisLabel = categoriesAxisLabel;
+
+    var measuresAxisLabel = "";
+    var measuresAxis = dataset.getColumnAxis();
+    var lastTuple = measuresAxis.tupleCount() - 1;
+    measuresAxis.eachTuple(function(measure){
+      if (measuresAxisLabel) {
+        measuresAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
+      }
+      measuresAxisLabel += this.getLabelForTuple(measure);
+    }, this);
+    this.measuresAxisLabel = measuresAxisLabel;
+
+    return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+  },
+  renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
+    var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
+
+    //prepare the data set. data will be an array of {category, measure, value} objects
+    var data = [], categoryOrder = [], measureOrder = [], measureOrderIndices = {};
+    categoriesAxis.eachTuple(function(categoryTuple){
+      var category = this.getLabelForTuple(categoryTuple);
+      categoryOrder.push(category);
+      measuresAxis.eachTuple(function(measureTuple){
+        var measure = this.getLabelForTuple(measureTuple);
+        if (categoryTuple.index === 0) {
+          measureOrderIndices[measure] = measureOrder.length;
+          measureOrder.push(measure);
+        }
+        var row = {
+          category: category,
+          measure: measure,
+          value: cellset.cellValue()
+        };
+        cellset.nextCell();
+        data.push(row);
+      }, this);
+
+    }, this);
+
+    var chart = new dimple.chart(svg, data);
+
+    //this will create a grouped bar chart: category groups with a bar for each measure
+    var categoryAxis = chart.addCategoryAxis("x", ["category", "measure"]);
+
+    //this will create a stacked bar chart: one stack of measures per category.
+    var categoryAxis = chart.addCategoryAxis("x", "category");
+
+    categoryAxis.title = this.categoriesAxisLabel;
+    categoryAxis.addOrderRule(categoryOrder);
+    categoryAxis.addGroupOrderRule(measureOrder);
+
+    var measureAxis = chart.addMeasureAxis("y", "value");
+    measureAxis.title = this.measuresAxisLabel;
+    //measureAxis.addOrderRule(measureOrder);
+    var measureSeries = chart.addSeries("measure", dimple.plot.bar);
+    measureSeries.addOrderRule(measureOrder);
+
+    var legend = chart.addLegend(100, 10, dom.clientWidth, 20, "left");
+    var _getEntries = legend._getEntries;
+    legend._getEntries = function(){
+      //get the legend entries just like plain dimple would return them
+      var entries = _getEntries.apply(legend, arguments);
+      //sort the entries according to the order in the query axis
+      entries.sort(function(a, b){
+        a = measureOrderIndices[a.key];
+        b = measureOrderIndices[b.key];
+        if (a > b) return 1;
+        if (a < b) return -1;
+        if (a === b) return 0;
+      })
+      //apparently when the legend is "right" the items come out the wrong way. WTF?
+      if (this.horizontalAlign === "right") {
+        entries = entries.reverse();
+      }
+      //we're done now, let dimple render the entries.
+      return entries;
+    }
+    chart.draw();
   }
 };
 XavierGroupedBarChart.prefix = "xavier-grouped-bar-chart";
