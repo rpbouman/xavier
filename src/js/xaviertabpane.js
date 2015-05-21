@@ -556,6 +556,7 @@ adopt(XavierDocumentTab, XavierTab);
     return this.dataGrid.getDom();
   },
   clear: function(){
+    this.isCleared = true;
     this.dataGrid.clear();
   },
   getDataset: function(){
@@ -627,6 +628,7 @@ adopt(XavierDocumentTab, XavierTab);
       rows: rows,
       cells: cells
     });
+    this.isCleared = false;
     this.dataGrid.doLayout();
   },
   doLayout: function(){
@@ -1195,6 +1197,7 @@ var XavierVisualizer;
     return id + "-instance-" + ctor.instanceId++;
   },
   clear: function(){
+    this.isCleared = true;
     dCh(this.getBody());
     dCh(this.getTitle());
   },
@@ -1320,7 +1323,7 @@ var XavierVisualizer;
           break;
         case "bottom":
           chartBody.style.top = "0px";
-          chartTitle.style.top = chartBody.clientHeight + "px";
+          chartTitle.style.top = chartBody.clientHeight - 20 + "px";
           break;
       }
       chartBody.style.margin = "auto"; //chartTitle.clientHeight + "px";
@@ -1556,8 +1559,10 @@ var XavierPieChart;
       categoriesAxis.eachTuple(function(tuple){
         var category = this.getLabelForTuple(tuple);
         var datum = {};
-        datum[categoriesAxisLabel] = category;
+        datum[categoriesAxisLabel] = tuple.index;
+        datum.label = category;
         datum[measure] = cellset.cellValue();
+        datum.fmtValue = cellset.cellFmtValue();
         data.push(datum);
         cellset.nextCell();
       }, this);
@@ -1565,9 +1570,19 @@ var XavierPieChart;
       var body = dom.lastChild;
       var svg = dimple.newSvg("#" + body.id, body.clientWidth, body.clientHeight);
       var chart = new dimple.chart(svg, data);
-      chart.addMeasureAxis("p", measure);
-      chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
-      var legend = chart.addLegend(10, 10, dom.clientWidth, 20, "left");
+      var measureAxis = chart.addMeasureAxis("p", measure);
+      var series = chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
+      //var oldGetToolTipText = series.getTooltipText;
+      series.getTooltipText = function(e){
+        //oldGetToolTipText.apply(this, arguments);
+        var datum = data[e.aggField[0]];
+        var pct = this.p._getFormat()(e.angle) + " (" + (d3.format("%")(e.piePct)) + ")";
+        return [datum.label + ": " + datum.fmtValue + pct];
+      };
+      if (this.isCleared) {
+        //TODO: print legend
+        this.isCleared = false;
+      }
       chart.draw();
     }, this);
   }
@@ -1719,7 +1734,7 @@ var XavierGroupedBarChart;
     var categoryAxis = chart.addCategoryAxis("x", ["category", "measure"]);
 
     //this will create a stacked bar chart: one stack of measures per category.
-    var categoryAxis = chart.addCategoryAxis("x", "category");
+    //var categoryAxis = chart.addCategoryAxis("x", "category");
 
     categoryAxis.title = this.categoriesAxisLabel;
     categoryAxis.addOrderRule(categoryOrder);
@@ -1727,7 +1742,7 @@ var XavierGroupedBarChart;
 
     var measureAxis = chart.addMeasureAxis("y", "value");
     measureAxis.title = this.measuresAxisLabel;
-    //measureAxis.addOrderRule(measureOrder);
+    measureAxis.addOrderRule(measureOrder);
     var measureSeries = chart.addSeries("measure", dimple.plot.bar);
     measureSeries.addOrderRule(measureOrder);
 
@@ -1742,7 +1757,7 @@ var XavierGroupedBarChart;
         b = measureOrderIndices[b.key];
         if (a > b) return 1;
         if (a < b) return -1;
-        if (a === b) return 0;
+        return 0;
       })
       //apparently when the legend is "right" the items come out the wrong way. WTF?
       if (this.horizontalAlign === "right") {
