@@ -1558,11 +1558,12 @@ var XavierPieChart;
       var measure = this.getLabelForTuple(tuple);
       categoriesAxis.eachTuple(function(tuple){
         var category = this.getLabelForTuple(tuple);
-        var datum = {};
+        var datum = {
+          label: category,
+          fmtValue: cellset.cellFmtValue()
+        };
         datum[categoriesAxisLabel] = tuple.index;
-        datum.label = category;
         datum[measure] = cellset.cellValue();
-        datum.fmtValue = cellset.cellFmtValue();
         data.push(datum);
         cellset.nextCell();
       }, this);
@@ -1573,10 +1574,10 @@ var XavierPieChart;
       var measureAxis = chart.addMeasureAxis("p", measure);
       var series = chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
       //var oldGetToolTipText = series.getTooltipText;
-      series.getTooltipText = function(e){
+      series.getTooltipText = function(d){
         //oldGetToolTipText.apply(this, arguments);
-        var datum = data[e.aggField[0]];
-        var pct = this.p._getFormat()(e.angle) + " (" + (d3.format("%")(e.piePct)) + ")";
+        var datum = data[d.aggField[0]];
+        var pct = this.p._getFormat()(d.angle) + " (" + (d3.format("%")(d.piePct)) + ")";
         return [datum.label + ": " + datum.fmtValue + pct];
       };
       if (this.isCleared) {
@@ -1707,23 +1708,32 @@ var XavierGroupedBarChart;
     var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
 
     //prepare the data set. data will be an array of {category, measure, value} objects
-    var data = [], categoryOrder = [], measureOrder = [], measureOrderIndices = {};
+    var data = [],
+        categoryOrder = [], categoryLabels = [],
+        measureOrder = [], measureOrderIndices = {}
+    ;
+    var categoriesAxisLabel = this.categoriesAxisLabel;
     categoriesAxis.eachTuple(function(categoryTuple){
-      var category = this.getLabelForTuple(categoryTuple);
+      var categoryAndLabel = this.getCategoryAndLabelForTuple(categoryTuple);
+      var category = categoryAndLabel.category;
+      var label = categoryAndLabel.label;
       categoryOrder.push(category);
+      categoryLabels.push(label);
       measuresAxis.eachTuple(function(measureTuple){
         var measure = this.getLabelForTuple(measureTuple);
         if (categoryTuple.index === 0) {
           measureOrderIndices[measure] = measureOrder.length;
           measureOrder.push(measure);
         }
-        var row = {
-          category: category,
+        var datum = {
+          label: label,
           measure: measure,
-          value: cellset.cellValue()
+          value: cellset.cellValue(),
+          fmtValue: cellset.cellFmtValue()
         };
+        datum[categoriesAxisLabel] = categoryTuple.index;
+        data.push(datum);
         cellset.nextCell();
-        data.push(row);
       }, this);
 
     }, this);
@@ -1731,7 +1741,7 @@ var XavierGroupedBarChart;
     var chart = new dimple.chart(svg, data);
 
     //this will create a grouped bar chart: category groups with a bar for each measure
-    var categoryAxis = chart.addCategoryAxis("x", ["category", "measure"]);
+    var categoryAxis = chart.addCategoryAxis("x", [categoriesAxisLabel, "measure"]);
 
     //this will create a stacked bar chart: one stack of measures per category.
     //var categoryAxis = chart.addCategoryAxis("x", "category");
@@ -1745,28 +1755,22 @@ var XavierGroupedBarChart;
     measureAxis.addOrderRule(measureOrder);
     var measureSeries = chart.addSeries("measure", dimple.plot.bar);
     measureSeries.addOrderRule(measureOrder);
+    measureSeries.getTooltipText = function(d){
+      var categoryNumber = d.xField[0];
+      var measure = d.xField[1];
+      var measureNumber = measureOrder.indexOf(measure);
+      var datum = data[measureNumber * categoryOrder.length + categoryNumber];
+      return [
+        measure + ": " + datum.fmtValue,
+        categoriesAxisLabel + ": " + datum.label
+      ];
+    };
 
-    var legend = chart.addLegend(100, 10, dom.clientWidth, 20, "left");
-    var _getEntries = legend._getEntries;
-    legend._getEntries = function(){
-      //get the legend entries just like plain dimple would return them
-      var entries = _getEntries.apply(legend, arguments);
-      //sort the entries according to the order in the query axis
-      entries.sort(function(a, b){
-        a = measureOrderIndices[a.key];
-        b = measureOrderIndices[b.key];
-        if (a > b) return 1;
-        if (a < b) return -1;
-        return 0;
-      })
-      //apparently when the legend is "right" the items come out the wrong way. WTF?
-      if (this.horizontalAlign === "right") {
-        entries = entries.reverse();
-      }
-      //we're done now, let dimple render the entries.
-      return entries;
-    }
     chart.draw();
+
+    categoryAxis.shapes.selectAll("text").text(function (d) {
+      return categoryLabels[d];
+    });
   }
 };
 XavierGroupedBarChart.prefix = "xavier-grouped-bar-chart";
