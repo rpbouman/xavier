@@ -1793,7 +1793,7 @@ var XavierGroupedBarChartTab;
         {
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Measures"),
-          tooltip: gMsg("Each measure on this axis generates one group."),
+          tooltip: gMsg("Each measure creates a bar, and the value of the measures controls the extent of the bars. Use the chart options to control whether measures should be grouped or stacked."),
           hint: gMsg("Drag measures to the measures axis. The measure value determines the size of the bar."),
           mandatory: true,
           canBeEmpty: false,

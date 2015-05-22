@@ -51,6 +51,7 @@ aMsg({
   //Bar chart
   "Bar Chart": "Staafdiagram",
   "New Bar Chart": "Nieuw Staafdiagram",
+  "Each measure creates a bar, and the value of the measures controls the extent of the bars. Use the chart options to control whether measures should be grouped or stacked.": "De waarde van de meetwaarden bepalen de lengte van de staven. Gebruik de opties om te bepalen of meetwaarden naast elkaar gegroepeerd, of op elkaar gestapeld worden afgebeeld.",
   "Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy.": "Elke combinatie van leden vormt een categorie waarvoor staven in het staafdiagram worden gemaakt. Kies een niveau, of selecteer leden uit een enkel niveau van een hierarchy.",
   "Drag levels or members to the categories axis to create categories for which bars are drawn.": "Sleep niveaus of leden naar de categorie as om categorieen te maken.",
   "Drag measures to the measures axis. The measure value determines the size of the bar.": "Sleep meetwaarden naar de meetwaarden as. De waarde van de meetwaarde bepaalt the hoogte van de staven in het staafdiagram.",
