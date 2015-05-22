@@ -187,9 +187,10 @@ var QueryDesigner;
     axis2.conf.id = id1;
 
     //update the collection
-    this.axes[axis1.conf.id] = axis1;
+    this.axes[axis1.getAxisId()] = axis1;
     QueryDesignerAxis.instances[axis1.getId()] = axis1;
-    this.axes[axis2.conf.id] = axis2;
+
+    this.axes[axis2.getAxisId()] = axis2;
     QueryDesignerAxis.instances[axis2.getId()] = axis2;
 
     var dom = this.getDom(false);
@@ -214,8 +215,18 @@ var QueryDesigner;
   moveMeasures: function(fromAxis, toAxis, toIndex){
     return this.moveHierarchy(QueryDesigner.prototype.measuresHierarchyName, fromAxis, toAxis, toIndex);
   },
-  getAxisId: function(i){
-    return "Axis(" + String(i) + ")";
+  getAxisId: function(id){
+    if (iInt(id)) {
+      id = "Axis(" + id + ")";
+    }
+    else
+    if (id === Xmla.Dataset.AXIS_SLICER){
+      id = Xmla.Dataset.AXIS_SLICER;
+    }
+    else {
+      throw "Invalid axis id: " + id;
+    }
+    return id;
   },
   addAxis: function(axis) {
     var id = this.getAxisId(axis.conf.id);
@@ -233,7 +244,7 @@ var QueryDesigner;
       axis = this.getAxis(axis);
     }
     axis.unlisten("changed", this.axisChanged, this);
-    delete this.axes[axis.conf.id];
+    delete this.axes[this.getAxisId(axis.conf.id)];
   },
   createAxis: function(conf) {
     conf = merge(conf, {
@@ -284,7 +295,7 @@ var QueryDesigner;
     }
     else
     if (axis instanceof QueryDesignerAxis){
-      var id = axis.conf.id;
+      var id = this.getAxisId(axis.conf.id);
       var myAxis = this.axes[id];
       if (myAxis && myAxis === axis) {
         return true;
@@ -564,7 +575,9 @@ var QueryDesignerAxis;
   QueryDesignerAxis.instances[this.getId()] = this;
 }).prototype = {
   destroy: function(){
-    delete this.conf.queryDesigner.axes[this.conf.id];
+    var queryDesigner = this.conf.queryDesigner;
+    var id = queryDesigner.getAxisId(this.conf.id);
+    delete queryDesigner.axes[id];
     this.unlisten();
     var id = this.getId();
     dEl(id);
@@ -587,6 +600,9 @@ var QueryDesignerAxis;
   },
   getLayout: function() {
     return this.conf.layout;
+  },
+  getAxisId: function(){
+    return this.conf.queryDesigner.getAxisId(this.conf.id);
   },
   getId: function(){
     return this.conf.queryDesigner.getId() + "-axis" + this.conf.id;
