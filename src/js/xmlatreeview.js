@@ -262,7 +262,10 @@ var XmlaTreeView;
       }, gMsg("Check the box to display catalog nodes in the treeview. Uncheck to hide."))
     ], schemaTreePaneDom);
 
-    this.indicateProgress(gMsg("Loading datasources..."));
+    this.indicateProgress(
+      "<IMG src=\"" + muiImgDir + "ajax-loader-small.gif" + "\"/>" +
+      gMsg("Loading datasources...")
+    );
     xmla.discoverDataSources({
       error: function(xmla, options, error){
         me.fireEvent("error", error);
