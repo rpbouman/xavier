@@ -74,7 +74,14 @@ var QueryDesigner;
     },
     {
       id: Xmla.Dataset.AXIS_SLICER,
-      label: gMsg("Slicer")
+      label: gMsg("Slicer"),
+      tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
+      hint: gMsg("Optionally, drag any members unto the slicer axis to control which selection of data will be visualized."),
+      "class": "slicer",
+      drop: {
+        include: "member"
+      },
+      userSortable: false
     }
   ],
   highlightDropTargets: function(target, dragInfo){
@@ -84,6 +91,16 @@ var QueryDesigner;
       }
       else {
         axis.highlightInvalid();
+      }
+
+      var sortDom = axis.getUserSortOptionsDom();
+      if (sortDom) {
+        if (dragInfo.dragOrigin instanceof QueryDesigner || axis.getUserSortOptions().indexOf(dragInfo.className) === -1) {
+          axis.highlightSortOptionsInvalid();
+        }
+        else {
+          axis.highlightSortOptionsValid();
+        }
       }
     });
   },
@@ -106,6 +123,7 @@ var QueryDesigner;
     className = className.split(" ")[0];
     var label = target.textContent || target.innerText;
     var classes = confCls(target.className);
+    var isSortOption = false;
     switch (className) {
       case "query-designer-axis-header":
         metadata = className;
@@ -132,6 +150,15 @@ var QueryDesigner;
         var member = queryDesignerAxis.getMember(target.id);
         metadata = member.setDef.metadata;
         break;
+      case "user-sort-hierarchy":
+      case "user-sort-member":
+        var sortOption = queryDesignerAxis.sortOption;
+        var memberInfo = sortOption.memberInfo;
+        var metadata = memberInfo.metadata;
+        var label = memberInfo.caption;
+        var className = memberInfo.type;
+        isSortOption = true;
+        break;
       default:
         return false;
     }
@@ -141,7 +168,8 @@ var QueryDesigner;
       classes: classes,
       className: className,
       metadata: metadata,
-      label: label
+      label: label,
+      isSortOption: isSortOption
     };
     return dragInfo;
   },
@@ -251,17 +279,21 @@ var QueryDesigner;
       queryDesigner: this,
       layout: QueryDesignerAxis.layouts.horizontal
     });
-    if (conf.id === Xmla.Dataset.AXIS_SLICER) {
-      conf = merge(conf, {
-        label: gMsg("Slicer"),
-        tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
-        hint: gMsg("Optionally, drag any members unto the slicer axis to control which selection of data will be visualized."),
-        "class": "slicer",
-        drop: {
-          include: "member"
-        }
-      });
+    var defaultConf, id = conf.id,
+        defaultAxesConf = this.defaultAxesConf,
+        defaultAxesConfLength = defaultAxesConf.length
+    ;
+    if (id === Xmla.Dataset.AXIS_SLICER) {
+      defaultConf = defaultAxesConf[defaultAxesConfLength - 1];
     }
+    else
+    if (conf.id < defaultAxesConfLength) {
+      defaultConf = defaultAxesConf[id];
+    }
+    else {
+      defaultConf = {};
+    }
+    conf = merge(conf, defaultConf);
     var axis = new QueryDesignerAxis(conf);
     axis.fireEvents(this.fireEvents());
     this.addAxis(axis);
@@ -374,6 +406,14 @@ var QueryDesigner;
     }
     Displayed.setDisplayed(this.getMessageAreaId(), showOrHide);
   },
+  clickHandler: function(event){
+    var target = event.getTarget();
+    var queryDesignerAxis = QueryDesignerAxis.lookup(target);
+    if (!queryDesignerAxis) {
+      return;
+    }
+    queryDesignerAxis.clickHandler(event);
+  },
   createDom: function() {
     var id = this.getId(),
         dom = this.dom = cEl("TABLE", {
@@ -393,11 +433,6 @@ var QueryDesigner;
         conf
       ).join(" ");
       c.appendChild(axis.getDom());
-      if (conf.tooltip) {
-        cEl("DIV", {
-          "class": "tooltip"
-        }, conf.tooltip, c);
-      }
 
       //message area
       if (r.rowIndex === 0) {
@@ -417,7 +452,7 @@ var QueryDesigner;
         id: axis.getMessageAreaId()
       }, conf.hint))
     }, this);
-
+    listen(dom, "click", this.clickHandler, this);
     return dom;
   },
   getDom: function(create) {
@@ -574,6 +609,23 @@ var QueryDesignerAxis;
   this.reset();
   QueryDesignerAxis.instances[this.getId()] = this;
 }).prototype = {
+  userSortable: true,
+  userSortOptions: ["measure", "level", "property"],
+  userSortBreaksHierarchy: true,
+  userSortDirection: "asc",
+  clickHandler: function(event) {
+    var target = event.getTarget();
+    if (hCls(target, "query-designer-axis-header")) {
+      var parentNode = target.parentNode;
+      if (hCls(parentNode, "user-sort-option")) {
+        this.toggleSortDirection();
+      }
+    }
+    else
+    if (hCls(target, "show-empty")) {
+      this.fireEvent("changed");
+    }
+  },
   destroy: function(){
     var queryDesigner = this.conf.queryDesigner;
     var id = queryDesigner.getAxisId(this.conf.id);
@@ -655,6 +707,14 @@ var QueryDesignerAxis;
     }
     conf.canBeEmpty = canBeEmpty;
     c.innerHTML = conf.label || label;
+    if (conf.tooltip) {
+      cEl("DIV", {
+        "class": "tooltip",
+        style: {
+          "font-weight": "normal"
+        }
+      }, conf.tooltip, c);
+    }
 
     var hasEmptyCheckBox;
     if (iDef(conf.hasEmptyCheckBox)) {
@@ -672,10 +732,8 @@ var QueryDesignerAxis;
         type: "checkbox"
       }, null, c);
       var me = this;
-      listen(nonEmptyCheckbox, "click", function(){
-        me.fireEvent("changed");
-      });
     }
+
     return dom;
   },
   updateDom: function() {
@@ -684,6 +742,7 @@ var QueryDesignerAxis;
     }
     switch (this.getLayout()) {
       case QueryDesignerAxis.layouts.vertical:
+        //this is basically obsolete.
         this.updateDomVertical();
         break;
       case QueryDesignerAxis.layouts.horizontal:
@@ -752,8 +811,147 @@ var QueryDesignerAxis;
       this.updateDomSetDefs(hierarchyName, c);
     }
   },
+  isUserSortable: function(){
+    var conf = this.conf, sortable
+    if (iDef(conf.userSortable)) {
+      sortable = conf.userSortable;
+    }
+    else {
+      sortable = this.userSortable;
+    }
+    return sortable;
+  },
+  getUserSortOptions: function(){
+    var conf = this.conf, options
+    if (iDef(conf.userSortOptions)) {
+      options = conf.userSortOptions;
+    }
+    else {
+      options = this.userSortOptions;
+    }
+    return options;
+  },
+  getUserSortBreaksHierarchy: function(){
+    var conf = this.conf, userSortBreaksHierarchy
+    if (iDef(conf.userSortBreaksHierarchy)) {
+      userSortBreaksHierarchy = conf.userSortBreaksHierarchy;
+    }
+    else {
+      userSortBreaksHierarchy = this.userSortBreaksHierarchy;
+    }
+    return userSortBreaksHierarchy;
+  },
+  toggleSortDirection: function(){
+    var sortOption = this.sortOption
+    if (!sortOption) {
+      return;
+    }
+    var direction;
+    switch (sortOption.direction) {
+      case "asc":
+        direction = "desc";
+        break;
+      case "desc":
+        direction = "asc";
+        break;
+      default:
+        return;
+    }
+    sortOption.direction = direction;
+    this.updateDom();
+    this.fireEvent("changed");
+  },
+  setSortOption: function(dragInfo){
+    if (dragInfo === null) {
+      delete this.sortOption;
+    }
+    else {
+      var requestType = dragInfo.className,
+          metadata = dragInfo.defaultMember || dragInfo.metadata
+      ;
+      var hierarchyName = this.getHierarchyName(metadata);
+      var treeView = this.getQueryDesigner().getXmlaTreeView();
+      var hierarchy = treeView.getHierarchyMetadata(hierarchyName);
+      var memberInfo = this.getMemberInfo(requestType, metadata);
+      var direction;
+      if (this.sortOption) {
+        direction = this.sortOption.direction;
+      }
+      else {
+        direction = this.userSortDirection;
+      }
+      this.sortOption = {
+        direction: direction,
+        hierarchy: hierarchy,
+        memberInfo: memberInfo,
+        breaksHierarchy: this.getUserSortBreaksHierarchy()
+      };
+    }
+    this.updateDom();
+    this.fireEvent("changed");
+  },
+  getSortDomId: function() {
+    return this.getId() + "-sort-options";
+  },
+  getUserSortOptionsDom: function(){
+    return gEl(this.getSortDomId());
+  },
+  updateSortOptionsDomHorizontal: function(dom){
+    var rows = dom.rows, r, c;
+    //header row demarcates the sort options from the rest of the axis
+    r = dom.insertRow(rows.length);
+    r.id = this.getSortDomId();
+    r.className = "user-sort-option";
+    c = r.insertCell(0);
+    c.className = "query-designer-axis-header";
+    sAtt(c, "colspan", "100%");
+    c.innerHTML = gMsg("Sort Options");
+    var tooltip = cEl("DIV", {
+      class: "tooltip",
+      style: {
+        "font-weight": "normal"
+      }
+    }, null, c);
+
+    //one row to hold the member, measure or property that is used to sort.
+    var sortOption = this.sortOption;
+    if (!sortOption) {
+      tooltip.innerHTML = gMsg("Drop a measure, level, or property here to sort the output of this axis in the query result.");
+      return;
+    }
+    c.className += " user-sort-direction-" + sortOption.direction;
+    tooltip.innerHTML = gMsg("Click to toggle sort direction.");
+
+    r = dom.insertRow(rows.length);
+    r.className = "user-sort-option";
+
+    var hierarchy = sortOption.hierarchy;
+    c = r.insertCell(0);
+    c.innerHTML = hierarchy.HIERARCHY_CAPTION;
+
+    c.className = "user-sort-hierarchy dimensiontype" + hierarchy.DIMENSION_TYPE;
+
+    var memberInfo = sortOption.memberInfo;
+    var metadata = memberInfo.metadata;
+    c = r.insertCell(1);
+    c.innerHTML = memberInfo.caption;
+
+    var classes = ["user-sort-member", memberInfo.type];
+    if (iDef(metadata.MEASURE_AGGREGATOR)){
+      classes.push("aggregator" + metadata.MEASURE_AGGREGATOR);
+    }
+    if (iDef(metadata.LEVEL_TYPE)){
+      classes.push("leveltype" + metadata.LEVEL_TYPE);
+    }
+    if (iDef(metadata.LEVEL_UNIQUE_SETTINGS)){
+      classes.push("levelunicity" + metadata.LEVEL_UNIQUE_SETTINGS);
+    }
+    c.className = confCls(classes).join(" ");
+
+  },
   updateDomHorizontal: function() {
-    var hierarchies = this.hierarchies,
+    var conf = this.conf,
+        hierarchies = this.hierarchies,
         hierarchy, hierarchyName,
         i, n = hierarchies.length,
         setDefs = this.setDefs, setDef,
@@ -780,6 +978,11 @@ var QueryDesignerAxis;
       c = r.insertCell(1);
       this.updateDomSetDefs(hierarchyName, c);
     }
+    //show the sort options, but only if there is something to sort.
+    if (!n || !this.isUserSortable()) {
+      return;
+    }
+    this.updateSortOptionsDomHorizontal(dom);
   },
   getDom: function() {
     var el = gEl(this.getId());
@@ -890,6 +1093,17 @@ var QueryDesignerAxis;
         requestType = dragInfo.className,
         metadata = dragInfo.metadata
     ;
+    if (target.tagName === "TD") {
+      var classes = target.parentNode.className.split(" ");
+      if (classes[0] === "user-sort-option") {
+        if (dragInfo.dragOrigin instanceof QueryDesigner) {
+          return false;
+        }
+        else {
+          return true;
+        }
+      }
+    }
     if (!this.dropIncludes(requestType)) {
       return false;
     }
@@ -1471,10 +1685,15 @@ var QueryDesignerAxis;
         hierarchyName = this.getHierarchyName(metadata),
         hierarchyIndex = this.getHierarchyIndex(hierarchyName),
         dropIndexes, dropHierarchyName,
-        memberType, memberExpression, memberCaption
+        memberType, memberExpression, memberCaption,
+        target
     ;
     if (hCls(target, "show-empty")) {
       target = gAnc(target, "TD");
+    }
+    if (hCls(target.parentNode, "user-sort-option")) {
+      this.setSortOption(dragInfo);
+      return;
     }
     dropIndexes = this.getDropIndexes(target);
     if (typeof(dropIndexes.dropHierarchyIndex)==="undefined") {
@@ -1593,6 +1812,15 @@ var QueryDesignerAxis;
         members = "Hierarchize(" + members + ")";
       }
       mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
+      var sortOption = this.sortOption;
+      if (sortOption) {
+        var direction = sortOption.direction.toUpperCase();
+        if (this.getUserSortBreaksHierarchy()) {
+          direction = "B" + direction;
+        }
+        var args = [mdx, sortOption.memberInfo.expression, direction];
+        mdx = "Order(" + args.join(",") + ")";
+      }
     }, this);
     return mdx;
   },
@@ -1613,6 +1841,16 @@ var QueryDesignerAxis;
     rCls(dom, classToRemove);
     aCls(dom, classToAdd);
   },
+  highlightSortOptionsValid: function(){
+    var dom = this.getUserSortOptionsDom();
+    rCls(dom, "invalid-sort-options");
+    aCls(dom, "valid-sort-options")
+  },
+  highlightSortOptionsInvalid: function(){
+    var dom = this.getUserSortOptionsDom();
+    rCls(dom, "valid-sort-options");
+    aCls(dom, "invalid-sort-options")
+  },
   highlightValid: function() {
     this.highlight("valid-drop-axis", "invalid-drop-axis");
   },
@@ -1621,6 +1859,11 @@ var QueryDesignerAxis;
   },
   removeHighlight: function(){
     rCls(this.getDom(), ["valid-drop-axis", "invalid-drop-axis"]);
+    var sortDom = this.getUserSortOptionsDom();
+    if (!sortDom) {
+      return;
+    }
+    rCls(sortDom, ["invalid-sort-options", "valid-sort-options"]);
   }
 };
 

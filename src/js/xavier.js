@@ -421,6 +421,9 @@ function endDrag(event, dndHandler) {
 
 function dragWithinAxis(dragInfo, queryDesignerAxis, target){
   //drag and drop within same axis.
+  if (dragInfo.isSortOption) {
+    return;
+  }
   switch (dragInfo.className){
     case "hierarchy":
     case "measures":
@@ -460,22 +463,28 @@ function dragFromAxisToOtherAxis(dragInfo, queryDesigner, queryDesignerAxis){
 
 function dropOutsideAxis(dragInfo){
   //drop outside axis: remove the object.
+  var queryDesignerAxis = dragInfo.queryDesignerAxis;
   switch (dragInfo.className) {
     case "hierarchy":
     case "measures":
-      dragInfo.queryDesignerAxis.removeHierarchy(dragInfo.metadata);
+      queryDesignerAxis.removeHierarchy(dragInfo.metadata);
       break;
     case "member":
     case "member-drilldown":
     case "measure":
     case "level":
     case "property":
-      dragInfo.queryDesignerAxis.removeMember(dragInfo.metadata, dragInfo.className);
+      if (dragInfo.isSortOption) {
+        queryDesignerAxis.setSortOption(null);
+      }
+      else {
+        queryDesignerAxis.removeMember(dragInfo.metadata, dragInfo.className);
+      }
       break;
     default:
       if (dragInfo.metadata === "query-designer-axis-header"){
         //an entire axis was dragged out.
-        dragInfo.queryDesignerAxis.clear();
+        queryDesignerAxis.clear();
       }
   }
 }

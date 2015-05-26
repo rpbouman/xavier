@@ -72,6 +72,10 @@ aMsg({
   "Columns": "Kolommen",
   "Rows": "Rijen",
   "Slicer": "Selectie",
+  //sorting
+  "Sort Options": "Sorteren",
+  "Drop a measure, level, or property here to sort the output of this axis in the query result.": "Plaats hier een meetwaarde, niveau of lid-eigenschap (property) om de uitvoer van deze as in het queryresultaat te sorteren.",
+  "Click to toggle sort direction.": "Klik hier om de sorteervolgorde te wijzigen.",
   //workarea
   "This action will close all tab pages associated with the current cube. Do you want to continue?": "Deze actie zal alle tabbladen voor de huidige kubus afsluiten. Wilt u doorgaan?",
   "Close tabs for current cube?": "Tabbladen voor de huidige kubus afsluiten?",

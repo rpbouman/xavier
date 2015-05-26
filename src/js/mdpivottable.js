@@ -294,7 +294,7 @@ var PivotTable;
     var thead = tr.parentNode;
     var table = thead.parentNode;
     this.fireEvent(eventName, {
-      axis: gAtt(table, "data-axis-id"),
+      axis: parseInt(gAtt(table, "data-axis-id"), 10),
       member: uName
     });
   },

@@ -986,7 +986,8 @@ var XavierPivotTableTab;
           hint: gMsg("Drag any levels, members or measures unto the columns axis to create columns in the pivot table."),
           "class": "columns",
           mandatory: true,
-          intrinsicProperties: intrinsicProperties
+          intrinsicProperties: intrinsicProperties,
+          userSortBreaksHierarchy: false
         },
         {
           id: Xmla.Dataset.AXIS_ROWS,
@@ -994,7 +995,8 @@ var XavierPivotTableTab;
           tooltip: gMsg("Items on this axis are used to generate rows for the pivot table"),
           hint: gMsg("Optionally, drag any levels, members or measures unto the row axis to create rows in the pivot table."),
           "class": "rows",
-          intrinsicProperties: intrinsicProperties
+          intrinsicProperties: intrinsicProperties,
+          userSortBreaksHierarchy: false
         },
         {
           id: Xmla.Dataset.AXIS_SLICER
@@ -1800,7 +1802,8 @@ var XavierGroupedBarChartTab;
           "class": "measures",
           drop: {
             include: "measure"
-          }
+          },
+          userSortable: false
         },
         {
           id: Xmla.Dataset.AXIS_ROWS,
