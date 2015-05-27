@@ -379,7 +379,7 @@ span.current-cube,
 
 .members-dragging,
 .tree .members > .head > .toggle {
-/*  background-image: url('../mui/images/folder16x16.png'); */
+/*  background-image: url('../../lib/mui/images/folder16x16.png'); */
   background-image: url('../images/folder2.png');
 }
 
@@ -397,7 +397,7 @@ span.current-cube,
 /* MDLEVEL_TYPE_TIME_HALF_YEAR 0x0024*/
 .leveltype36-dragging,
 .tree .leveltype36 > .head > .toggle {
-  background-image: url('../mui/images/calendar_16x16.png');
+  background-image: url('../../lib/mui/images/calendar_16x16.png');
 }
 
 /* MDLEVEL_TYPE_TIME_QUARTERS 0x0044*/

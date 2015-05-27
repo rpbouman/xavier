@@ -55,31 +55,31 @@ html, body {
  *  Toolbar
  */
 .toolbar .refresh {
-  background-image: url('../mui/images/refresh16x16.png');
+  background-image: url('../../lib/mui/images/refresh16x16.png');
 }
 
 .toolbar .new {
-  background-image: url('../mui/images/new16x16.png');
+  background-image: url('../../lib/mui/images/new16x16.png');
 }
 
 .toolbar .open {
-  background-image: url('../mui/images/openfolder16x16.png');
+  background-image: url('../../lib/mui/images/openfolder16x16.png');
 }
 
 .toolbar .save {
-  background-image: url('../mui/images/save16x16.png');
+  background-image: url('../../lib/mui/images/save16x16.png');
 }
 
 .toolbar .save-as {
-  background-image: url('../mui/images/saveas16x16.png');
+  background-image: url('../../lib/mui/images/saveas16x16.png');
 }
 
 .toolbar .edit {
-  background-image: url('../mui/images/edit16x16.png');
+  background-image: url('../../lib/mui/images/edit16x16.png');
 }
 
 .toolbar .show-empty {
-  background-image: url('../mui/images/empty16x16.png');
+  background-image: url('../../lib/mui/images/empty16x16.png');
 }
 
 .toolbar .run {
@@ -95,5 +95,5 @@ html, body {
 }
 
 .toolbar .clear {
-  background-image: url('../mui/images/trash_16x16.png');
+  background-image: url('../../lib/mui/images/trash_16x16.png');
 }

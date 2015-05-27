@@ -380,11 +380,11 @@ td.query-designer-axis table.query-designer-axis tr.user-sort-option td.query-de
 }
 
 td.query-designer-axis table.query-designer-axis tr.user-sort-option td.user-sort-direction-asc {
-  background-image: url('../mui/images/sort-ascending-16x16.png');
+  background-image: url('../../lib/mui/images/sort-ascending-16x16.png');
 }
 
 td.query-designer-axis table.query-designer-axis tr.user-sort-option td.user-sort-direction-desc {
-  background-image: url('../mui/images/sort-descending-16x16.png');
+  background-image: url('../../lib/mui/images/sort-descending-16x16.png');
 }
 
 td.query-designer-axis table.query-designer-axis tr.user-sort-option td.user-sort-direction-desc,
