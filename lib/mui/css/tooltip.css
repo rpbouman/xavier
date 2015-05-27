@@ -1,0 +1,139 @@
+/*
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+@-webkit-keyframes tooltip-appear {
+  0% {
+    opacity: 0.0;
+  }
+  5% {
+    opacity: 0.3;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.99;
+  }
+  100% {
+    opacity: 0.0;
+  }
+}
+
+@-moz-keyframes tooltip-appear {
+  0% {
+    opacity: 0.0;
+  }
+  5% {
+    opacity: 0.3;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.99;
+  }
+  100% {
+    opacity: 0.0;
+  }
+}
+
+@keyframes tooltip-appear {
+  0% {
+    opacity: 0.0;
+  }
+  5% {
+    opacity: 0.3;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.99;
+  }
+  100% {
+    opacity: 0.0;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  background-color: #ff9;
+  opacity: 0.85;
+  padding: .25em;
+  border-radius: .5em;
+  border-width: 1px;
+  border-color: black;
+  border-style:solid;
+  color: black;
+  margin-left: 22px;
+  z-index: 10;
+  display: none;
+  height: 1em;
+  white-space: nowrap;
+  float: right;
+}
+
+
+*:hover > .tooltip {
+  -webkit-animation-name: tooltip-appear;
+  -webkit-animation-duration: 6s;
+  -moz-animation-name: tooltip-appear;
+  -moz-animation-duration: 6s;
+  animation-name: tooltip-appear;
+  animation-duration: 6s;
+  display: block;
+}
+
+.tooltip:hover {
+  display: none;
+}

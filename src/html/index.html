@@ -39,18 +39,24 @@ limitations under the License.
         var CONTEXT_PATH = mantle_win.CONTEXT_PATH;
       }
 
-      var muiCssDir = "../mui/css/";
-      var muiImgDir = "../mui/images/";
+      var muiCssDir = "../../lib/mui/css/";
+      var muiImgDir = "../../lib/mui/images/";
       var cssDir = "../css/";
     </script>
-    <link rel="stylesheet" type="text/css" href="../mui/css/tooltip.css"/>
+    <link rel="stylesheet" type="text/css" href="../../lib/mui/css/tooltip.css"/>
 
   </head>
   <body class="pentaho-page-background" >
     <!--[if lte IE 9]><script src="../../lib/aight-2.1.1/aight.min.js"></script><![endif]-->
+    <!--
     <script type="text/javascript" src="../../lib/d3-3.5.5/d3.js" charset="utf-8"></script>
+    -->
+    <script type="text/javascript" src="../../lib/d3-3.5.5/d3.min.js" charset="utf-8"></script>
 
+    <!--
     <script type="text/javascript" src="../../lib/dimple-2.1.2/dimple.v2.1.2.js"></script>
+    -->
+    <script type="text/javascript" src="../../lib/dimple-2.1.2/dimple.v2.1.2.min.js"></script>
 
     <!-- zip lib required to do excel export -->
     <script type="text/javascript" src="../../lib/jszip/jszip.min.js"></script>
@@ -60,9 +66,10 @@ limitations under the License.
     <script type="text/javascript" src="../../lib/filesaver/FileSaver.min.js"></script>
 
     <!-- xmla4js required to talk to XML/A servers -->
-    <script type="text/javascript" src="../xmla4js/Xmla.js"></script>
+    <script type="text/javascript" src="../../lib/xmla4js/Xmla-compiled.js"></script>
 
     <!-- mui required for building GUI -->
+    <!--
     <script type="text/javascript" src="../mui/js/utilities.js"></script>
     <script type="text/javascript" src="../mui/js/dateutils.js"></script>
     <script type="text/javascript" src="../mui/js/dom.js"></script>
@@ -78,11 +85,14 @@ limitations under the License.
     <script type="text/javascript" src="../mui/js/treenode.js"></script>
     <script type="text/javascript" src="../mui/js/treelistener.js"></script>
     <script type="text/javascript" src="../mui/js/treeselection.js"></script>
+    <script type="text/javascript" src="../mui/js/highlighter.js"></script>
     <script type="text/javascript" src="../mui/js/contentarea.js"></script>
     <script type="text/javascript" src="../mui/js/contentpane.js"></script>
     <script type="text/javascript" src="../mui/js/splitpane.js"></script>
     <script type="text/javascript" src="../mui/js/tabpane.js"></script>
     <script type="text/javascript" src="../mui/js/datagrid.js"></script>
+    -->
+    <script type="text/javascript" src="../../lib/mui/mui-compiled.js"></script>
 
     <!-- xavier specific stuff -->
     <script type="text/javascript" src="../js/messages.js"></script>

@@ -3,15 +3,16 @@
     XML/A Analyzer
   </description>
 
+  <taskdef name="jscomp" classname="com.google.javascript.jscomp.ant.CompileTask" classpath="/usr/share/java/closure-compiler.jar"/>
+
   <!-- set global properties for this build -->
   <property name="src" location="src"/>
   <property name="lib" location="lib"/>
   <property name="mui.src.dir" location="../mui/src"/>
-  <property name="xmla4js.src.dir" location="../xmla4js/src"/>
+  <property name="mui.dist.dir" location="../mui/dist"/>
+  <property name="xmla4js.dir" location="../xmla4js"/>
   <property name="dist" location="dist"/>
   <property name="dist.all" location="${dist}/${ant.project.name}"/>
-  <property name="mui.dst.dir" location="${dist.all}/resources/mui"/>
-  <property name="xmla4js.dst.dir" location="${dist.all}/resources/xmla4js"/>
   <property name="src.plugin" location="${src}/plugin"/>
   <property name="dist.plugin" location="${dist}/plugin"/>
   <property name="resources"  location="resources"/>
@@ -56,12 +57,44 @@
     <tstamp/>
   </target>
 
-  <target name="mui">
-    <delete dir="${mui.dst.dir}"/>
-    <mkdir dir="${mui.dst.dir}"/>
-    <copy todir="${mui.dst.dir}" >
+  <target name="copy-mui">
+    <copy todir="${lib}/mui" >
       <fileset dir="${mui.src.dir}" includes="**"/>
     </copy>
+  </target>
+
+  <target name="compile-mui" depends="copy-mui">
+    <jscomp compilationLevel="simple" warning="verbose" debug="false" output="${lib}/mui/mui-compiled.js">
+
+      <externs dir="${lib}/mui/js">
+        <file name="externs.js"/>
+      </externs>
+
+      <sources dir="${lib}/mui/js">
+        <file name="utilities.js"/>
+        <file name="dateutils.js"/>
+        <file name="dom.js"/>
+        <file name="event.js"/>
+        <file name="dnd.js"/>
+        <file name="observable.js"/>
+        <file name="displayed.js"/>
+        <file name="disabled.js"/>
+        <file name="timer.js"/>
+        <file name="spinner.js"/>
+        <file name="dialog.js"/>
+        <file name="toolbar.js"/>
+        <file name="treenode.js"/>
+        <file name="treelistener.js"/>
+        <file name="treeselection.js"/>
+        <file name="highlighter.js"/>
+        <file name="contentarea.js"/>
+        <file name="contentpane.js"/>
+        <file name="splitpane.js"/>
+        <file name="tabpane.js"/>
+        <file name="datagrid.js"/>
+      </sources>
+
+    </jscomp>
   </target>
 
 <!--
@@ -72,14 +105,13 @@
   </target>
 -->
   <target name="xmla4js">
-    <delete dir="${xmla4js.dst.dir}"/>
-    <mkdir dir="${xmla4js.dst.dir}"/>
-    <copy todir="${xmla4js.dst.dir}" >
-      <fileset dir="${xmla4js.src.dir}" includes="**"/>
+    <copy todir="${lib}/xmla4js" >
+      <fileset dir="${xmla4js.dir}/src" includes="Xmla.js"/>
+      <fileset dir="${xmla4js.dir}/js" includes="Xmla-compiled.js"/>
     </copy>
   </target>
 
-  <target name="dist" depends="clean,init,mui,xmla4js" description="generate the distribution" >
+  <target name="dist" depends="clean,init,compile-mui,xmla4js" description="generate the distribution" >
     <mkdir dir="${dist}"/>
     <mkdir dir="${dist.all}"/>
 

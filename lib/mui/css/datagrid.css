@@ -1,0 +1,131 @@
+/*
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+div.datagrid {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  margin-right: 5px;
+  font-size: 10pt;
+  overflow: hidden;
+}
+
+.datagrid > div, .datagrid > div {
+  position: absolute;
+}
+
+.datagrid > div > table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-style:solid;
+  border-width:1px;
+  border-color: #cbdde8;
+  left: 0px;
+  right: 0px;
+}
+
+.datagrid > div.datagrid-cells > table {
+  border-style:none;
+}
+
+div.datagrid-cells {
+  overflow: auto;
+}
+
+.datagrid table tr.positioning-row {
+  font-size:0px;
+  height:0px;
+  position:relative;
+}
+
+.datagrid table tr.positioning-row td {
+  padding: 0px !important;
+  border-style:none !important;
+}
+
+
+.datagrid table td {
+  vertical-align: top;
+  white-space: nowrap;
+  border-width: 1px;
+  padding: 2px;
+  background-repeat: repeat-y;
+  overflow: hidden;
+}
+
+div.datagrid > div.datagrid-cells > table.datagrid-cells {
+  border-width:1px;
+}
+
+.datagrid table td.td {
+  border-style: solid;
+  border-color: #cbdde8;
+  text-align: right;
+  font-family: monospace;
+  font-size: 9pt;
+}
+
+div.datagrid table td.th,
+div.datagrid div.datagrid-spacer {
+  background-color: #dceef9;
+}
+
+div.datagrid-spacer {
+  left: 0px;
+  top: 0px;
+  z-index:1;
+}
+.datagrid table td.th {
+  padding-left: 2px;
+  padding-right: 2px;
+  border-color: white #cbdde8 #cbdde8 white;
+  border-style: solid;
+  border-width:1px;
+}
+
+.datagrid table td.thh {
+  border-style: none;
+  background-color: lightgrey;
+}
+
+.datagrid > .datagrid-cells > table > tbody > tr > td {
+  background-color: white;
+  border-color: lightgrey;
+  border-style: solid;
+}
+
+.datagrid > .datagrid-col-headers {
+}
+
+table.datagrid-col-headers td.th {
+  text-align: center;
+}
+
+.datagrid > .datagrid-row-headers {
+}
+
+table.datagrid-row-headers td.autorownum {
+  text-align: right;
+}
+
+.datagrid > .datagrid-cells {
+  overflow: auto;
+}
+
+.datagrid > div > table > tbody > tr.positioning-row > td > div {
+}

@@ -1757,6 +1757,8 @@ var XavierGroupedBarChart;
     measureAxis.addOrderRule(measureOrder);
     var measureSeries = chart.addSeries("measure", dimple.plot.bar);
     measureSeries.addOrderRule(measureOrder);
+
+    //set the tooltip text
     measureSeries.getTooltipText = function(d){
       var categoryNumber = d.xField[0];
       var measure = d.xField[1];
@@ -1770,7 +1772,10 @@ var XavierGroupedBarChart;
 
     chart.draw();
 
+    //update the category axis labels.
+    //have to do this after drawing the chart.
     categoryAxis.shapes.selectAll("text").text(function (d) {
+      debugger;
       return categoryLabels[d];
     });
   }
