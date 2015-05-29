@@ -1362,12 +1362,12 @@ var XavierVisualizer;
 
     }, this);
   },
-  generateTrellisList: function(dom, pageAxis, rowAxis, columnAxis, cellset) {
-    this.createGridForTuples(dom, pageAxis, "top", function(tuple, dom, len){
-      this.renderCharts(dom.lastChild, rowAxis, columnAxis, cellset);
+  generateTrellisList: function(dom, trellisColumnsAxis, categoriesAxis, measuresAxis, cellset) {
+    this.createGridForTuples(dom, trellisColumnsAxis, "top", function(tuple, dom, len){
+      this.renderCharts(dom.lastChild, categoriesAxis, measuresAxis, cellset);
     }, this);
   },
-  generateTrellisMatrix: function(dom, chapterAxis, pageAxis, rowAxis, columnAxis, cellset) {
+  generateTrellisMatrix: function(dom, trellisRowsAxis, trellisColumnsAxis, categoriesAxis, measuresAxis, cellset) {
     var matrix = cEl("TABLE", {
       "class": "xavier-chart xavier-trellis-matrix",
       cellpadding: 2,
@@ -1401,7 +1401,22 @@ var XavierVisualizer;
       }, this);
     }, this);
   },
-  renderDataset: function(dataset, queryDesigner){
+  axisDesignations: {
+    series: Xmla.Dataset.AXIS_COLUMNS,
+    categories: Xmla.Dataset.AXIS_ROWS,
+    multiColumns: Xmla.Dataset.AXIS_PAGES,
+    multiRows: Xmla.Dataset.AXIS_CHAPTERS
+  }
+  getAxisDesignations: function(){
+    var conf = this.conf || {};
+    return merge(
+      conf.axisDesignations || {},
+      this.axisDesignations || {},
+      XavierVisualizer.prototype.axisDesignations
+    );
+  },
+  renderDataset: function(dataset, queryDesigner, axisDesignations){
+    axisDesignations = merge(axisDesignations || {}, this.getAxisDesignations());
     this.clear();
     this.dataset = dataset;
     if (this.hasTitle()) {
@@ -1411,31 +1426,31 @@ var XavierVisualizer;
     var dom = this.getBody();
     this.charts = [];
     this.chartDivs = [];
-    if (dataset.hasChapterAxis()){
+    if (dataset.hasAxis(axisDesignations.multiRows)){
       this.generateTrellisMatrix(
         dom,
-        dataset.getChapterAxis(),
-        dataset.getPageAxis(),
-        dataset.getRowAxis(),
-        dataset.getColumnAxis(),
+        dataset.getAxis(axisDesignations.multiRows),
+        dataset.getAxis(axisDesignations.multiColumns),
+        dataset.getAxis(axisDesignations.categories),
+        dataset.getAxis(axisDesignations.series),
         dataset.getCellset()
       );
     }
     else
-    if (dataset.hasPageAxis()) {
+    if (dataset.hasAxis(axisDesignations.multiColumns)) {
       this.generateTrellisList(
         dom,
-        dataset.getPageAxis(),
-        dataset.getRowAxis(),
-        dataset.getColumnAxis(),
+        dataset.getAxis(axisDesignations.multiColumns),
+        dataset.getAxis(axisDesignations.categories),
+        dataset.getAxis(axisDesignations.series),
         dataset.getCellset()
       );
     }
     else {
       this.renderCharts(
         dom,
-        dataset.getRowAxis(),
-        dataset.getColumnAxis(),
+        dataset.getAxis(axisDesignations.categories),
+        dataset.getAxis(axisDesignations.series),
         dataset.getCellset()
       );
     }
@@ -1546,7 +1561,11 @@ var XavierPieChart;
 
     return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
   },
-  renderCharts: function(dom, measuresAxis, categoriesAxis, cellset){
+  axisDesignations: {
+    series: Xmla.Dataset.AXIS_ROWS,
+    categories: Xmla.Dataset.AXIS_COLUMNS
+  },
+  renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
     var categoriesAxisLabel = this.categoriesAxisLabel;
     var titlePosition;
     if (dom.tagName === "TD") {
@@ -1749,11 +1768,13 @@ var XavierGroupedBarChart;
     //var categoryAxis = chart.addCategoryAxis("x", "category");
 
     categoryAxis.title = this.categoriesAxisLabel;
+
     categoryAxis.addOrderRule(categoryOrder);
     categoryAxis.addGroupOrderRule(measureOrder);
 
     var measureAxis = chart.addMeasureAxis("y", "value");
     measureAxis.title = this.measuresAxisLabel;
+
     measureAxis.addOrderRule(measureOrder);
     var measureSeries = chart.addSeries("measure", dimple.plot.bar);
     measureSeries.addOrderRule(measureOrder);
@@ -1774,10 +1795,48 @@ var XavierGroupedBarChart;
 
     //update the category axis labels.
     //have to do this after drawing the chart.
-    categoryAxis.shapes.selectAll("text").text(function (d) {
-      debugger;
-      return categoryLabels[d];
+    var chartWidth = chart._widthPixels();
+    var maxAvailableLabelWidth = chartWidth / categoryLabels.length;
+    var maxLabelWidth = 0;
+
+    //http://stackoverflow.com/questions/17791926/how-to-rotate-x-axis-text-in-dimple-js
+    //first pass: set the label for the categories
+    //also, keep track of the maximum labelwidth
+    categoryAxis.shapes.selectAll("text").each(function(d){
+      this.textContent = categoryLabels[d];
+      var bbox = this.getBBox();
+      var width = bbox.width;
+      if (width > maxLabelWidth) {
+        maxLabelWidth = width;
+      }
     });
+    //if there are labels that are too wide, we rotate all labels so they won't overlap
+    if (maxLabelWidth > maxAvailableLabelWidth) {
+      categoryAxis.shapes.selectAll("text").each(function(d){
+        var x = this.getAttribute("x");
+        this.setAttribute("x", 0);
+        this.setAttribute("transform", "translate(" + x + " -5) rotate(10)");
+        this.style.textAnchor = "";
+      });
+    }
+
+    //make the axis titles bold.
+    categoryAxis.titleShape[0][0].style.fontWeight = "bold";
+    measureAxis.titleShape[0][0].style.fontWeight = "bold";
+
+    //position the category axis title left of the axis
+    var titleShape = categoryAxis.titleShape[0][0];
+    var titleShapeBBox = titleShape.getBBox();
+    var categoryAxisShape = categoryAxis.shapes[0][0];
+    var y = categoryAxisShape.transform.baseVal[0].matrix.f;
+    var x = categoryAxisShape.children[0].transform.baseVal[0].matrix.e;
+    x = x - titleShapeBBox.width;
+    y = y + 2*titleShapeBBox.height;
+    if (x < 70) {
+      x = 70;
+    }
+    titleShape.setAttribute("x", x);
+    titleShape.setAttribute("y", y);
   }
 };
 XavierGroupedBarChart.prefix = "xavier-grouped-bar-chart";
