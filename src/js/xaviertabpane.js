@@ -1406,7 +1406,7 @@ var XavierVisualizer;
     categories: Xmla.Dataset.AXIS_ROWS,
     multiColumns: Xmla.Dataset.AXIS_PAGES,
     multiRows: Xmla.Dataset.AXIS_CHAPTERS
-  }
+  },
   getAxisDesignations: function(){
     var conf = this.conf || {};
     return merge(
