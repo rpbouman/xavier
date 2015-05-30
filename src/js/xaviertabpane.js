@@ -1187,6 +1187,20 @@ var XavierVisualizer;
 }).prototype = {
   titlePosition: "top",
   padding: 5,
+  axisDesignations: {
+    series: Xmla.Dataset.AXIS_COLUMNS,
+    categories: Xmla.Dataset.AXIS_ROWS,
+    multiColumns: Xmla.Dataset.AXIS_PAGES,
+    multiRows: Xmla.Dataset.AXIS_CHAPTERS
+  },
+  getAxisDesignations: function(){
+    var conf = this.conf || {};
+    return merge(
+      conf.axisDesignations || {},
+      this.axisDesignations || {},
+      XavierVisualizer.prototype.axisDesignations
+    );
+  },
   getTab: function(){
     return this.conf.tab;
   },
@@ -1362,12 +1376,16 @@ var XavierVisualizer;
 
     }, this);
   },
-  generateTrellisList: function(dom, trellisColumnsAxis, categoriesAxis, measuresAxis, cellset) {
+  generateTrellisList: function(dom, dataset, queryDesigner, axisDesignations) {
+    var trellisColumnsAxis = dataset.getAxis(axisDesignations.multiColumns);
     this.createGridForTuples(dom, trellisColumnsAxis, "top", function(tuple, dom, len){
-      this.renderCharts(dom.lastChild, categoriesAxis, measuresAxis, cellset);
+      dom.className += " xavier-trellis-list-item";
+      this.renderCharts(dom.lastChild, dataset, queryDesigner, axisDesignations);
     }, this);
   },
-  generateTrellisMatrix: function(dom, trellisRowsAxis, trellisColumnsAxis, categoriesAxis, measuresAxis, cellset) {
+  generateTrellisMatrix: function(dom, dataset, queryDesigner, axisDesignations) {
+    var trellisColumnsAxis = dataset.getAxis(axisDesignations.multiColumns);
+    var trellisRowsAxis = dataset.getAxis(axisDesignations.multiRows);
     var matrix = cEl("TABLE", {
       "class": "xavier-chart xavier-trellis-matrix",
       cellpadding: 2,
@@ -1375,19 +1393,19 @@ var XavierVisualizer;
     }, null, dom);
 
     //column header
-    var columnWidth = dom.clientWidth / (1 + pageAxis.tupleCount());
+    var columnWidth = dom.clientWidth / (1 + trellisColumnsAxis.tupleCount());
     var tr = matrix.insertRow(matrix.rows.length);
     var td = tr.insertCell(tr.cells.length);
     td.className = "trellis-pivot";
-    pageAxis.eachTuple(function(tuple) {
+    trellisColumnsAxis.eachTuple(function(tuple) {
       td = tr.insertCell(tr.cells.length);
       td.style.width = columnWidth + "px";
       td.className = "trellis-header trellis-column-header";
       td.innerHTML = this.getLabelForTuple(tuple);
     }, this);
 
-    var rowHeight = (dom.clientHeight - tr.clientHeight) / chapterAxis.tupleCount();
-    chapterAxis.eachTuple(function(tuple){
+    var rowHeight = (dom.clientHeight - tr.clientHeight) / trellisRowsAxis.tupleCount();
+    trellisRowsAxis.eachTuple(function(tuple){
       //row header
       tr = matrix.insertRow(matrix.rows.length);
       td = tr.insertCell(tr.cells.length);
@@ -1395,25 +1413,11 @@ var XavierVisualizer;
       td.className = "trellis-header trellis-row-header";
       td.innerHTML = this.getLabelForTuple(tuple);
 
-      pageAxis.eachTuple(function(tuple) {
+      trellisColumnsAxis.eachTuple(function(tuple) {
         td = tr.insertCell(tr.cells.length);
-        this.renderCharts(td, rowAxis, columnAxis, cellset);
+        this.renderCharts(td, dataset, queryDesigner, axisDesignations);
       }, this);
     }, this);
-  },
-  axisDesignations: {
-    series: Xmla.Dataset.AXIS_COLUMNS,
-    categories: Xmla.Dataset.AXIS_ROWS,
-    multiColumns: Xmla.Dataset.AXIS_PAGES,
-    multiRows: Xmla.Dataset.AXIS_CHAPTERS
-  },
-  getAxisDesignations: function(){
-    var conf = this.conf || {};
-    return merge(
-      conf.axisDesignations || {},
-      this.axisDesignations || {},
-      XavierVisualizer.prototype.axisDesignations
-    );
   },
   renderDataset: function(dataset, queryDesigner, axisDesignations){
     axisDesignations = merge(axisDesignations || {}, this.getAxisDesignations());
@@ -1427,32 +1431,14 @@ var XavierVisualizer;
     this.charts = [];
     this.chartDivs = [];
     if (dataset.hasAxis(axisDesignations.multiRows)){
-      this.generateTrellisMatrix(
-        dom,
-        dataset.getAxis(axisDesignations.multiRows),
-        dataset.getAxis(axisDesignations.multiColumns),
-        dataset.getAxis(axisDesignations.categories),
-        dataset.getAxis(axisDesignations.series),
-        dataset.getCellset()
-      );
+      this.generateTrellisMatrix(dom, dataset, queryDesigner, axisDesignations);
     }
     else
     if (dataset.hasAxis(axisDesignations.multiColumns)) {
-      this.generateTrellisList(
-        dom,
-        dataset.getAxis(axisDesignations.multiColumns),
-        dataset.getAxis(axisDesignations.categories),
-        dataset.getAxis(axisDesignations.series),
-        dataset.getCellset()
-      );
+      this.generateTrellisList(dom, dataset, queryDesigner, axisDesignations);
     }
     else {
-      this.renderCharts(
-        dom,
-        dataset.getAxis(axisDesignations.categories),
-        dataset.getAxis(axisDesignations.series),
-        dataset.getCellset()
-      );
+      this.renderCharts(dom, dataset, queryDesigner, axisDesignations);
     }
   }
 };
@@ -1565,7 +1551,11 @@ var XavierPieChart;
     series: Xmla.Dataset.AXIS_ROWS,
     categories: Xmla.Dataset.AXIS_COLUMNS
   },
-  renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
+  renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
+    var categoriesAxis = dataset.getAxis(axisDesignations.categories);
+    var measuresAxis = dataset.getAxis(axisDesignations.series);
+    var cellset = dataset.getCellset();
+
     var categoriesAxisLabel = this.categoriesAxisLabel;
     var titlePosition;
     if (dom.tagName === "TD") {
@@ -1594,9 +1584,8 @@ var XavierPieChart;
       var chart = new dimple.chart(svg, data);
       var measureAxis = chart.addMeasureAxis("p", measure);
       var series = chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
-      //var oldGetToolTipText = series.getTooltipText;
+      series.innerRadius = "50%";
       series.getTooltipText = function(d){
-        //oldGetToolTipText.apply(this, arguments);
         var datum = data[d.aggField[0]];
         var pct = this.p._getFormat()(d.angle) + " (" + (d3.format("%")(d.piePct)) + ")";
         return [datum.label + ": " + datum.fmtValue + pct];
@@ -1725,7 +1714,11 @@ var XavierGroupedBarChart;
 
     return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
   },
-  renderCharts: function(dom, categoriesAxis, measuresAxis, cellset){
+  renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
+    var categoriesAxis = dataset.getAxis(axisDesignations.categories);
+    var measuresAxis = dataset.getAxis(axisDesignations.series);
+    var cellset = dataset.getCellset();
+
     var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
 
     //prepare the data set. data will be an array of {category, measure, value} objects
