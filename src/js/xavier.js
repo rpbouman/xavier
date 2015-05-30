@@ -57,16 +57,24 @@ mainToolbar.addButton([
 
 mainToolbar.addButton([
   {"class": "separator"},
-  {"class": "run", group: "visaction", tooltip: gMsg("Run Query")},
   {"class": "auto-run", group: "visaction", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
+  {"class": "run", group: "visaction", tooltip: gMsg("Run Query")},
   {"class": "separator"},
   {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel")},
   {"class": "separator"},
   {"class": "clear", group: "visaction", tooltip: gMsg("Discard this query and start over")}
 ]);
 
-mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
-mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
+function getAutoRunEnabled(){
+  return mainToolbar.getDepressedButtonInToggleGroup("auto-run");
+}
+
+function toggleAutoRunEnabled() {
+  var autoRunEnabled = getAutoRunEnabled();
+  mainToolbar.displayButton("run", !autoRunEnabled);
+  workArea.setAutoRunEnabled(autoRunEnabled);
+}
+
 mainToolbar.listen({
   buttonPressed: function(toolbar, event, button){
     var conf = button.conf;
@@ -101,15 +109,11 @@ mainToolbar.listen({
     var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
     switch (data.group) {
       case "auto-run":
-        workArea.setAutoRunEnabled(getAutoRunEnabled());
+        toggleAutoRunEnabled();
         break;
     }
   }
 });
-
-function getAutoRunEnabled(){
-  return mainToolbar.getDepressedButtonInToggleGroup("auto-run");
-}
 
 /**
 *   TreeView
@@ -198,6 +202,7 @@ var workArea = new XavierTabPane({
       var tab = tabPane.getTab(data.newTab);
       var display = tab ? Boolean(tab.getVisualizer()) : false;
       mainToolbar.displayGroup(mainToolbar.groups.visaction.name, display);
+      toggleAutoRunEnabled();
       tab.doLayout();
     }
   }
@@ -221,7 +226,6 @@ mainSplitPane.listen("splitterPositionChanged", function(mainSplitPane, event, d
 
 //force rendering
 mainSplitPane.getDom();
-xmlaTreeView.init();
 
 var oldSplitterPosition = 300;
 setTimeout(function(){
@@ -525,5 +529,13 @@ listen(window, "resize", function(){
   }
   resizeTimer.start();
 });
+
+/**
+ * Init:
+ */
+xmlaTreeView.init();
+mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
+mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
+toggleAutoRunEnabled();
 
 })();
