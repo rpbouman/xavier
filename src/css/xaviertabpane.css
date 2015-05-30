@@ -165,3 +165,11 @@ table.xavier-trellis-matrix td.trellis-column-header {
 table.xavier-trellis-matrix {
   table-layout: fixed;
 }
+
+div.xavier-trellis-list-item > div.xavier-chart {
+  margin: auto;
+}
+
+table.xavier-trellis-matrix td > div.xavier-chart {
+  margin: auto;
+}
