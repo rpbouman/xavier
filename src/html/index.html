@@ -109,7 +109,14 @@ limitations under the License.
     <script type="text/javascript" src="../js/xavier.js"></script>
 
     <script type="text/javascript">
+      var xavierOptions = {
+        xmlaUrl: undefined,
+        catalogNodesInitiallyFlattened: false,
+        dimensionNodesInitiallyFlattened: true,
+      };
+
       var xmlaFactory = new XmlaFactory({
+        xmlaUrl: xavierOptions.xmlaUrl,
         listeners: {
           error: function(xmlaFactory, event, error) {
             var exception = error.exception;
@@ -120,14 +127,13 @@ limitations under the License.
             showAlert("Unexpected Error", message);
           },
           found: function(xmlaFactory, event, xmla){
-            var xavierApplication = new XavierApplication({
-              xmla: xmla
-            });
+            xavierOptions.xmla = xmla;
+            var xavierApplication = new XavierApplication(xavierOptions);
           },
           notfound: function(xmlaFactory, event) {
             showAlert("Not Found",
               "Unfortunately, we did not find a suitable XML/A provider.\n" +
-              "Please supply one in the URL querystring."
+              "Please supply one in the URL using the XmlaUrl querystring parameter."
             );
           }
         }

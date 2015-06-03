@@ -17,6 +17,10 @@ limitations under the License.
 */
 function XavierApplication(xavierOptions){
 
+if (!xavierOptions) {
+  xavierOptions = {};
+}
+
 doc.title = gMsg("XML/A Visualizer");
 
 var xmla;
@@ -119,8 +123,8 @@ mainToolbar.listen({
 */
 var xmlaTreeView = new XmlaTreeView({
   xmla: xmla,
-  catalogNodesInitiallyFlattened: true,
-  dimensionNodesInitiallyFlattened: false,
+  catalogNodesInitiallyFlattened: iDef(xavierOptions.catalogNodesInitiallyFlattened) ? xavierOptions.catalogNodesInitiallyFlattened : true,
+  dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : false,
   listeners: {
     busy: function(){
       busy(true);
