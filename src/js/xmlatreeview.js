@@ -424,9 +424,11 @@ var XmlaTreeView;
   showCatalogNodes: function(event){
     var target = event.getTarget(), state;
     if (target.checked) {
+      this.catalogNodesInitiallyFlattened = false;
       state = TreeNode.states.unflattened;
     }
     else {
+      this.catalogNodesInitiallyFlattened = true;
       state = TreeNode.states.flattened;
     }
     this.eachCatalogNode(function(catalogNode, index){
@@ -449,11 +451,21 @@ var XmlaTreeView;
     return true;
   },
   showDimensionNodes: function(event){
-    var target = event.getTarget(), state;
-    if (target.checked) {
+    var checked;
+    if (typeof(event) === "boolean") {
+      checked = event;
+    }
+    else {
+      var target = event.getTarget();
+      checked = target.checked;
+    }
+    var state;
+    if (checked) {
+      this.dimensionNodesInitiallyFlattened = false;
       state = TreeNode.states.unflattened;
     }
     else {
+      this.dimensionNodesInitiallyFlattened = true;
       state = TreeNode.states.flattened;
     }
     this.eachDimensionNode(function(dimensionNode, index){
@@ -1292,6 +1304,9 @@ var XmlaTreeView;
       }, gMsg("Show dimension nodes"))
     ]);
     cubeTreePaneDom.insertBefore(div, cubeTreePaneDom.firstChild);
+
+    //initialize state of dimension tree nodes.
+    this.showDimensionNodes(showDimensionNodesCheckbox.checked);
   },
   doneLoadingCube: function(){
     this.collapseSchema();
