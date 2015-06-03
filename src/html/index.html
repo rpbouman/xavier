@@ -99,16 +99,40 @@ limitations under the License.
     <script type="text/javascript" src="../js/messages.js"></script>
     <script type="text/javascript" src="../js/messages-nl.js"></script>
     <script type="text/javascript" src="../js/xlsxexport.js"></script>
-    <script type="text/javascript" src="../js/xmlaUrl.js"></script>
     <script type="text/javascript" src="../js/loadingindicator.js"></script>
     <script type="text/javascript" src="../js/msgbox.js"></script>
     <script type="text/javascript" src="../js/xmlatreeview.js"></script>
     <script type="text/javascript" src="../js/mdquerydesigner.js"></script>
     <script type="text/javascript" src="../js/mdpivottable.js"></script>
     <script type="text/javascript" src="../js/xaviertabpane.js"></script>
-
-    <!-- xavier main application -->
+    <script type="text/javascript" src="../js/xmlafactory.js"></script>
     <script type="text/javascript" src="../js/xavier.js"></script>
+
+    <script type="text/javascript">
+      var xmlaFactory = new XmlaFactory({
+        listeners: {
+          error: function(xmlaFactory, event, error) {
+            var exception = error.exception;
+            var message = exception.toString() || exception.message;
+            if (error.code && error.desc) {
+              message += "\n" + error.code + ": " + error.desc;
+            }
+            showAlert("Unexpected Error", message);
+          },
+          found: function(xmlaFactory, event, xmla){
+            var xavierApplication = new XavierApplication({
+              xmla: xmla
+            });
+          },
+          notfound: function(xmlaFactory, event) {
+            showAlert("Not Found",
+              "Unfortunately, we did not find a suitable XML/A provider.\n" +
+              "Please supply one in the URL querystring."
+            );
+          }
+        }
+      }).createXmla();
+    </script>
   </body>
 </html>
 

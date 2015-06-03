@@ -15,22 +15,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-(function(){
-
-//we expect this to be initialized outside of this script. See xmlaUrl.js
-if (!xmlaUrl) {
-  return;
-}
+function XavierApplication(xavierOptions){
 
 doc.title = gMsg("XML/A Visualizer");
 
-linkCss("../css/xavier.css");
+var xmla;
+if (xavierOptions.xmla) {
+  xmla = xavierOptions.xmla;
+}
+else {
+  showAlert("Unexpected error", "Xmla object not available.");
+  return;
+}
 
-var xmla = new Xmla({
-  async: true,
-  url: xmlaUrl,
-  forceResponseXMLEmulation: true
-});
+
+linkCss("../css/xavier.css");
 
 var dnd = new DDHandler({
   node: body
@@ -538,4 +537,5 @@ mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
 mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
 toggleAutoRunEnabled();
 
-})();
+return this;
+}
