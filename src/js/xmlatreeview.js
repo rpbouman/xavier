@@ -189,7 +189,9 @@ var XmlaTreeView;
             });
             cubeQueue.push(treeNode);
           });
-          if (doCatalogQueue() === false) doCubeQueue();
+          if (doCatalogQueue() === false) {
+            doCubeQueue();
+          }
         }
       });
     }
@@ -262,6 +264,72 @@ var XmlaTreeView;
       }, gMsg("Check the box to display catalog nodes in the treeview. Uncheck to hide."))
     ], schemaTreePaneDom);
 
+    this.schemaTreeListener = new TreeListener({container: this.schemaTreePane.getDom()});
+    this.cubeSelection = new TreeSelection({treeListener: this.schemaTreeListener});
+
+    this.cubeSelection.listen({
+      scope: this,
+      beforeChangeSelection: function(cubeSelection, event, data){
+        var d = data.data;
+        var event = d.event;
+        var target = event.getTarget();
+        var ret;
+        if (hCls(target, "info-icon")){
+          var url = gAtt(target, "data-url");
+          this.fireEvent("requestinfo", {
+            title: d.treeNode.conf.objectName,
+            url: url,
+          });
+          ret = false;
+        }
+        else {
+          var selection = data.newSelection[0];
+          switch (selection.conf.classes) {
+            case "cube":
+              if (this.fireEvent("beforeLoadCube", selection) === false) {
+                ret = false;
+              }
+              else {
+                ret = true;
+              }
+              break;
+            default:
+              ret = true;
+          }
+        }
+        return ret;
+      },
+      selectionChanged: function(cubeSelection, event, data){
+        if (!data.newSelection || !data.newSelection.length) {
+          return;
+        }
+        var selection = data.newSelection[0];
+        switch (selection.conf.classes) {
+          case "cube":
+            this.loadCube(selection);
+            break;
+          default:
+        }
+      }
+    });
+    var cubeTreePaneDom = this.cubeTreePane.getDom();
+    this.cubeTreeListener = new TreeListener({
+      container: cubeTreePaneDom,
+      listeners: {
+        nodeClicked: function(treeListener, event, d){
+          var target = d.event.getTarget();
+          if (hCls(target, "info-icon")) {
+            var url = gAtt(target, "data-url");
+            this.fireEvent("requestinfo", {
+              title: d.treeNode.conf.objectName,
+              url: url,
+            });
+          }
+        },
+        scope: this
+      }
+    });
+
     this.indicateProgress(
       "<IMG src=\"" + muiImgDir + "ajax-loader-small.gif" + "\"/>" +
       gMsg("Loading datasources...")
@@ -328,71 +396,6 @@ var XmlaTreeView;
           catalogQueue.push(treeNode);
         });
         doCatalogQueue();
-      }
-    });
-    this.schemaTreeListener = new TreeListener({container: this.schemaTreePane.getDom()});
-    this.cubeSelection = new TreeSelection({treeListener: this.schemaTreeListener});
-
-    this.cubeSelection.listen({
-      scope: this,
-      beforeChangeSelection: function(cubeSelection, event, data){
-        var d = data.data;
-        var event = d.event;
-        var target = event.getTarget();
-        var ret;
-        if (hCls(target, "info-icon")){
-          var url = gAtt(target, "data-url");
-          this.fireEvent("requestinfo", {
-            title: d.treeNode.conf.objectName,
-            url: url,
-          });
-          ret = false;
-        }
-        else {
-          var selection = data.newSelection[0];
-          switch (selection.conf.classes) {
-            case "cube":
-              if (this.fireEvent("beforeLoadCube", selection) === false) {
-                ret = false;
-              }
-              else {
-                ret = true;
-              }
-              break;
-            default:
-              ret = true;
-          }
-        }
-        return ret;
-      },
-      selectionChanged: function(cubeSelection, event, data){
-        if (!data.newSelection || !data.newSelection.length) {
-          return;
-        }
-        var selection = data.newSelection[0];
-        switch (selection.conf.classes) {
-          case "cube":
-            this.loadCube(selection);
-            break;
-          default:
-        }
-      }
-    });
-    var cubeTreePaneDom = this.cubeTreePane.getDom();
-    this.cubeTreeListener = new TreeListener({
-      container: cubeTreePaneDom,
-      listeners: {
-        nodeClicked: function(treeListener, event, d){
-          var target = d.event.getTarget();
-          if (hCls(target, "info-icon")) {
-            var url = gAtt(target, "data-url");
-            this.fireEvent("requestinfo", {
-              title: d.treeNode.conf.objectName,
-              url: url,
-            });
-          }
-        },
-        scope: this
       }
     });
   },
