@@ -24,8 +24,14 @@ var XmlaFactory;
   arguments.callee._super.call(this, conf);
 }).prototype = {
   getPossibleXmlaUrls: function() {
-    var location = document.location, urls = [];
+    var location = document.location, urls = [], conf = this.conf;
 
+    //if a xmlaUrl was specified in the conf of the factory, then that is what we'll use
+    if (conf.xmlaUrl) {
+      urls.push(conf.xmlaUrl);
+    }
+    else
+    //if the xmlaUrl was specified through the url, then that is what we'll use
     if (location.search) {
       var search = location.search.substr(1); //get rid of initial ? char.
       search = search.split("&"); //cut in individual parameters;
@@ -41,6 +47,7 @@ var XmlaFactory;
       }
     }
 
+    //if no xmlaUrl was configured at all, we try a list of well known ones.
     if (!urls.length) {
       var origin = location.protocol + "//" + location.host;
       var base = origin + "/";
