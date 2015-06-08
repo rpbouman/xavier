@@ -74,6 +74,9 @@ var DataTable;
   getXmlaTreeView: function(){
     return this.conf.xmlaTreeView;
   },
+  getXmlaMetadataFilter: function(){
+    return this.conf.xmlaMetadataFilter;
+  },
   newTab: function(component){
     this.addTab(component);
     if (!component.getQueryDesigner) {
@@ -298,6 +301,41 @@ var XavierTab;
   getXmlaTreeView: function(){
     return this.getTabPane().getXmlaTreeView();
   },
+  getXmlaMetadataFilter: function(){
+    return this.getTabPane().getXmlaMetadataFilter();
+  },
+  getMandatoryDimensions: function(){
+    var treeview = this.getXmlaTreeView();
+    var filter = this.getXmlaMetadataFilter();
+    var datasourceFilter = this.getDatasource();
+    var requestTypeFilter = Xmla.MDSCHEMA_DIMENSIONS;
+
+    var rules = [];
+    filter.eachRequestTypeRuleRule(function(rule){
+      var ifMatch = rule.ifMatch;
+      if (iUnd(ifMatch) || iUnd(ifMatch.mandatory)) {
+        return;
+      }
+      var mandatory = ifMatch.mandatory;
+      var dimensions = [], matcher = rule.matcher;
+      treeview.eachDimensionNode(function(treeNode, index){
+        var metadata = treeNode.conf.metadata;
+        if (filter.match(matcher, metadata)) {
+          dimensions.push(metadata);
+        }
+      }, this);
+
+      if (dimensions.length) {
+        rules.push({
+          description: rule.description,
+          mandatory: mandatory,
+          dimensions: dimensions
+        });
+      }
+
+    }, this, datasourceFilter, requestTypeFilter);
+    return rules;
+  },
   getDnd: function(){
     return this.getTabPane().getDnd();
   },
@@ -469,7 +507,7 @@ var XavierTab;
           by = Xmla.Dataset.AXIS_COLUMNS;
           vs = Xmla.Dataset.AXIS_ROWS;
       }
-
+      by = queryDesigner.getAxisId(by);
       by = axes[by];
       var hasBy = by.length;
       if (hasBy) {
@@ -502,6 +540,31 @@ var XavierTab;
     catch (exception){
       showAlert(gMsg("Export Error"), gMsg(exception));
     }
+  },
+  createQueryDesigner: function(dom, tab){
+    //noop
+  },
+  initQueryDesigner: function(dom){
+    var queryDesigner = this.queryDesigner = this.createQueryDesigner(dom, this);
+
+    queryDesigner.listen({
+      changed: function(queryDesigner, event, data){
+        if (this.getAutoRunEnabled()) {
+          this.executeQuery();
+        }
+        else {
+
+        }
+      },
+      scope: this
+    });
+
+    var mandatoryDimensions = this.getMandatoryDimensions();
+    queryDesigner.setMandatoryDimensions(mandatoryDimensions);
+
+    queryDesigner.render();
+
+    return queryDesigner;
   }
 };
 XavierTab.id = 0;
@@ -836,10 +899,9 @@ var XavierTableTab;
     //
     return mdx;
   },
-  initQueryDesigner: function(dom, tab){
+  createQueryDesigner: function(dom, tab){
     var queryDesigner = this.queryDesigner = new QueryDesigner({
-      container: cEl("DIV", {
-      }, null, dom),
+      container: cEl("DIV", {}, null, dom),
       dnd: this.getDnd(),
       xmla: this.getXmla(),
       xmlaTreeView: this.getXmlaTreeView(),
@@ -875,20 +937,7 @@ var XavierTableTab;
     var dom = cEl("DIV", {
       id: this.getId()
     });
-    var queryDesigner = this.queryDesigner = this.initQueryDesigner(dom);
-    queryDesigner.listen({
-      changed: function(queryDesigner, event, data){
-        if (this.getAutoRunEnabled()) {
-          this.executeQuery();
-          this.doLayout();
-        }
-        else {
-
-        }
-      },
-      scope: this
-    });
-    queryDesigner.render();
+    this.initQueryDesigner(dom);
     this.visualizer = this.initTable(dom);
     return dom;
   },
@@ -971,7 +1020,7 @@ var XavierPivotTableTab;
       }
     });
   },
-  initQueryDesigner: function(dom){
+  createQueryDesigner: function(dom){
     var intrinsicProperties = "PARENT_UNIQUE_NAME";
     var queryDesigner = this.queryDesigner = new QueryDesigner({
       container: cEl("DIV", {}, null, dom),
@@ -1134,19 +1183,7 @@ var XavierPivotTableTab;
       id: this.getId()
     });
     this.initToolbar(dom);
-    var queryDesigner = this.queryDesigner = this.initQueryDesigner(dom);
-    queryDesigner.listen({
-      changed: function(queryDesigner, event, data){
-        if (this.getAutoRunEnabled()) {
-          this.executeQuery();
-        }
-        else {
-
-        }
-      },
-      scope: this
-    });
-    queryDesigner.render();
+    this.initQueryDesigner(dom);
     this.visualizer = this.initPivotTable(dom);
     return dom;
   }
@@ -1223,8 +1260,6 @@ var XavierVisualizer;
   getId: function(){
     return this.conf.id;
   },
-  doLayout: function(){
-  },
   generateTitleText: function(dataset, queryDesigner) {
     return "Please implement me: generateTitleText";
   },
@@ -1294,6 +1329,13 @@ var XavierVisualizer;
       category: category,
       label: label
     };
+  },
+  getLegend: function(dimpleSeries) {
+    var items = [];
+    var list = cEl("OL", {
+      "class": "xavier-chart-legend"
+    }, items, null);
+    return list;
   },
   makeChartDom: function(dom, x, y, width, height, title, titlePosition, id){
     if (!id) {
@@ -1440,6 +1482,35 @@ var XavierVisualizer;
     else {
       this.renderCharts(dom, dataset, queryDesigner, axisDesignations);
     }
+  },
+  forEachChart: function(callback, scope){
+    var charts = this.charts;
+    if (!charts) {
+      return;
+    }
+    var n = charts.length, i, chart;
+    for (i = 0; i < n; i++) {
+      chart = charts[i];
+      if (callback.call(scope || null, chart) === false) {
+        return false;
+      }
+    }
+    return true;
+  },
+  reDrawCharts: function(){
+    this.forEachChart(function(chart){
+      var container = chart.svg.parentNode;
+      chart.width(container.clientWidth);
+      chart.height(container.clientHeight);
+      chart.draw();
+    }, this);
+  },
+  reCalculateLayout: function(){
+
+  },
+  doLayout: function(){
+    this.reCalculateLayout();
+    this.reDrawCharts();
   }
 };
 XavierVisualizer.prefix = "xavier-visualizer";
@@ -1456,7 +1527,7 @@ var XavierChartTab;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Generic Chart"),
-  initQueryDesigner: function(dom, tab){
+  createQueryDesigner: function(dom, tab){
     //noop. Override.
   },
   initChart: function(dom, tab){
@@ -1468,20 +1539,7 @@ var XavierChartTab;
       id: this.getId(),
       "class": [XavierChartTab.prefix]
     });
-    var queryDesigner = this.initQueryDesigner(dom, this);
-    this.queryDesigner = queryDesigner;
-    queryDesigner.listen({
-      changed: function(queryDesigner, event, data){
-        if (this.getAutoRunEnabled()) {
-          this.executeQuery();
-        }
-        else {
-
-        }
-      },
-      scope: this
-    });
-    queryDesigner.render();
+    this.initQueryDesigner(dom);
     this.visualizer = this.initChart(dom, this);
     return dom;
   },
@@ -1522,6 +1580,10 @@ var XavierPieChart;
   conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  axisDesignations: {
+    series: Xmla.Dataset.AXIS_ROWS,
+    categories: Xmla.Dataset.AXIS_COLUMNS
+  },
   generateTitleText: function(dataset, queryDesigner){
     var categoriesAxisLabel = "";
     var categoriesAxis = queryDesigner.getColumnAxis();
@@ -1546,10 +1608,6 @@ var XavierPieChart;
     this.measuresAxisLabel = measuresAxisLabel;
 
     return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
-  },
-  axisDesignations: {
-    series: Xmla.Dataset.AXIS_ROWS,
-    categories: Xmla.Dataset.AXIS_COLUMNS
   },
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
     var categoriesAxis = dataset.getAxis(axisDesignations.categories);
@@ -1592,6 +1650,7 @@ var XavierPieChart;
       };
       if (this.isCleared) {
         //TODO: print legend
+        //chart.legend();
         this.isCleared = false;
       }
       chart.draw();
@@ -1608,7 +1667,7 @@ var XavierPieChartTab;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Pie Chart"),
-  initQueryDesigner: function(dom, tab){
+  createQueryDesigner: function(dom, tab){
     var queryDesigner = new QueryDesigner({
       container: cEl("DIV", {}, null, dom),
       dnd: this.getDnd(),
@@ -1842,7 +1901,7 @@ var XavierGroupedBarChartTab;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Grouped Bar Chart"),
-  initQueryDesigner: function(dom, tab){
+  createQueryDesigner: function(dom, tab){
     var queryDesigner = new QueryDesigner({
       container: cEl("DIV", {}, null, dom),
       dnd: this.getDnd(),

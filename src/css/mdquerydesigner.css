@@ -344,18 +344,21 @@ input.show-empty:before {
   white-space: nowrap;
 }
 
-.query-designer .message-area .axis-message-area {
+.query-designer .message-area .axis-message-area,
+.query-designer .message-area .mandatory-dimension-message-area {
   padding-left: 20px;
   margin: 3px;
   background-repeat: no-repeat;
 }
 
-.query-designer .message-area .axis-message-area-populated {
+.query-designer .message-area .axis-message-area-populated,
+.query-designer .message-area .mandatory-dimension-message-area-valid {
   padding-left: 20px;
   background-image: url('../images/ok.png');
 }
 
-.query-designer .message-area .axis-message-area-invalid {
+.query-designer .message-area .axis-message-area-invalid,
+.query-designer .message-area .mandatory-dimension-message-area-invalid {
   padding-left: 20px;
   background-image: url('../images/error.png');
 }

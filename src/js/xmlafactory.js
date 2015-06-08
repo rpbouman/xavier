@@ -98,7 +98,6 @@ var XmlaFactory;
           }
           else
           if (exception.code.indexOf("SOAP-ENV") === 0) {
-            me.error(exception.code + ": " + exception.message);
             try {
               var xml = request.xhr.responseXML;
               var code = xml.getElementsByTagName("code")[0].firstChild.data;

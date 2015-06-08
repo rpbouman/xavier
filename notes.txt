@@ -9,3 +9,6 @@ xavier: XML/A Visualizer
 #4 excel export: export date should be proper excel date.
 #5 property support.
 #6 "show parents" support in pivot table.
+#7 Currently we can only drag a sort item out of the axis. Should be possible to drag it from the sort section into the hierarchies section
+#8 pie charts needs labels
+#9

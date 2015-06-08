@@ -442,3 +442,13 @@ div.node > div.head > span.label > span.label-prefix:after {
 div.flattened > div.body > div.node > div.head > span.label > span.label-prefix {
   display: inline;
 }
+
+/* mandatory nodes */
+div.mandatory > div.head > span.label {
+  font-weight: bold;
+}
+
+/* hierarchies of mandatory dimensions get to be bold. */
+div.mandatory > div.body > div.hierarchy > div.head > span.label {
+  font-weight: bold;
+}

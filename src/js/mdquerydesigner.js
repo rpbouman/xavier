@@ -33,6 +33,23 @@ var QueryDesigner;
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
   measuresHierarchyName: "[Measures]",
+  setMandatoryDimensions: function(mandatoryDimensions) {
+    this.mandatoryDimensions = mandatoryDimensions;
+  },
+  eachMandatoryDimension: function(callback, scope){
+    var mandatoryDimensions = this.mandatoryDimensions;
+    if (iUnd(mandatoryDimensions)) {
+      return true;
+    }
+    var i, n = mandatoryDimensions.length, mandatoryDimension;
+    for (i = 0; i < n; i++) {
+      mandatoryDimension = mandatoryDimensions[i];
+      if (callback.call(scope || this, mandatoryDimension, i) === false) {
+        return false;
+      }
+    }
+    return true;
+  },
   getXmlaTreeView: function(){
     return this.conf.xmlaTreeView;
   },
@@ -374,6 +391,19 @@ var QueryDesigner;
   getSlicerAxis: function(){
     return this.getAxis(Xmla.Dataset.AXIS_SLICER);
   },
+  getAxisForDimension: function(dimension){
+    var ret = null;
+    this.eachAxis(function(id, axis){
+      if (axis.hasDimension(dimension)) {
+        ret = axis;
+        return false;
+      }
+    });
+    return ret;
+  },
+  hasDimension: function(dimension) {
+    return Boolean(this.getAxisForDimension(dimension))
+  },
   getAxisForHierarchy: function(hierarchyUniqueName) {
     var ret = null;
     this.eachAxis(function(id, axis){
@@ -414,7 +444,12 @@ var QueryDesigner;
     }
     queryDesignerAxis.clickHandler(event);
   },
+  getMandatoryDimensionMessageAreaId: function(index){
+    var id = this.getId();
+    return id + "-mandatory-dimension-message-area" + index;
+  },
   createDom: function() {
+    //
     var id = this.getId(),
         dom = this.dom = cEl("TABLE", {
             id: id,
@@ -422,7 +457,8 @@ var QueryDesigner;
             cellspacing: 0
         })
     ;
-    var rows = dom.rows;
+    //
+    var rows = dom.rows, messageArea;
     this.eachAxis(function(index, axis){
       var r, c, conf = axis.conf;
       r = dom.insertRow(rows.length);
@@ -438,20 +474,26 @@ var QueryDesigner;
       if (r.rowIndex === 0) {
         c = r.insertCell(r.cells.length);
         c.setAttribute("rowspan", "100%");
-        cEl("DIV", {
+        messageArea = cEl("DIV", {
           id: this.getMessageAreaId(),
           "class": "message-area"
         }, null, c);
+
+        this.eachMandatoryDimension(function(rule, index){
+          cEl("DIV", {
+            "class": "mandatory-dimension-message-area mandatory-dimension-message-area-empty",
+            id: this.getMandatoryDimensionMessageAreaId(index)
+          }, rule.description, messageArea);
+        }, this);
       }
 
-      //get the message area
-      c = rows[0].cells[1].firstChild;
       //append a message area for each axis.
-      c.appendChild(cEl("DIV", {
+      messageArea.appendChild(cEl("DIV", {
         "class": "axis-message-area axis-message-area-empty",
         id: axis.getMessageAreaId()
       }, conf.hint))
     }, this);
+
     listen(dom, "click", this.clickHandler, this);
     return dom;
   },
@@ -497,7 +539,7 @@ var QueryDesigner;
   getContainer: function() {
     return gEl(this.conf.container);
   },
-  checkValid: function(){
+  checkAxesValid: function(){
     var valid = true, empty = [];
     this.eachAxis(function(id, axis) {
       var add, remove;
@@ -530,6 +572,51 @@ var QueryDesigner;
       }
       rCls(axis.getMessageAreaId(), remove, add);
     }, this, true);
+    return valid;
+  },
+  checkMandatoryDimensionsValid: function(){
+    var valid = true;
+    this.eachMandatoryDimension(function(rule, index){
+      var ruleValid = false;
+      var mandatory = rule.mandatory;
+      var usedDimensions = [];
+      var dimensions = rule.dimensions;
+      var i, n = dimensions.length, dimension;
+      for (i = 0; i < n; i++){
+        dimension = dimensions[i];
+        if (this.hasDimension(dimension)) {
+          usedDimensions.push(dimension);
+        }
+      }
+      switch (mandatory) {
+        case XmlaMetadataFilter.PROP_MANDATORY_ALL:
+          ruleValid = dimensions.length === usedDimensions.length;
+          break;
+        case XmlaMetadataFilter.PROP_MANDATORY_SOME:
+          ruleValid = usedDimensions.length > 0;
+          break
+        case XmlaMetadataFilter.PROP_MANDATORY_ONE:
+          ruleValid = usedDimensions.length === 1;
+          break
+      }
+      var remove, add;
+      if (ruleValid) {
+        add = "mandatory-dimension-message-area-valid";
+        remove = ["mandatory-dimension-message-area-empty", "mandatory-dimension-message-area-invalid"];
+      }
+      else {
+        add = "mandatory-dimension-message-area-invalid";
+        remove = ["mandatory-dimension-message-area-empty", "mandatory-dimension-message-area-valid"];
+        valid = false;
+      }
+      rCls(this.getMandatoryDimensionMessageAreaId(index), remove, add);
+    }, this);
+    return valid;
+  },
+  checkValid: function(){
+    var axesValid = this.checkAxesValid();
+    var mandatorDimensionsValid = this.checkMandatoryDimensionsValid();
+    var valid = axesValid && mandatorDimensionsValid;
     this.showMessageArea(!valid);
     return valid;
   },
@@ -1133,7 +1220,7 @@ var QueryDesignerAxis;
           return false;
         }
         //if this axis already has a hierarchy with this dimension, then we can only replace
-        if (this.dimensions[dimensionName] && target.className.indexOf("hierarchy")) {
+        if (this.hasDimension(dimensionName) && target.className.indexOf("hierarchy")) {
           return false;
         }
         break;
@@ -1264,6 +1351,17 @@ var QueryDesignerAxis;
       dimensionName = QueryDesigner.prototype.measuresHierarchyName;
     }
     return dimensionName;
+  },
+  hasDimension: function(dimension){
+    var dimensionName = this.getDimensionName(dimension);
+    if (this.eachHierarchy(function(hierarchy, i){
+      if (this.getDimensionName(hierarchy) === dimensionName) {
+        return false;
+      }
+    }, this) === false) {
+      return true;
+    }
+    return false;
   },
   eachHierarchy: function(callback, scope){
     var i, hierarchies = this.hierarchies, n = hierarchies.length, hierarchy;

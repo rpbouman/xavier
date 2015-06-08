@@ -38,6 +38,9 @@ var XmlaTreeView;
   if (iDef(conf.dimensionNodesInitiallyFlattened)) {
     this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
   }
+  if (iDef(conf.xmlaMetadataFilter)) {
+    this.xmlaMetadataFilter = conf.xmlaMetadataFilter;
+  }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
   //maximum number of members to allow auto-loading of a level's members
@@ -46,6 +49,16 @@ var XmlaTreeView;
   catalogNodesInitiallyFlattened: true,
   //whether dimension nodes should initially be hidden
   dimensionNodesInitiallyFlattened: true,
+  checkIsExcluded: function(request, row){
+    var xmlaMetadataFilter = this.xmlaMetadataFilter;
+    if (!xmlaMetadataFilter) {
+      return true;
+    }
+    var datasource = request.properties.DataSourceInfo;
+    var type = request.requestType;
+    var excluded = xmlaMetadataFilter.isExcluded(datasource, type, row);
+    return excluded;
+  },
   clearTreePane: function(treePane){
     var treePaneDom = treePane.getDom();
     var childNodes = treePaneDom.childNodes, n = childNodes.length, i, childNode, treeNode;
@@ -174,6 +187,9 @@ var XmlaTreeView;
         },
         success: function(xmla, options, rowset){
           rowset.eachRow(function(row){
+            if (me.checkIsExcluded(options, row)) {
+              return;
+            }
             var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
             var state = TreeNode.states.expanded;
             var objectName = row.CATALOG_NAME;
@@ -222,6 +238,9 @@ var XmlaTreeView;
         },
         success: function(xmla, options, rowset){
           rowset.eachRow(function(row){
+            if (me.checkIsExcluded(options, row)) {
+              return;
+            }
             var objectName = row.CUBE_CAPTION || row.CUBE_NAME;
             var title = objectName;
             var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
@@ -915,8 +934,12 @@ var XmlaTreeView;
       },
     });
   },
-  renderDimensionTreeNode: function(conf, row){
+  renderDimensionTreeNode: function(conf, row, mandatory){
     var classes = ["dimension", "dimensiontype" + row.DIMENSION_TYPE, TreeNode.states.flattened];
+    if (mandatory) {
+      classes.push("mandatory");
+      classes.push("mandatory-" + mandatory);
+    }
     var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
     var objectName = row.DIMENSION_CAPTION || row.DIMENSION_NAME;
     var title = objectName;
@@ -965,7 +988,14 @@ var XmlaTreeView;
             return;
           }
           //actually add a treenode for the hierarchy.
-          me.renderDimensionTreeNode(conf, row);
+          var datasource = options.properties.DataSourceInfo;
+          var method = options.requestType;
+          var xmlaMetadataFilter = me.xmlaMetadataFilter;
+          var mandatory;
+          if (xmlaMetadataFilter) {
+            mandatory = xmlaMetadataFilter.getMandatory(datasource, method, row);
+          }
+          var dimensionNode = me.renderDimensionTreeNode(conf, row, mandatory);
         });
         //add hierarchies
         me.renderHierarchyTreeNodes(conf);

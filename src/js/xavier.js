@@ -21,6 +21,13 @@ if (!xavierOptions) {
   xavierOptions = {};
 }
 
+var metadataFilter = xavierOptions.metadataFilter;
+if (!metadataFilter) {
+  metadataFilter = {};
+}
+var xmlaMetadataFilter = new XmlaMetadataFilter(metadataFilter);
+
+
 doc.title = gMsg("XML/A Visualizer");
 
 var xmla;
@@ -123,6 +130,7 @@ mainToolbar.listen({
 */
 var xmlaTreeView = new XmlaTreeView({
   xmla: xmla,
+  xmlaMetadataFilter: xmlaMetadataFilter,
   catalogNodesInitiallyFlattened: iDef(xavierOptions.catalogNodesInitiallyFlattened) ? xavierOptions.catalogNodesInitiallyFlattened : true,
   dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : false,
   listeners: {
@@ -193,6 +201,7 @@ var workArea = new XavierTabPane({
   dnd: dnd,
   xmla: xmla,
   xmlaTreeView: xmlaTreeView,
+  xmlaMetadataFilter: xmlaMetadataFilter,
   autorun: getAutoRunEnabled(),
   listeners: {
     tabClosed: function(tabPane, event, data){

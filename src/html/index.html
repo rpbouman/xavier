@@ -106,14 +106,55 @@ limitations under the License.
     <script type="text/javascript" src="../js/mdpivottable.js"></script>
     <script type="text/javascript" src="../js/xaviertabpane.js"></script>
     <script type="text/javascript" src="../js/xmlafactory.js"></script>
+    <script type="text/javascript" src="../js/xmlametadatafilter.js"></script>
+
     <script type="text/javascript" src="../js/xavier.js"></script>
 
     <script type="text/javascript">
       var xavierOptions = {
+        //if you want to connect to a specific XML/A provider, put its url here
         xmlaUrl: undefined,
-        catalogNodesInitiallyFlattened: false,
+        //configure whether catalog nodes are flattened (hidden) or not
+        catalogNodesInitiallyFlattened: true,
+        //configure whether dimension nodes with multiple hierarchies are flattened (hidden) or not
         dimensionNodesInitiallyFlattened: true,
+        //specify matchers and extra properties to apply to XML/A schema elements
+        metadataFilter: [
+          {
+            matcher: "Pentaho",  //match datasource with DataSourceInfo = "Pentaho"
+            rules: [  //rules to match DISCOVER request types
+              {
+                matcher: Xmla.DBSCHEMA_CATALOGS,  //rules applied to catalogs
+                rules: [
+                  {
+                    matcher: {
+                      CATALOG_NAME: "FoodMart"  //rule for the FoodMart catalog
+                    },
+                    ifNotMatch: {
+                      exclude: true             //catalogs are excluded unless they are called "FoodMart"
+                    }
+                  }
+                ]
+              },
+              {
+                matcher: Xmla.MDSCHEMA_DIMENSIONS,    //rules applied to dimensions
+                rules: [
+                  {
+                    matcher: {
+                      DIMENSION_TYPE: 1 //match all Time dimensions
+                    },
+                    ifMatch: {
+                      mandatory: XmlaMetadataFilter.PROP_MANDATORY_SOME //queries must use "some" (i.e. at least one, i.e. one or more) time dimensions.
+                    },
+                    description: gMsg("At least one Date dimension is required.")
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       };
+
 
       var xmlaFactory = new XmlaFactory({
         xmlaUrl: xavierOptions.xmlaUrl,
