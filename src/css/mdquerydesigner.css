@@ -214,6 +214,7 @@ table.query-designer-axis {
   background-color: lightblue;
   color: white;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .query-designer-axis tr.user-sort-option td.user-sort-hierarchy,
@@ -342,6 +343,12 @@ input.show-empty {
 input.show-empty:before {
   margin-left: 10px;
   white-space: nowrap;
+}
+
+/* message area */
+.query-designer td.message-area {
+  padding: 1em;
+  vertical-align: top;
 }
 
 .query-designer .message-area .axis-message-area,

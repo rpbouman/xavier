@@ -62,7 +62,8 @@ mainToolbar.addButton([
 
 mainToolbar.addButton([
   {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")},
-  {"class": "new-grouped-bar-chart", group: "vis", tooltip: gMsg("New Grouped Bar Chart")}
+  {"class": "new-grouped-bar-chart", group: "vis", tooltip: gMsg("New Grouped Bar Chart")},
+  {"class": "new-combi-chart", group: "vis", tooltip: gMsg("New Combi Chart")}
 ]);
 
 mainToolbar.addButton([
@@ -101,6 +102,9 @@ mainToolbar.listen({
         break;
       case "new-grouped-bar-chart":
         workArea.newGroupedBarChartTab();
+        break;
+      case "new-combi-chart":
+        workArea.newCombiChartTab();
         break;
       case "run":
         workArea.executeQuery();
@@ -426,7 +430,7 @@ function endDrag(event, dndHandler) {
         dragWithinAxis(dragInfo, queryDesignerAxis, target);
       }
       else {
-        dragFromAxisToOtherAxis(dragInfo, queryDesigner, queryDesignerAxis);
+        dragFromAxisToOtherAxis(dragInfo, queryDesigner, queryDesignerAxis, target);
       }
     }
     else {
@@ -443,9 +447,10 @@ function dragWithinAxis(dragInfo, queryDesignerAxis, target){
   switch (dragInfo.className){
     case "hierarchy":
     case "measures":
+      var hierarchyIndex = queryDesignerAxis.getHierarchyIndexForTd(target);
       queryDesignerAxis.moveHierarchy(
         dragInfo.metadata,
-        queryDesignerAxis.getHierarchyIndexForTd(target)
+        hierarchyIndex
       );
       break;
     case "member":
@@ -458,16 +463,17 @@ function dragWithinAxis(dragInfo, queryDesignerAxis, target){
   }
 }
 
-function dragFromAxisToOtherAxis(dragInfo, queryDesigner, queryDesignerAxis){
+function dragFromAxisToOtherAxis(dragInfo, queryDesigner, queryDesignerAxis, target){
   //drag from and drop on another axis.
   switch (dragInfo.className) {
     case "hierarchy":
     case "measures":
+      var hierarchyIndex = queryDesignerAxis.getHierarchyIndexForTd(target);
       queryDesigner.moveHierarchy(
         dragInfo.metadata,
         dragInfo.queryDesignerAxis,
         queryDesignerAxis,
-        queryDesignerAxis.getHierarchyIndexForTd(target) + 1
+        hierarchyIndex + 1
       );
       break;
     default:

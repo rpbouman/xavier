@@ -86,6 +86,14 @@ limitations under the License.
   background-image: url('../images/new-bar-chart.png');
 }
 
+.xavier-tabpane > .pentaho-tab-bar > .combi-chart {
+  background-image: url('../images/combi-chart.png');
+}
+
+.toolbar > .new-combi-chart {
+  background-image: url('../images/combi-chart.png');
+}
+
 .toolbar .show-column-hierarchy-headers {
   background-image: url('../images/pivot-table-show-column-headers.png');
 }
@@ -172,4 +180,53 @@ div.xavier-trellis-list-item > div.xavier-chart {
 
 table.xavier-trellis-matrix td > div.xavier-chart {
   margin: auto;
+}
+
+
+/* Combi chart designer */
+
+.xavier-combi-chart-designer {
+}
+
+.xavier-combi-chart-designer td {
+}
+
+.xavier-combi-chart-designer td.graph-series,
+.xavier-combi-chart-designer td.graph-axis {
+  padding: 10px;
+}
+
+.xavier-combi-chart-designer td.graph-axis-y1 {
+  border-right-style: dashed;
+  border-right-width: 1px;
+  border-right-color: darkgray;
+}
+
+.xavier-combi-chart-designer td.graph-axis-y2 {
+  border-left-style: dashed;
+  border-left-width: 1px;
+  border-left-color: darkgray;
+}
+
+.xavier-combi-chart-designer td.graph-axis-y2:empty {
+  border-left-style: none;
+}
+
+.xavier-combi-chart-designer td.graph-axis-x2 {
+  border-bottom-style: dashed;
+  border-bottom-width: 1px;
+  border-bottom-color: darkgray;
+}
+
+.xavier-combi-chart-designer td.graph-axis-x2:empty {
+  border-bottom-style: none;
+}
+
+.xavier-combi-chart-designer td.graph-axis-x1 {
+  border-top-style: dashed;
+  border-top-width: 1px;
+  border-top-color: darkgray;
+}
+
+.xavier-combi-chart-designer td.graph-series {
 }

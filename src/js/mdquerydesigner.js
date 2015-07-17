@@ -290,6 +290,7 @@ var QueryDesigner;
     }
     axis.unlisten("changed", this.axisChanged, this);
     delete this.axes[this.getAxisId(axis.conf.id)];
+    return axis;
   },
   createAxis: function(conf) {
     conf = merge(conf, {
@@ -425,16 +426,59 @@ var QueryDesigner;
     return id + "-message-area";
   },
   getMessageArea: function(){
-    return gEl(getMessageAreaId());
+    return gEl(this.getMessageAreaId());
+  },
+  getMandatoryDimensionMessageAreaId: function(index){
+    var id = this.getId();
+    return id + "-mandatory-dimension-message-area" + index;
+  },
+  createMandatoryDimensionMessageArea: function(rule, index, messageArea){
+    return cEl("DIV", {
+      "class": "mandatory-dimension-message-area mandatory-dimension-message-area-empty",
+      id: this.getMandatoryDimensionMessageAreaId(index)
+    }, rule.description, messageArea);
+  },
+  createMandatoryDimensionMessageAreas: function(messageArea){
+    this.eachMandatoryDimension(function(rule, index){
+      this.createMandatoryDimensionMessageArea(rule, index, messageArea);
+    }, this);
+  },
+  createMessageArea: function(dom){
+    if (dom.tagName === "TD") {
+      dom.setAttribute("rowspan", "100%");
+    }
+    var messageArea = cEl("DIV", {
+      id: this.getMessageAreaId(),
+      "class": "message-area"
+    }, null, dom);
+    this.createMandatoryDimensionMessageAreas(messageArea);
+    return messageArea;
+  },
+  createAxisMessageArea: function(axis, index, messageArea){
+    var axisMessageArea = cEl("DIV", {
+      "class": "axis-message-area axis-message-area-empty",
+      id: axis.getMessageAreaId()
+    }, axis.conf.hint);
+    aCh(messageArea, axisMessageArea);
+    return axisMessageArea;
+  },
+  createAxisMessageAreas: function(messageArea) {
+    this.eachAxis(function(index, axis){
+      this.createAxisMessageArea(axis, index, messageArea);
+    }, this);
   },
   hideMessageArea: function(){
     Displayed.hide(this.getMessageAreaId());
   },
   showMessageArea: function(showOrHide){
+    var messageArea = this.getMessageArea();
+    if (!messageArea) {
+      return;
+    }
     if (iUnd(showOrHide)) {
       showOrHide = true;
     }
-    Displayed.setDisplayed(this.getMessageAreaId(), showOrHide);
+    Displayed.setDisplayed(messageArea, showOrHide);
   },
   clickHandler: function(event){
     var target = event.getTarget();
@@ -443,10 +487,6 @@ var QueryDesigner;
       return;
     }
     queryDesignerAxis.clickHandler(event);
-  },
-  getMandatoryDimensionMessageAreaId: function(index){
-    var id = this.getId();
-    return id + "-mandatory-dimension-message-area" + index;
   },
   createDom: function() {
     //
@@ -473,25 +513,12 @@ var QueryDesigner;
       //message area
       if (r.rowIndex === 0) {
         c = r.insertCell(r.cells.length);
-        c.setAttribute("rowspan", "100%");
-        messageArea = cEl("DIV", {
-          id: this.getMessageAreaId(),
-          "class": "message-area"
-        }, null, c);
-
-        this.eachMandatoryDimension(function(rule, index){
-          cEl("DIV", {
-            "class": "mandatory-dimension-message-area mandatory-dimension-message-area-empty",
-            id: this.getMandatoryDimensionMessageAreaId(index)
-          }, rule.description, messageArea);
-        }, this);
+        c.className = "message-area";
+        messageArea = this.createMessageArea(c);
       }
 
       //append a message area for each axis.
-      messageArea.appendChild(cEl("DIV", {
-        "class": "axis-message-area axis-message-area-empty",
-        id: axis.getMessageAreaId()
-      }, conf.hint))
+      this.createAxisMessageArea(axis, index, messageArea);
     }, this);
 
     listen(dom, "click", this.clickHandler, this);
@@ -1322,12 +1349,12 @@ var QueryDesignerAxis;
       hierarchyName = hierarchy;
     }
     else
-    if (hierarchy.HIERARCHY_UNIQUE_NAME) {
-      hierarchyName = hierarchy.HIERARCHY_UNIQUE_NAME;
-    }
-    else
     if (hierarchy.DIMENSION_TYPE && hierarchy.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
       hierarchyName = QueryDesigner.prototype.measuresHierarchyName;
+    }
+    else
+    if (hierarchy.HIERARCHY_UNIQUE_NAME) {
+      hierarchyName = hierarchy.HIERARCHY_UNIQUE_NAME;
     }
     else {
       hierarchyName = QueryDesigner.prototype.measuresHierarchyName;

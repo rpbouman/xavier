@@ -11,6 +11,7 @@ var XmlaMetadataFilter;
     switch (matcherType) {
       case "string":
       case "number":
+      case "boolean":
         matches = matcher === data;
         break;
       case "undefined":
@@ -30,7 +31,7 @@ var XmlaMetadataFilter;
         }
         else
         if (matcher instanceof RegExp) {
-          matchers = matcher.test(data);
+          matches = matcher.test(data);
         }
         else {
           matches = true;

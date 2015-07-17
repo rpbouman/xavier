@@ -67,7 +67,8 @@ limitations under the License.
     <script type="text/javascript" src="../../lib/filesaver/FileSaver.min.js"></script>
 
     <!-- xmla4js required to talk to XML/A servers -->
-    <script type="text/javascript" src="../../lib/xmla4js/Xmla-compiled.js"></script>
+    <!-- <script type="text/javascript" src="../../lib/xmla4js/Xmla-compiled.js"></script> -->
+    <script type="text/javascript" src="../../lib/xmla4js/Xmla.js"></script>
 
     <!-- mui required for building GUI -->
     <!--
@@ -97,7 +98,9 @@ limitations under the License.
 
     <!-- xavier specific stuff -->
     <script type="text/javascript" src="../js/messages.js"></script>
+    <!--
     <script type="text/javascript" src="../js/messages-nl.js"></script>
+    -->
     <script type="text/javascript" src="../js/xlsxexport.js"></script>
     <script type="text/javascript" src="../js/loadingindicator.js"></script>
     <script type="text/javascript" src="../js/msgbox.js"></script>
@@ -119,9 +122,10 @@ limitations under the License.
         //configure whether dimension nodes with multiple hierarchies are flattened (hidden) or not
         dimensionNodesInitiallyFlattened: true,
         //specify matchers and extra properties to apply to XML/A schema elements
+/*
         metadataFilter: [
           {
-            matcher: "Pentaho",  //match datasource with DataSourceInfo = "Pentaho"
+            matcher: {},  //match datasource with DataSourceInfo = "Pentaho"
             rules: [  //rules to match DISCOVER request types
               {
                 matcher: Xmla.DBSCHEMA_CATALOGS,  //rules applied to catalogs
@@ -141,7 +145,7 @@ limitations under the License.
                 rules: [
                   {
                     matcher: {
-                      DIMENSION_TYPE: 1 //match all Time dimensions
+                      DIMENSION_NAME: "Customers" //match all Time dimensions
                     },
                     ifMatch: {
                       mandatory: XmlaMetadataFilter.PROP_MANDATORY_SOME //queries must use "some" (i.e. at least one, i.e. one or more) time dimensions.
@@ -153,6 +157,7 @@ limitations under the License.
             ]
           }
         ]
+*/
       };
 
 

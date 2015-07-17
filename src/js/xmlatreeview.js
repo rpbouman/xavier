@@ -76,7 +76,8 @@ var XmlaTreeView;
     description = description.trim();
     var type;
     var len = description.length;
-    if (/^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(([\w\.]|%\d\d)+\/)*(([\w\.]|%\d\d)+)(\?([\w\.=\&]|%\d\d)*)?$/.test(description)) {
+    //      protocol       domain name      ip address                port      path                resource         query name/value       anchor
+    if (/^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(([\w\.]|%\d\d)+\/)+(([\w\.]|%\d\d)+)(\?([\w\.=\&]|%\d\d)*)?(#\w*)?$/.test(description)) {
       type = "url";
     }
     else
@@ -821,6 +822,9 @@ var XmlaTreeView;
       restrictions: restrictions,
       success: function(xmla, options, rowset){
         rowset.eachRow(function(row){
+          if (me.checkIsExcluded(options, row)) {
+            return;
+          }
           //don't render properties that aren't marked visible
           if (iDef(row.PROPERTY_IS_VISIBLE) && row.PROPERTY_IS_VISIBLE === false) {
             return;
@@ -833,11 +837,19 @@ var XmlaTreeView;
         });
         var levelMembersNodes = [];
         conf.levelsRowset.eachRow(function(row){
-          if (!row.LEVEL_IS_VISIBLE) {
-            return;
-          }
+          //if (!row.LEVEL_IS_VISIBLE) {
+          //return;
+          //}
           var membersNode = me.renderLevelMembersNode(conf, row);
-          if (row.LEVEL_CARDINALITY <= me.maxLowCardinalityLevelMembers) {
+          var cardinality;
+          //SAP thinks "All" levels could have a cardinality > 1, like, what the hell - 10.000
+          if (row.LEVEL_TYPE === 1) { //1: MDLEVEL_TYPE_ALL
+            cardinality = 1;
+          }
+          else {
+            cardinality = row.LEVEL_CARDINALITY;
+          }
+          if (cardinality <= me.maxLowCardinalityLevelMembers) {
             levelMembersNodes.push(membersNode);
           }
         });
@@ -916,9 +928,15 @@ var XmlaTreeView;
       success: function(xmla, options, rowset){
         //create a treenode for each level
         rowset.eachRow(function(row){
-          if (!row.LEVEL_IS_VISIBLE) {
+          if (me.checkIsExcluded(options, row)) {
             return;
           }
+          //https://technet.microsoft.com/en-us/library/ms126038(v=sql.110).aspx reads:
+          //A Boolean that indicates whether the level is visible. Always returns True. If the level is not visible, it will not be included in the schema rowset.
+          //So, we might as well not check it at all. Besides, SAP doesn't support it.
+          //if (!row.LEVEL_IS_VISIBLE) {
+          //  return;
+          //}
           row.HIERARCHY_CAPTION = hierarchyCaption;
           me.renderLevelTreeNode(conf, row);
         });
@@ -977,10 +995,16 @@ var XmlaTreeView;
       success: function(xmla, options, rowset) {
         //for each dimension, add a treenode.
         rowset.eachRow(function(row){
-          //don't render invisible dimensions
-          if (row.DIMENSION_IS_VISIBLE === false) {
+          if (me.checkIsExcluded(options, row)) {
             return;
           }
+          //https://technet.microsoft.com/en-us/library/ms126180(v=sql.110).aspx reads:
+          //DIMENSION_IS_VISIBLE DBTYPE_BOOL Always TRUE. A dimension is not visible unless one or more hierarchies in the dimension are visible.
+          //So we might as well not check for it at all. Plus, SAP doesn't support this.
+          //don't render invisible dimensions
+          //if (row.DIMENSION_IS_VISIBLE === false) {
+          //  return;
+          //}
           //if this dimension happens to be a measure dimension, don't render it.
           //We already have measures
           if (row.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
@@ -1003,6 +1027,9 @@ var XmlaTreeView;
     });
   },
   getHierarchyTreeNodeId: function(hierarchyUniqueName){
+    if (hierarchyUniqueName === QueryDesigner.prototype.measuresHierarchyName) {
+      return this.getMeasuresTreeNodeId();
+    }
     if (iObj(hierarchyUniqueName)){
       hierarchyUniqueName = hierarchyUniqueName.HIERARCHY_UNIQUE_NAME;
     }
@@ -1123,6 +1150,9 @@ var XmlaTreeView;
         var defaultMemberQueue = [];
         var hasMultipleHierarchies = false;
         rowset.eachRow(function(row){
+          if (me.checkIsExcluded(options, row)) {
+            return;
+          }
           //if this hierarchy happens to be a measure hierarchy, don't render it.
           //We already have measures
           if (row.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
@@ -1132,14 +1162,17 @@ var XmlaTreeView;
               me.setDefaultMeasure(row.DEFAULT_MEMBER)
             }
             conf.measuresTreeNode.conf.metadata = row;
-            conf.measuresTreeNode.setId(
-              me.getHierarchyTreeNodeId(row.HIERARCHY_UNIQUE_NAME)
-            );
+
+            //Changing the id is dangerous
+            //In SAP the unique hierarchy name happens to be [Measures].[Measures]
+            //conf.measuresTreeNode.setId(
+            //  me.getHierarchyTreeNodeId(row.HIERARCHY_UNIQUE_NAME)
+            //);
             return;
           }
           else
           //if the hierarchy is not visible, don't render it.
-          if (!row.HIERARCHY_IS_VISIBLE || !row.DIMENSION_IS_VISIBLE) {
+          if (iDef(row.HIERARCHY_IS_VISIBLE) && row.HIERARCHY_IS_VISIBLE === false) {
             return;
           }
           //actually add a treenode for the hierarchy.
@@ -1224,7 +1257,6 @@ var XmlaTreeView;
     var me = this;
     var measuresTreeNode = conf.measuresTreeNode;
     var measuresTreeNodeConf = measuresTreeNode.conf;
-    var measuresMetadata = measuresTreeNodeConf.metadata;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
@@ -1245,9 +1277,16 @@ var XmlaTreeView;
         //collect the measures so we can sort them
         var measures = [];
         rowset.eachRow(function(row){
-          if (!row.MEASURE_IS_VISIBLE) {
+          if (me.checkIsExcluded(options, row)) {
             return;
           }
+          //https://technet.microsoft.com/en-us/library/ms126250(v=sql.110).aspx reads:
+          //"MEASURE_IS_VISIBLE DBTYPE_BOOL A Boolean that always returns True. If the measure is not visible, it will not be included in the schema rowset."
+          //so we might just as well not check for MEASURE_IS_VISIBLE it all.
+          //Besides, SAP doesn't support it
+          //if (!row.MEASURE_IS_VISIBLE) {
+          //  return;
+          //}
           measures.push(row);
         });
 

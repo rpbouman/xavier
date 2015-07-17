@@ -97,4 +97,6 @@ aMsg({
   "Cube": "Kubus",
   "Selection": "Selectie",
   "Export Date": "Exportdatum",
+  //filter:
+  "At least one Date dimension is required.": "Ten minste één datum dimensie is verplicht."
 });

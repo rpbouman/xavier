@@ -27,7 +27,9 @@ limitations under the License.
   left: 0px;
   right: 0px;
   padding-left: .2em;
+  /*
   padding-top: .2em;
+  */
   height: 22px;
   color: white;
 }
