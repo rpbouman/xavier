@@ -38,6 +38,10 @@ dfn.olap {
   padding-left: 0px;
 }
 
+dfn.catalog {
+  background-image: url('../images/schema.png');
+}
+
 dfn.cube {
   background-image: url('../images/cube.png');
 }
