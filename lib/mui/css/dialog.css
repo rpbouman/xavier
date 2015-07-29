@@ -24,6 +24,7 @@ limitations under the License.
   position:absolute;
   z-index: 100000;
   background-color: white;
+  font:  message-box;
 }
 
 .dialog-title {
