@@ -675,7 +675,7 @@ adopt(XavierDocumentTab, XavierTab);
       }
     }
 
-    var cellOrdinal = 0;
+    var cellOrdinal = 0, columnIndex, value;
     axis.eachTuple(function(tuple){
       var members = tuple.members, i, n = members.length, values = [];
       for (i = 0; i < n; i++){
@@ -684,7 +684,15 @@ adopt(XavierDocumentTab, XavierTab);
       n = cellmap.length;
       for (i = 0; i < n; i++) {
         if (cellset.cellOrdinal() === cellOrdinal++) {
-          values[cellmap[i]] = cellset.cellValue();
+          columnIndex = cellmap[i];
+          column = columns[columnIndex];
+          if (column.isMeasure) {
+            value = cellset.cellValue();
+          }
+          else {
+            value = cellset.cellFmtValue();
+          }
+          values[columnIndex] = value;
           cellset.nextCell();
         }
         if (i && onlyMeasures) {
