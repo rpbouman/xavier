@@ -444,6 +444,38 @@ var XmlaTreeView;
     }
     return true;
   },
+  eachCubeNode: function(callback, scope) {
+    if(this.eachCatalogNode(function(catalogNode, i){
+      if (catalogNode.eachChild(callback, scope) === false) {
+        return false;
+      }
+    }, scope) === false){
+      return false;
+    }
+    return true;
+  },
+  findCubeNode: function(metadata){ //TODO: we might optimize this by searching top-down, but for now it'll do.
+    var node;
+    if (this.eachCubeNode(function(cubeNode, i){
+      //check if the cube metadata matches
+      if (eq(metadata.cube, cubeNode.conf.metadata)) {
+        //check if the catalog metadata matches
+        var catalogNode = cubeNode.getParentTreeNode();
+        if (eq(metadata.catalog, catalogNode.conf.metadata)) {
+          //check if the datasource metadata matches
+          var datasourceNode = catalogNode.getParentTreeNode();
+          if (eq(metadata.datasource, datasourceNode.conf.metadata)) {
+            //ok, everything matches. Store the node and bail out.
+            node = cubeNode;
+            return false;
+          }
+        }
+      }
+    }, this) === false) {
+      return node;
+    }
+    return null;
+  },
   showCatalogNodes: function(event){
     var target = event.getTarget(), state;
     if (target.checked) {
@@ -1333,6 +1365,18 @@ var XmlaTreeView;
     this.renderMeasureNodes(conf);
     return measuresTreeNode;
   },
+  getCurrentCube: function(){
+    var cubeTreeNode = this.getCurrentCubeTreeNode();
+    var catalogTreeNode = this.getCurrentCatalogTreeNode();
+    var datasourceTreeNode = this.getCurrentDatasourceTreeNode();
+
+    var currentCube = {
+      cube: cubeTreeNode.conf.metadata,
+      catalog: catalogTreeNode.conf.metadata,
+      datasource: datasourceTreeNode.conf.metadata
+    };
+    return currentCube;
+  },
   getCurrentCubeTreeNode: function(){
     var cubeTreeNode = this.currentCubeTreeNode;
     if (!cubeTreeNode) {
@@ -1387,6 +1431,18 @@ var XmlaTreeView;
     this.fireEvent("cubeLoaded");
   },
   loadCube: function(cubeTreeNode){
+    if (!(cubeTreeNode instanceof TreeNode)) {
+      if (!iObj(cubeTreeNode)) {
+        throw "Illegal object specified as cube";
+      }
+      if (iUnd(cubeTreeNode.datasource) || iUnd(cubeTreeNode.catalog) || iUnd(cubeTreeNode.cube)) {
+        throw "Illegal object specified as cube";
+      }
+      cubeTreeNode = this.findCubeNode(cubeTreeNode);
+      if (!cubeTreeNode) {
+        throw "No treenode found for specified cube";
+      }
+    }
     this.cubeSelection._setSelection({
       oldSelection: this.cubeSelection.getSelection(),
       newSelection: [cubeTreeNode]

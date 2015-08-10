@@ -31,14 +31,17 @@ var DataTable;
     conf.classes = ["xavier-tabpane"];
   }
   if (!conf.tabs) {
-    conf.tabs = [
-      new XavierDocumentTab({
-        tabPane: this
-      })
-    ];
+    this.welcomeTab = new XavierDocumentTab({
+      tabPane: this,
+      closeable: false
+    });
+    conf.tabs = [this.welcomeTab];
   }
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  getWelcomeTab: function(){
+    return this.welcomeTab;
+  },
   closeTab: function(index) {
     var tab = this.getTab(index);
     tab.destroy();
@@ -133,11 +136,21 @@ var DataTable;
     this.newTab(combiChartTab);
     return combiChartTab;
   },
+  getMetadata: function(){
+    return {
+      datasource: this.getDatasource(),
+      catalog: this.getCatalog(),
+      cube: this.getCube()
+    };
+  },
+  setMetadata: function(metadata){
+    this.setDatasource(metadata.datasource);
+    this.setCatalog(metadata.catalog);
+    this.setCube(metadata.cube);
+  },
   setCube: function(metadata){
     if (metadata.cube && metadata.catalog && metadata.datasource) {
-      this.setDatasource(metadata.datasource);
-      this.setCatalog(metadata.catalog);
-      this.setCube(metadata.cube);
+      this.setMetadata(metadata);
     }
     else {
       this.cube = metadata;
@@ -184,30 +197,27 @@ var DataTable;
     }
     selectedTab.exportToExcel();
   },
-  hasTabsForCube: function(){
-    var ret;
-    if (this.eachTab(function(tab, index){
-      if (tab.isForCube() === true) {
-        return false;
-      }
-    }) === false) {
-      ret = true;
+  getTabsForCube: function(cube){
+    if (iUnd(cube)){
+      cube = this.getMetadata()
     }
-    else {
-      ret = false;
-    }
-    return ret;
-  },
-  closeTabsForCube: function(){
-    var i, n, tabsToClose = [];
+    var i, n, tabsForCube = [];
     this.eachTab(function(tab, index){
-      if (tab.isForCube() === true) {
-        tabsToClose.push(index);
+      if (tab.isForCube(cube) === true) {
+        tabsForCube.push(index);
       }
     });
+    return tabsForCube;
+  },
+  closeTabsForCube: function(cube){
+    var tabsToClose = this.getTabsForCube(cube);
     for (i = tabsToClose.length - 1; i >= 0; i--){
       this.closeTab(tabsToClose[i]);
     }
+  },
+  hasTabsForCube: function(cube){
+    var tabsForCube = this.getTabsForCube(cube);
+    return tabsForCube.length !== 0;
   }
 };
 adopt(XavierTabPane, TabPane);
@@ -225,18 +235,45 @@ var XavierTab;
   this.classes.push(XavierTab.prefix);
   this.id = String(XavierTab.id++);
   this.selected = true;
-  this.closeable = true;
+  this.closeable = iDef(conf.closeable) ? conf.closeable : true;
   this.component = this;
+
+  this.initMetadata();
+
 }).prototype = {
+  forCube: true,
   queryDesigner: null,
   visualizer: null,
-  isForCube: function(){
+  isForCube: function(cube){
     var forCube;
-    if (this instanceof XavierDocumentTab) {
-      forCube = this.conf.forCube || this.forCube;
+    //first. check if this is the kind of tab that is associated with a cube.
+    if ((this.conf.forCube || this.forCube)) {
+      //it is. Now check if we're matching against a specific cube
+      if (cube) {
+        //yes. Check if the tab's cube matches the specified cube.
+        if (!eq(this.getDatasource(), cube.datasource)) {
+          forCube = false;
+        }
+        else
+        if (!eq(this.getCatalog(), cube.catalog)) {
+          forCube = false;
+        }
+        else
+        if (!eq(this.getCube(), cube.cube)) {
+          forCube = false;
+        }
+        else {
+          forCube = true;
+        }
+      }
+      else {
+        //not matching against a specific cube.
+        //Since this tab is a tab for some cube, we return true.
+        forCube = true;
+      }
     }
     else {
-      forCube = true;
+      forCube = false;
     }
     return forCube;
   },
@@ -349,14 +386,45 @@ var XavierTab;
   getAutoRunEnabled: function(){
     return this.getTabPane().getAutoRunEnabled();
   },
+  initMetadata: function(){
+    var tabPane = this.getTabPane();
+    this.setCube({
+      datasource: tabPane.getDatasource(),
+      catalog: tabPane.getCatalog(),
+      cube: tabPane.getCube()
+    });
+  },
+  setCube: function(metadata){
+    if (metadata.cube && metadata.catalog && metadata.datasource) {
+      this.setDatasource(metadata.datasource);
+      this.setCatalog(metadata.catalog);
+      this.setCube(metadata.cube);
+    }
+    else {
+      this.cube = metadata;
+    }
+  },
   getCube: function(){
-    return this.getTabPane().getCube();
+    return this.cube;
+  },
+  setCatalog: function(metadata){
+    this.catalog = metadata;
   },
   getCatalog: function(){
-    return this.getTabPane().getCatalog();
+    return this.catalog;
+  },
+  setDatasource: function(metadata){
+    this.datasource = metadata;
   },
   getDatasource: function(){
-    return this.getTabPane().getDatasource();
+    return this.datasource;
+  },
+  getMetadata: function(){
+    return {
+      datasource: this.getDatasource(),
+      catalog: this.getCatalog(),
+      cube: this.getCube()
+    };
   },
   clear: function(){
     var queryDesigner = this.getQueryDesigner();
@@ -590,6 +658,7 @@ var XavierDocumentTab;
   }
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  forCube: false,
   text: gMsg("Welcome!"),
   createDom: function(){
     var conf = this.conf;

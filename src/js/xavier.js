@@ -149,46 +149,37 @@ var xmlaTreeView = new XmlaTreeView({
       showAlert("Unexpected Error", error.toString() || error.message);
       console.error(error.getStackTrace());
     },
-    beforeLoadCube: function(xmlaTreeView, event, selection){
-      var ret;
-      if (workArea.hasTabsForCube()) {
-        showConfirm(
-          "This action will close all tab pages associated with the current cube. Do you want to continue?",
-          "Close tabs for current cube?",
-          function(){
-            workArea.closeTabsForCube();
-            xmlaTreeView.loadCube(selection);
-          },
-          function(){
-            return;
-          },
-          null,
-          "Yes",
-          "No"
-        );
-        ret = false;
-      }
-      else {
-        ret = true;
-      }
-      return ret;
-    },
     loadCube: function(xmlaTreeView, event, cubeTreeNode){
+      var cube = cubeTreeNode.conf.metadata;
+      var catalogTreeNode = cubeTreeNode.getParentTreeNode();
+      var catalog = catalogTreeNode.conf.metadata;
+      var datasourceTreeNode = catalogTreeNode.getParentTreeNode();
+      var datasource = datasourceTreeNode.conf.metadata;
+
+      //see if we have to switch tab (selected tab must belong to current cube, or welcome tab)
+      var selectedTab = workArea.getSelectedTab();
+      var tabs = workArea.getTabsForCube({
+        datasource: datasource,
+        catalog: catalog,
+        cube: cube
+      });
+
+      //check if the current tab belongs to the current cube
+      if (tabs.indexOf(selectedTab) === -1) {
+        //nope, so switch tabs.
+        if (tabs.length) {  //we have at least one tab for this cube, so select it.
+          selectedTab = tabs[0];
+        }
+        else {  //we don't have any tabs for this cube, default to the welcome tab.
+          selectedTab = workArea.getWelcomeTab();
+        }
+        workArea.setSelectedTab(selectedTab);
+      }
       mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
     },
     cubeLoaded: function(xmlaTreeView, event){
       mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
-
-      var cubeTreeNode = xmlaTreeView.getCurrentCubeTreeNode();
-      var catalogTreeNode = xmlaTreeView.getCurrentCatalogTreeNode();
-      var datasourceTreeNode = xmlaTreeView.getCurrentDatasourceTreeNode();
-
-      var currentCube = {
-        cube: cubeTreeNode.conf.metadata,
-        catalog: catalogTreeNode.conf.metadata,
-        datasource: datasourceTreeNode.conf.metadata
-      };
-
+      var currentCube = xmlaTreeView.getCurrentCube();
       workArea.setCube(currentCube);
     },
     //called when an information icon is clicked.
@@ -216,6 +207,16 @@ var workArea = new XavierTabPane({
     },
     tabSelected: function(tabPane, event, data){
       var tab = tabPane.getTab(data.newTab);
+
+      //check if we have to select another cube in the treeview.
+      if (tab.isForCube()) {
+        var currentCube = xmlaTreeView.getCurrentCube();
+        if (!tab.isForCube(currentCube)) {
+          currentCube = tab.getMetadata();
+          xmlaTreeView.loadCube(currentCube);
+        }
+      }
+
       var display = tab ? Boolean(tab.getVisualizer()) : false;
       mainToolbar.displayGroup(mainToolbar.groups.visaction.name, display);
       toggleAutoRunEnabled();
