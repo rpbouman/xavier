@@ -41,6 +41,9 @@ var XmlaTreeView;
   if (iDef(conf.xmlaMetadataFilter)) {
     this.xmlaMetadataFilter = conf.xmlaMetadataFilter;
   }
+  if (iDef(conf.maxLowCardinalityLevelMembers)) {
+    this.maxLowCardinalityLevelMembers = conf.maxLowCardinalityLevelMembers;
+  }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
   //maximum number of members to allow auto-loading of a level's members

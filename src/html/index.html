@@ -125,6 +125,9 @@ limitations under the License.
         catalogNodesInitiallyFlattened: true,
         //configure whether dimension nodes with multiple hierarchies are flattened (hidden) or not
         dimensionNodesInitiallyFlattened: true,
+        //configure what is considered "low cardinality" for a level.
+        //If the level has this or less members, they are automatically expanded in the treeview.
+        maxLowCardinalityLevelMembers: 5,
         //specify matchers and extra properties to apply to XML/A schema elements
 /*
         metadataFilter: [
