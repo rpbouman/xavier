@@ -562,6 +562,7 @@ var QueryDesigner;
     this.eachAxis(function(id, axis){
       axis.updateDom();
     });
+    this.checkValid();
   },
   getContainer: function() {
     return gEl(this.conf.container);

@@ -89,7 +89,7 @@ var DataTable;
     if (!queryDesigner) {
       return;
     }
-    queryDesigner.checkValid();
+    queryDesigner.render();
   },
   newInfoTab: function(conf){
     var infoTab = new XavierDocumentTab({
