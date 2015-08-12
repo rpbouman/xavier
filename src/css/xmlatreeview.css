@@ -378,9 +378,14 @@ span.current-cube,
 }
 
 .members-dragging,
-.tree .members > .head > .toggle {
+.tree .members-collapsed > .head > .toggle {
 /*  background-image: url('../../lib/mui/images/folder16x16.png'); */
-  background-image: url('../images/folder2.png');
+  background-image: url('../images/folder-closed.png');
+}
+
+.tree .members-expanded > .head > .toggle {
+/*  background-image: url('../../lib/mui/images/folder16x16.png'); */
+  background-image: url('../images/folder-open.png');
 }
 
 .member-dragging,
