@@ -159,6 +159,14 @@ table.query-designer-axis {
   background-image: url('../images/calculation.png');
 }
 
+/* Derived measures */
+.query-designer-axis tr.user-sort-option td.derived-measure-percentage,
+.derived-measure-percentage-dragging,
+.query-designer-axis td span.derived-measure-percentage {
+  background-image: url('../images/derived-measure-percentage.png');
+}
+
+
 .query-designer-axis td span.level {
   background-image: url('../images/level.png');
 }

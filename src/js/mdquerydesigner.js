@@ -159,6 +159,7 @@ var QueryDesigner;
         var hierarchy = queryDesignerAxis.getHierarchyByName(target.id);
         metadata = hierarchy;
         break;
+      case "derived-measure":
       case "measure":
       case "level":
       case "property":
@@ -873,6 +874,9 @@ var QueryDesignerAxis;
       setDef = hierarchySetDefs[j];
       metadata = setDef.metadata;
       classes = [setDef.type];
+      if (setDef.type === "derived-measure" && metadata.classes) {
+        classes = classes.concat(metadata.classes);
+      }
       if (iDef(metadata.MEASURE_AGGREGATOR)){
         classes.push("aggregator" + metadata.MEASURE_AGGREGATOR);
       }
@@ -1254,6 +1258,7 @@ var QueryDesignerAxis;
         break;
       case "level":
       case "member":
+      case "derived-measure":
       case "measure":
       case "property":
         axis = queryDesigner.getAxisForHierarchy(hierarchyName);
@@ -1305,8 +1310,17 @@ var QueryDesignerAxis;
     }
     return expression;
   },
+  isIdentifierBraced: function(identifier) {
+    return identifier.charAt(0) === "[" && identifier.charAt(identifier.length-1) === "]";
+  },
+  braceIdentifier: function(identifier) {
+    if (!this.isIdentifierBraced(identifier)) {
+      identifier = "[" + identifier + "]";
+    }
+    return identifier;
+  },
   stripBracesFromIdentifier: function(identifier){
-    if (identifier.charAt(0) === "[" && identifier.charAt(identifier.length-1) === "]") {
+    if (this.isIdentifierBraced(identifier)) {
       identifier = identifier.substr(1, identifier.length-2);
     }
     return identifier;
@@ -1669,12 +1683,11 @@ var QueryDesignerAxis;
         memberInfo.levelMetadata = levelMetadata;
         break;
       case "member":
-        caption = metadata.MEMBER_CAPTION;
-        break;
       case "member-drilldown":
         caption = metadata.MEMBER_CAPTION;
         break;
       case "measure":
+      case "derived-measure":
         caption = metadata.MEASURE_CAPTION;
         break;
       case "calculated-member":
@@ -1911,11 +1924,17 @@ var QueryDesignerAxis;
   getCalculatedMembersMdx: function(){
     var mdx = "";
     this.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
-      if (setDef.type !== "calculated-member") {
-        return;
-      }
       var metadata = setDef.metadata;
-      mdx += "\nMEMBER " + metadata.MEMBER_UNIQUE_NAME + " AS " + metadata.calculation;
+      switch (setDef.type) {
+        case "calculated-member":
+          mdx += "\nMEMBER " + metadata.MEMBER_UNIQUE_NAME + " AS " + metadata.calculation;
+          break;
+        case "derived-measure":
+          var queryDesigner = this.getQueryDesigner();
+          mdx += "\n" + metadata.calculation.call(null, metadata, queryDesigner) + " ";
+          break;
+        default:
+      }
     }, this);
     return mdx;
   },

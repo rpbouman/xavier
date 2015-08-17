@@ -30,8 +30,20 @@ var XmlaMetadataFilter;
           matches = data === null;
         }
         else
-        if (matcher instanceof RegExp) {
+        if (iRxp(matcher)) {
           matches = matcher.test(data);
+        }
+        else
+        if (iArr(matcher)) {
+          matches = false;
+          var i, v, n = matcher.length;
+          for (i = 0; i < n; i++){
+            v = matcher[i];
+            if (this.match(v, data)){
+              matches = true;
+              break;
+            }
+          }
         }
         else {
           matches = true;
@@ -144,10 +156,17 @@ var XmlaMetadataFilter;
     return ret;
   },
   getProperties: function(datasourceFilter, requestTypeFilter, metadata){
-    var properties = {};
+    var properties = {}, found = false;
     this.eachRequestTypeRuleProperties(function(props){
+      if (iUnd(props)) {
+        return null;
+      }
       merge(properties, props);
+      found = true;
     }, this, datasourceFilter, requestTypeFilter, metadata);
+    if (!found) {
+      return null;
+    }
     return properties;
   },
   isExcluded: function(datasourceFilter, requestTypeFilter, metadata) {

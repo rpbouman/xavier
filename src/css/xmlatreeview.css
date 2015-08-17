@@ -358,6 +358,12 @@ span.current-cube,
 
 /* end of time dimension */
 
+/* Derived measures */
+.derived-measure-percentage-dragging,
+.tree .derived-measure-percentage > .head > .toggle {
+  background-image: url('../images/derived-measure-percentage.png');
+}
+
 .level-dragging,
 .tree .level > .head > .toggle {
   background-image: url('../images/level.png');

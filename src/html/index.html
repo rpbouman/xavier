@@ -129,11 +129,68 @@ limitations under the License.
         //If the level has this or less members, they are automatically expanded in the treeview.
         maxLowCardinalityLevelMembers: 5,
         //specify matchers and extra properties to apply to XML/A schema elements
-/*
         metadataFilter: [
           {
-            matcher: {},  //match datasource with DataSourceInfo = "Pentaho"
+            matcher: {},  //match any datasource
             rules: [  //rules to match DISCOVER request types
+              {
+                matcher: Xmla.MDSCHEMA_MEASURES,  //rules applied to measures
+                rules: [
+                  {
+                    matcher: {
+                      MEASURE_AGGREGATOR: [ //rules for additive measures:
+                        Xmla.Rowset.MDMEASURE_AGGR_SUM,
+                        Xmla.Rowset.MDMEASURE_AGGR_COUNT,
+                        Xmla.Rowset.MDMEASURE_AGGR_DST
+                        //Xmla.Rowset.MDMEASURE_AGGR_CALCULATED:
+                        //Xmla.Rowset.MDMEASURE_AGGR_UNKNOWN:
+                      ]
+                    },
+                    ifMatch: {
+                      derivedMeasures: [
+                        {
+                          classes: ["derived-measure-percentage"],
+                          name: "${1} percentage",
+                          captionMessageKey: "${1} percentage",
+                          tooltipMessageKey: "${1} percentage",
+                          formatString: "0.00%",
+                          calculation: function(metadata, queryDesigner){
+                            var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
+
+                            var measure = metadata.derivedFrom;
+                            var numerator = measure.MEASURE_UNIQUE_NAME;
+
+                            var denominator = "";
+                            queryDesigner.eachAxis(function(id, axis, i){
+                              if (id === Xmla.Dataset.AXIS_SLICER) {
+                                return;
+                              }
+                              axis.eachHierarchy(function(hierarchy, i){
+                                if (axis.isMeasureHierarchy(hierarchy)) {
+                                  return;
+                                }
+                                var hierarchy = axis.getHierarchyName(hierarchy);
+                                denominator += ", " + axis.braceIdentifier(hierarchy) + ".CurrentMember.Parent"
+                              });
+                            })
+                            denominator = "(" + numerator + denominator + ")";
+
+                            var expression =  numerator + " / " + denominator;
+                            mdx += "\n'" + expression + "'";
+
+                            var formatString = iDef(metadata.formatString) ? metadata.formatString : "0.00%"
+                            mdx += ",\nFORMAT_STRING = '" + formatString + "'"
+
+                            return mdx;
+                          }
+                        }
+                      ]
+                    },
+                    description: "Special derived measures for declared additive measures"
+                  }
+                ]
+              }
+/*
               {
                 matcher: Xmla.DBSCHEMA_CATALOGS,  //rules applied to catalogs
                 rules: [
@@ -152,7 +209,7 @@ limitations under the License.
                 rules: [
                   {
                     matcher: {
-                      DIMENSION_NAME: "Customers" //match all Time dimensions
+                      DIMENSION_TYPE: 1 //match all Time dimensions
                     },
                     ifMatch: {
                       mandatory: XmlaMetadataFilter.PROP_MANDATORY_SOME //queries must use "some" (i.e. at least one, i.e. one or more) time dimensions.
@@ -161,10 +218,10 @@ limitations under the License.
                   }
                 ]
               }
+*/
             ]
           }
         ]
-*/
       };
 
       var xmlaFactory = new XmlaFactory({

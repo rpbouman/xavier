@@ -921,6 +921,8 @@ var XavierTableTab;
       if (columnAxis.hasMeasures()) {
         this.moveMeasures(columnAxis, rowAxis);
       }
+      //create calculated members
+      var measuresHierarchyUniqueName = QueryDesigner.prototype.measuresHierarchyName;
       for (i = 0; i < n; i++) {
         calculatedMeasure = calculatedMeasures[i];
         metadata = calculatedMeasure.metadata;
@@ -943,8 +945,8 @@ var XavierTableTab;
         }
         expression += ".PROPERTIES(\"" + property + "\")";
         rowAxis.addMember(measures.length + i, "calculated-member", {
-          HIERARCHY_UNIQUE_NAME: QueryDesigner.prototype.measuresHierarchyName,
-          MEMBER_UNIQUE_NAME: "[Measures].[" + caption + "]",
+          HIERARCHY_UNIQUE_NAME: measuresHierarchyUniqueName,
+          MEMBER_UNIQUE_NAME: measuresHierarchyUniqueName + ".[" + caption + "]",
           CAPTION: caption,
           calculation: expression
         });

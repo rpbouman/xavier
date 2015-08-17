@@ -488,6 +488,7 @@ function dropOutsideAxis(dragInfo){
     case "member":
     case "member-drilldown":
     case "measure":
+    case "derived-measure":
     case "level":
     case "property":
       if (dragInfo.isSortOption) {

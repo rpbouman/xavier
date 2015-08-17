@@ -551,6 +551,7 @@ var XmlaTreeView;
       case "measures":
       case "hierarchy":
       case "measure":
+      case "derived-measure":
       case "level":
       case "member":
       case "property":
@@ -1271,14 +1272,73 @@ var XmlaTreeView;
     var id = this.getMeasuresTreeNodeId();
     return TreeNode.getInstance("node:" + id);
   },
+  getDerivedMeasureTreeNodeId: function(measure, derivedMeasure) {
+    var measureUniqueName = measure.MEASURE_UNIQUE_NAME;
+    var measuresTreeNodeId = this.getMeasureTreeNodeId(measureUniqueName);
+    var derivedMeasureName = derivedMeasure.name;
+    var derivedMeasureTreeNodeId = measuresTreeNodeId + ":" + derivedMeasureName;
+    return derivedMeasureTreeNodeId;
+  },
+  createDerivedMeasureTreeNode: function(derivedMeasure, measureCaption) {
+    //TODO: put all this MDX and metadata related stuff in the query designer.
+    //it doesn't really belong in the tree.
+    //it also doesn't belong in the query designer but it's less of a misfit there.
+    var measuresHierarchyUniqueName = QueryDesigner.prototype.measuresHierarchyName;
+    var caption = gMsg(derivedMeasure.captionMessageKey, measureCaption);
+    var measure = derivedMeasure.derivedFrom;
+    var measureName = measure.MEASURE_NAME;
+    measureName = QueryDesignerAxis.prototype.stripBracesFromIdentifier(measureName);
+    var name = gMsg(derivedMeasure.name, measureName)
+
+    derivedMeasure.MEASURE_CAPTION = caption;
+    derivedMeasure.HIERARCHY_UNIQUE_NAME = measuresHierarchyUniqueName;
+    derivedMeasure.MEASURE_NAME = name;
+    derivedMeasure.MEASURE_UNIQUE_NAME = measuresHierarchyUniqueName + "." + QueryDesignerAxis.prototype.braceIdentifier(name);
+
+    var classes = ["derived-measure", "measure"];
+    if (derivedMeasure.classes) {
+      classes = classes.concat(derivedMeasure.classes);
+    }
+    var derivedMeasureTreeNode = new TreeNode({
+      state: TreeNode.states.leaf,
+      classes: classes,
+      id: this.getDerivedMeasureTreeNodeId(measure, derivedMeasure),
+      title: caption,
+      tooltip: gMsg(derivedMeasure.tooltipMessageKey, measureCaption),
+      metadata: derivedMeasure
+    });
+    return derivedMeasureTreeNode;
+  },
+  createDerivedMeasureTreeNodes: function(measure, measureCaption){
+    var xmlaMetadataFilter = this.xmlaMetadataFilter;
+    if (!xmlaMetadataFilter) {
+      return null;
+    }
+    var datasource = this.getCurrentDatasourceMetadata();
+    datasource = datasource.DataSourceInfo;
+    var derivedMeasureProperties = xmlaMetadataFilter.getProperties(datasource, Xmla.MDSCHEMA_MEASURES, measure);
+    if (!derivedMeasureProperties) {
+      return null;
+    }
+    var derivedMeasures = derivedMeasureProperties.derivedMeasures;
+    var i, n = derivedMeasures.length, derivedMeasure, child, children = [];
+    for (i = 0; i < n; i++) {
+      derivedMeasure = merge({
+        derivedFrom: measure
+      }, derivedMeasures[i]);
+      child = this.createDerivedMeasureTreeNode(derivedMeasure, measureCaption);
+      children.push(child);
+    }
+    return children;
+  },
   renderMeasureNode: function(conf, row){
     var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
     var objectName = row.MEASURE_CAPTION || row.MEASURE_NAME;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = title + tooltipAndInfoLabel.infoLabel;
-    return new TreeNode({
-      state: TreeNode.states.leaf,
+
+    var nodeConf = {
       parentTreeNode: conf.measuresTreeNode,
       classes: ["measure", "aggregator" + row.MEASURE_AGGREGATOR],
       id: this.getMeasureTreeNodeId(row.MEASURE_UNIQUE_NAME),
@@ -1286,7 +1346,21 @@ var XmlaTreeView;
       title: title,
       tooltip: tooltip,
       metadata: row
-    });
+    };
+
+    var state;
+    var children = this.createDerivedMeasureTreeNodes(row, objectName);
+    if (children && children.length) {
+      nodeConf.children = children;
+      state = TreeNode.states.collapsed;
+    }
+    else {
+      state = TreeNode.states.leaf;
+    }
+    nodeConf.state = state;
+
+    var measureNode = new TreeNode(nodeConf);
+    return measureNode;
   },
   renderMeasureNodes: function(conf){
     var me = this;
@@ -1368,24 +1442,19 @@ var XmlaTreeView;
     this.renderMeasureNodes(conf);
     return measuresTreeNode;
   },
-  getCurrentCube: function(){
-    var cubeTreeNode = this.getCurrentCubeTreeNode();
-    var catalogTreeNode = this.getCurrentCatalogTreeNode();
-    var datasourceTreeNode = this.getCurrentDatasourceTreeNode();
-
-    var currentCube = {
-      cube: cubeTreeNode.conf.metadata,
-      catalog: catalogTreeNode.conf.metadata,
-      datasource: datasourceTreeNode.conf.metadata
-    };
-    return currentCube;
-  },
   getCurrentCubeTreeNode: function(){
     var cubeTreeNode = this.currentCubeTreeNode;
     if (!cubeTreeNode) {
       cubeTreeNode = null;
     }
     return cubeTreeNode;
+  },
+  getCurrentCubeMetadata: function(){
+    var currentCubeTreeNode = this.getCurrentCubeTreeNode();
+    if (!currentCubeTreeNode) {
+      return null;
+    }
+    return currentCubeTreeNode.conf.metadata;
   },
   getCurrentCatalogTreeNode: function(){
     var cubeTreeNode = this.getCurrentCubeTreeNode();
@@ -1394,12 +1463,34 @@ var XmlaTreeView;
     }
     return cubeTreeNode.getParentTreeNode();
   },
+  getCurrentCatalogMetadata: function(){
+    var currentCatalogTreeNode = this.getCurrentCatalogTreeNode();
+    if (!currentCatalogTreeNode) {
+      return null;
+    }
+    return currentCatalogTreeNode.conf.metadata;
+  },
   getCurrentDatasourceTreeNode: function(){
     var currentCatalogTreeNode = this.getCurrentCatalogTreeNode();
     if (!currentCatalogTreeNode) {
       return null;
     }
     return currentCatalogTreeNode.getParentTreeNode();
+  },
+  getCurrentDatasourceMetadata: function(){
+    var currentDatasourceTreeNode = this.getCurrentDatasourceTreeNode();
+    if (!currentDatasourceTreeNode) {
+      return null;
+    }
+    return currentDatasourceTreeNode.conf.metadata;
+  },
+  getCurrentCube: function(){
+    var currentCube = {
+      cube: this.getCurrentCubeMetadata(),
+      catalog: this.getCurrentCatalogMetadata(),
+      datasource: this.getCurrentDatasourceMetadata()
+    };
+    return currentCube;
   },
   createShowDimensionNodesCheckbox: function(){
     var cubeTreePane = this.cubeTreePane;
