@@ -172,10 +172,10 @@ limitations under the License.
                                 var hierarchy = axis.getHierarchyName(hierarchy);
                                 var topLevelMembersExpression = axis.braceIdentifier(hierarchy) + ".Levels(0).Members";
                                 if (denominator) {
-                                  denominator += "CrossJoin(" + denominator + ", " + topLevelMembersExpression + ")";
+                                  denominator = "CrossJoin(" + denominator + ", " + topLevelMembersExpression + ")";
                                 }
                                 else {
-                                  denominator += topLevelMembersExpression;
+                                  denominator = topLevelMembersExpression;
                                 }
                               });
                             })
@@ -218,7 +218,9 @@ limitations under the License.
                                   return;
                                 }
                                 var hierarchy = axis.getHierarchyName(hierarchy);
-                                denominator += ", " + axis.braceIdentifier(hierarchy) + ".CurrentMember.Parent"
+                                var currentMemberExpression = axis.braceIdentifier(hierarchy) + ".CurrentMember";
+                                var parentExpression = currentMemberExpression + ".Parent";
+                                denominator += ", Iif( COUNT(" + parentExpression + ") = 1, " + parentExpression + ", " + currentMemberExpression + ")"
                               });
                             })
                             denominator = "(" + numerator + denominator + ")";
