@@ -170,6 +170,54 @@ limitations under the License.
                                   return;
                                 }
                                 var hierarchy = axis.getHierarchyName(hierarchy);
+                                var topLevelMembersExpression = axis.braceIdentifier(hierarchy) + ".Levels(0).Members";
+                                if (denominator) {
+                                  denominator += "CrossJoin(" + denominator + ", " + topLevelMembersExpression + ")";
+                                }
+                                else {
+                                  denominator += topLevelMembersExpression;
+                                }
+                              });
+                            })
+                            var expression;
+                            if (denominator) {
+                              denominator = "SUM(" + denominator + ", " + numerator + ")";
+                            }
+                            else {
+                              denominator = numerator;
+                            }
+                            expression =  numerator + " / " + denominator;
+
+                            mdx += "\n'" + expression + "'";
+
+                            var formatString = iDef(metadata.formatString) ? metadata.formatString : "0.00%"
+                            mdx += ",\nFORMAT_STRING = '" + formatString + "'"
+
+                            return mdx;
+                          }
+                        },
+                        {
+                          classes: ["derived-measure-percentage"],
+                          name: "${1} percentage of parent",
+                          captionMessageKey: "${1} percentage of parent",
+                          tooltipMessageKey: "${1} percentage of parent",
+                          formatString: "0.00%",
+                          calculation: function(metadata, queryDesigner){
+                            var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
+
+                            var measure = metadata.derivedFrom;
+                            var numerator = measure.MEASURE_UNIQUE_NAME;
+
+                            var denominator = "";
+                            queryDesigner.eachAxis(function(id, axis, i){
+                              if (id === Xmla.Dataset.AXIS_SLICER) {
+                                return;
+                              }
+                              axis.eachHierarchy(function(hierarchy, i){
+                                if (axis.isMeasureHierarchy(hierarchy)) {
+                                  return;
+                                }
+                                var hierarchy = axis.getHierarchyName(hierarchy);
                                 denominator += ", " + axis.braceIdentifier(hierarchy) + ".CurrentMember.Parent"
                               });
                             })
