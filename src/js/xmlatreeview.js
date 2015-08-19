@@ -1345,6 +1345,7 @@ var XmlaTreeView;
       objectName: objectName,
       title: title,
       tooltip: tooltip,
+      sorted: true,
       metadata: row
     };
 

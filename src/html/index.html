@@ -150,9 +150,9 @@ limitations under the License.
                       derivedMeasures: [
                         {
                           classes: ["derived-measure-percentage"],
-                          name: "${1} percentage",
-                          captionMessageKey: "${1} percentage",
-                          tooltipMessageKey: "${1} percentage",
+                          name: "${1} percentage of all",
+                          captionMessageKey: "${1} percentage of all",
+                          tooltipMessageKey: "${1} as a percentage of all categories along all hierarchies on all axes.",
                           formatString: "0.00%",
                           calculation: function(metadata, queryDesigner){
                             var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
@@ -169,8 +169,8 @@ limitations under the License.
                                 if (axis.isMeasureHierarchy(hierarchy)) {
                                   return;
                                 }
-                                var hierarchy = axis.getHierarchyName(hierarchy);
-                                var topLevelMembersExpression = axis.braceIdentifier(hierarchy) + ".Levels(0).Members";
+                                var hierarchyName = axis.getHierarchyName(hierarchy);
+                                var topLevelMembersExpression = axis.braceIdentifier(hierarchyName) + ".Levels(0).Members";
                                 if (denominator) {
                                   denominator = "CrossJoin(" + denominator + ", " + topLevelMembersExpression + ")";
                                 }
@@ -179,14 +179,13 @@ limitations under the License.
                                 }
                               });
                             })
-                            var expression;
                             if (denominator) {
-                              denominator = "SUM(" + denominator + ", " + numerator + ")";
+                              denominator = "Sum(" + denominator + ", " + numerator + ")";
                             }
                             else {
                               denominator = numerator;
                             }
-                            expression =  numerator + " / " + denominator;
+                            var expression =  numerator + " / " + denominator;
 
                             mdx += "\n'" + expression + "'";
 
@@ -200,7 +199,7 @@ limitations under the License.
                           classes: ["derived-measure-percentage"],
                           name: "${1} percentage of parent",
                           captionMessageKey: "${1} percentage of parent",
-                          tooltipMessageKey: "${1} percentage of parent",
+                          tooltipMessageKey: "${1} as a percentage of the parent level of all hierarchies along all axes.",
                           formatString: "0.00%",
                           calculation: function(metadata, queryDesigner){
                             var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
@@ -217,14 +216,71 @@ limitations under the License.
                                 if (axis.isMeasureHierarchy(hierarchy)) {
                                   return;
                                 }
-                                var hierarchy = axis.getHierarchyName(hierarchy);
-                                var currentMemberExpression = axis.braceIdentifier(hierarchy) + ".CurrentMember";
+                                var hierarchyName = axis.getHierarchyName(hierarchy);
+                                var currentMemberExpression = axis.braceIdentifier(hierarchyName) + ".CurrentMember";
                                 var parentExpression = currentMemberExpression + ".Parent";
-                                denominator += ", Iif( COUNT(" + parentExpression + ") = 1, " + parentExpression + ", " + currentMemberExpression + ")"
+                                denominator += ", Iif( Count(" + parentExpression + ") = 1, " + parentExpression + ", " + currentMemberExpression + ")"
                               });
                             })
                             denominator = "(" + numerator + denominator + ")";
 
+                            var expression =  numerator + " / " + denominator;
+                            mdx += "\n'" + expression + "'";
+
+                            var formatString = iDef(metadata.formatString) ? metadata.formatString : "0.00%"
+                            mdx += ",\nFORMAT_STRING = '" + formatString + "'"
+
+                            return mdx;
+                          }
+                        },
+                        {
+                          classes: ["derived-measure-percentage"],
+                          name: "${1} percentage",
+                          captionMessageKey: "${1} percentage",
+                          tooltipMessageKey: "${1} as a percentage all categories that appear on all axes in only this query",
+                          formatString: "0.00%",
+                          calculation: function(metadata, queryDesigner){
+                            var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
+
+                            var measure = metadata.derivedFrom;
+                            var numerator = measure.MEASURE_UNIQUE_NAME;
+
+                            var denominator = "";
+                            queryDesigner.eachAxis(function(id, axis, i){
+                              if (id === Xmla.Dataset.AXIS_SLICER) {
+                                return;
+                              }
+                              axis.eachHierarchy(function(hierarchy, i){
+                                if (axis.isMeasureHierarchy(hierarchy)) {
+                                  return;
+                                }
+                                var hierarchyName = axis.getHierarchyName(hierarchy);
+                                var currentMemberExpression = axis.braceIdentifier(hierarchyName) + ".CurrentMember";
+                                var siblingExpression = currentMemberExpression + ".Siblings";
+                                var members = "";
+                                axis.eachSetDef(function(setDef, setDefIndex){
+                                  var type = setDef.type;
+                                  switch (type) {
+                                    case "property":
+                                    case "derived-measure":
+                                      return;
+                                  }
+                                  if (members.length) {
+                                    members += ", ";
+                                  }
+                                  members += setDef.expression;
+                                }, null, hierarchy);
+                                members = "{" + members + "}";
+                                members = "InterSect(" + members + ", " + siblingExpression + ")";
+                                denominator = denominator ? "CrossJoin(" + denominator + ", " + members + ")" : members;
+                              });
+                            })
+                            if (denominator) {
+                              denominator = "Sum(" + denominator + ", " + numerator + ")";
+                            }
+                            else {
+                              denominator = numerator;
+                            }
                             var expression =  numerator + " / " + denominator;
                             mdx += "\n'" + expression + "'";
 
