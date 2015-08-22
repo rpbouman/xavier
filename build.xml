@@ -36,6 +36,7 @@
 -->
   <property name="pentaho-ce-5.2"  location="/home/roland/pentaho-ce/biserver-ce-5.2.0.0-209/biserver-ce"/>
   <property name="pentaho-ce-5.4"  location="/home/roland/pentaho-ce/biserver-ce-5.4.0.0-128/biserver-ce"/>
+  <property name="pentaho-ee-5.4"  location="/home/roland/pentaho-ee/biserver-ee-5.4.0.1-130/biserver-ee"/>
 
   <property name="bi-server-system.dir"  location="/pentaho-solutions/system"/>
   <property name="tomcat.dir"  location="${bi-server.dir}/tomcat"/>
@@ -177,6 +178,14 @@
 
   <target name="deploy-pentaho-5.4" depends="dist,undeploy-pentaho-5.4" description="deploy distribution">
     <unzip src="${dist}/${ant.project.name}.zip" dest="${pentaho-ce-5.4}${bi-server-system.dir}"/>
+  </target>
+
+  <target name="undeploy-pentaho-ee-5.4" description="undeploy distribution">
+    <delete dir="${pentaho-ee-5.4}${bi-server-system.dir}/${ant.project.name}"/>
+  </target>
+
+  <target name="deploy-pentaho-ee-5.4" depends="dist,undeploy-pentaho-ee-5.4" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${pentaho-ee-5.4}${bi-server-system.dir}"/>
   </target>
 
   <target name="deploy-iccube" depends="dist" description="deploy distribution">
