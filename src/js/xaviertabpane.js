@@ -755,12 +755,7 @@ adopt(XavierDocumentTab, XavierTab);
         if (cellset.cellOrdinal() === cellOrdinal++) {
           columnIndex = cellmap[i];
           column = columns[columnIndex];
-          if (column.isMeasure) {
-            value = cellset.cellValue();
-          }
-          else {
-            value = cellset.cellFmtValue();
-          }
+          value = cellset.cellFmtValue();
           values[columnIndex] = value;
           cellset.nextCell();
         }
@@ -1003,7 +998,7 @@ var XavierTableTab;
           mandatory: true,
           hasEmptyCheckBox: false,
           drop: {
-            include: ["level", "property", "measure"]
+            include: ["level", "property", "measure", "derived-measure"]
           }
         },
         {
@@ -1109,7 +1104,7 @@ var XavierPivotTableTab;
     });
   },
   createQueryDesigner: function(dom){
-    var intrinsicProperties = "PARENT_UNIQUE_NAME";
+    var intrinsicProperties = ["PARENT_UNIQUE_NAME"];
     var queryDesigner = this.queryDesigner = new QueryDesigner({
       container: cEl("DIV", {}, null, dom),
       dnd: this.getDnd(),
@@ -1713,6 +1708,7 @@ var XavierPieChart;
     this.createGridForTuples(dom, measuresAxis, titlePosition, function(tuple, dom, len){
       var data = [];
       var measure = this.getLabelForTuple(tuple);
+      var percentageLabel = gMsg("Percentage");
       categoriesAxis.eachTuple(function(tuple){
         var category = this.getLabelForTuple(tuple);
         var datum = {
@@ -1732,9 +1728,14 @@ var XavierPieChart;
       var series = chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
       series.innerRadius = "50%";
       series.getTooltipText = function(d){
+        var tooltip = [];
         var datum = data[d.aggField[0]];
-        var pct = this.p._getFormat()(d.angle) + " (" + (d3.format("%")(d.piePct)) + ")";
-        return [datum.label + ": " + datum.fmtValue + pct];
+        tooltip.push(datum.label + ": " + datum.fmtValue);
+        if (datum.fmtValue.indexOf("%") === -1) {
+          var pct = this.p._getFormat()(d.angle) + " (" + (d3.format("%")(d.piePct)) + ")";
+          tooltip.push(percentageLabel + ": " + pct);
+        }
+        return tooltip;
       };
       if (this.isCleared) {
         //TODO: print legend
@@ -1771,7 +1772,7 @@ var XavierPieChartTab;
           canBeEmpty: false,
           "class": "measures",
           drop: {
-            include: "measure"
+            include: ["measure", "derived-measure"]
           }
         },
         {
@@ -2005,7 +2006,7 @@ var XavierGroupedBarChartTab;
           canBeEmpty: false,
           "class": "measures",
           drop: {
-            include: "measure"
+            include: ["measure", "derived-measure"]
           },
           userSortable: false
         },
@@ -2237,7 +2238,7 @@ var XavierCombiChartTab;
           mandatory: true,
           hasEmptyCheckBox: false,
           drop: {
-            include: ["level", "property", "member", "measure"]
+            include: ["level", "property", "member", "measure", "derived-measure"]
           }
         },
         {
@@ -2249,7 +2250,7 @@ var XavierCombiChartTab;
           mandatory: true,
           hasEmptyCheckBox: false,
           drop: {
-            include: ["level", "property", "member", "measure"]
+            include: ["level", "property", "member", "measure", "derived-measure"]
           }
         },
         {
