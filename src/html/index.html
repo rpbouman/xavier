@@ -155,7 +155,9 @@ limitations under the License.
                           tooltipMessageKey: "${1} as a percentage of all categories along all hierarchies on all axes.",
                           formatString: "0.00%",
                           calculation: function(metadata, queryDesigner){
-                            var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
+                            var memberName;
+                            memberName = metadata.MEASURE_UNIQUE_NAME;
+                            var mdx = "MEMBER " + memberName + "\nAS";
 
                             var measure = metadata.derivedFrom;
                             var numerator = measure.MEASURE_UNIQUE_NAME;
@@ -190,8 +192,9 @@ limitations under the License.
                             mdx += "\n'" + expression + "'";
 
                             var formatString = iDef(metadata.formatString) ? metadata.formatString : "0.00%"
-                            mdx += ",\nFORMAT_STRING = '" + formatString + "'"
+                            mdx += ",\nFORMAT_STRING = '" + formatString + "'";
 
+                            mdx += ",\nCAPTION = '" + metadata.MEASURE_CAPTION + "'";
                             return mdx;
                           }
                         },
@@ -202,7 +205,9 @@ limitations under the License.
                           tooltipMessageKey: "${1} as a percentage of the parent level of all hierarchies along all axes.",
                           formatString: "0.00%",
                           calculation: function(metadata, queryDesigner){
-                            var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
+                            var memberName;
+                            memberName = metadata.MEASURE_UNIQUE_NAME;
+                            var mdx = "MEMBER " + memberName + "\nAS";
 
                             var measure = metadata.derivedFrom;
                             var numerator = measure.MEASURE_UNIQUE_NAME;
@@ -230,17 +235,20 @@ limitations under the License.
                             var formatString = iDef(metadata.formatString) ? metadata.formatString : "0.00%"
                             mdx += ",\nFORMAT_STRING = '" + formatString + "'"
 
+                            mdx += ",\nCAPTION = '" + metadata.MEASURE_CAPTION + "'";
                             return mdx;
                           }
                         },
                         {
                           classes: ["derived-measure-percentage"],
-                          name: "${1} percentage",
-                          captionMessageKey: "${1} percentage",
+                          name: "${1} percentage NAME",
+                          captionMessageKey: "${1} percentage CAPTION",
                           tooltipMessageKey: "${1} as a percentage all categories that appear on all axes in only this query",
                           formatString: "0.00%",
                           calculation: function(metadata, queryDesigner){
-                            var mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS";
+                            var memberName;
+                            memberName = metadata.MEASURE_UNIQUE_NAME;
+                            var mdx = "MEMBER " + memberName + "\nAS";
 
                             var measure = metadata.derivedFrom;
                             var numerator = measure.MEASURE_UNIQUE_NAME;
@@ -287,6 +295,7 @@ limitations under the License.
                             var formatString = iDef(metadata.formatString) ? metadata.formatString : "0.00%"
                             mdx += ",\nFORMAT_STRING = '" + formatString + "'"
 
+                            mdx += ",\nCAPTION = '" + metadata.MEASURE_CAPTION + "'";
                             return mdx;
                           }
                         }
