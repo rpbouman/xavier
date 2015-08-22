@@ -1284,16 +1284,25 @@ var XmlaTreeView;
     //it doesn't really belong in the tree.
     //it also doesn't belong in the query designer but it's less of a misfit there.
     var measuresHierarchyUniqueName = QueryDesigner.prototype.measuresHierarchyName;
-    var caption = gMsg(derivedMeasure.captionMessageKey, measureCaption);
     var measure = derivedMeasure.derivedFrom;
     var measureName = measure.MEASURE_NAME;
     measureName = QueryDesignerAxis.prototype.stripBracesFromIdentifier(measureName);
-    var name = gMsg(derivedMeasure.name, measureName)
+    var name = gMsg(derivedMeasure.name, measureName);
+    var caption = gMsg(derivedMeasure.captionMessageKey, measureCaption);
+
 
     derivedMeasure.MEASURE_CAPTION = caption;
     derivedMeasure.HIERARCHY_UNIQUE_NAME = measuresHierarchyUniqueName;
     derivedMeasure.MEASURE_NAME = name;
-    derivedMeasure.MEASURE_UNIQUE_NAME = measuresHierarchyUniqueName + "." + QueryDesignerAxis.prototype.braceIdentifier(name);
+    derivedMeasure.MEASURE_UNIQUE_NAME = QueryDesignerAxis.prototype.braceIdentifier(measuresHierarchyUniqueName) +
+                                         "." +
+                                         //use the caption rather than the name because
+                                         //mondrian does not support the CAPTION property for calc members.
+                                         //QueryDesignerAxis.prototype.braceIdentifier(name);
+                                         QueryDesignerAxis.prototype.braceIdentifier(caption);
+    if (derivedMeasure.formatString) {
+      derivedMeasure.DEFAULT_FORMAT_STRING = derivedMeasure.formatString;
+    }
 
     var classes = ["derived-measure", "measure"];
     if (derivedMeasure.classes) {
