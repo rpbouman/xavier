@@ -26,8 +26,10 @@
 <!--
   <property name="icCube.dir"  location="/home/roland/icCube-4.8.2"/>
 -->
-  <property name="icCube.dir"  location="/home/roland/icCube/icCube-5.0.2"/>
-  <property name="icCube.web.dir"  location="${icCube.dir}/web"/>
+  <property name="icCube-5.0.2.dir"  location="/home/roland/icCube/icCube-5.0.2"/>
+  <property name="icCube-5.0.2.web.dir"  location="${icCube-5.0.2.dir}/web"/>
+  <property name="icCube-5.1.2.dir"  location="/home/roland/icCube/icCube-5.1.2"/>
+  <property name="icCube-5.1.2.web.dir"  location="${icCube-5.1.2.dir}/web"/>
 <!--
   <property name="bi-server.dir"  location="/home/roland/pentaho-ce/biserver-ce-5.1.0.0-752/biserver-ce"/>
   <property name="bi-server.dir"  location="/home/roland/pentaho-ee/biserver-ee-TRUNK-b2246/biserver-ee"/>
@@ -188,8 +190,12 @@
     <unzip src="${dist}/${ant.project.name}.zip" dest="${pentaho-ee-5.4}${bi-server-system.dir}"/>
   </target>
 
-  <target name="deploy-iccube" depends="dist" description="deploy distribution">
-    <unzip src="${dist}/${ant.project.name}.zip" dest="${icCube.web.dir}"/>
+  <target name="deploy-iccube-5.0.2" depends="dist" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${icCube-5.0.2.web.dir}"/>
+  </target>
+
+  <target name="deploy-iccube-5.1.2" depends="dist" description="deploy distribution">
+    <unzip src="${dist}/${ant.project.name}.zip" dest="${icCube-5.1.2.web.dir}"/>
   </target>
 
   <target name="undeploy-tomcat" description="undeploy distribution">
