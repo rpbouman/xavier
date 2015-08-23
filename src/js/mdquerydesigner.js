@@ -808,7 +808,8 @@ var QueryDesignerAxis;
         break;
     }
 
-    var label, canBeEmpty = iDef(conf.canBeEmpty) ? conf.canBeEmpty : true;
+    var label,
+        canBeEmpty = iDef(conf.canBeEmpty) ? conf.canBeEmpty : true;
     switch (this.conf.id) {
       case Xmla.Dataset.AXIS_COLUMNS:
         label = gMsg("Columns");
@@ -1939,6 +1940,7 @@ var QueryDesignerAxis;
     return mdx;
   },
   getMemberSetMdx: function(){
+    var conf = this.conf;
     var mdx = "";
     this.eachHierarchy(function(hierarchy, hierarchyIndex){
       var members = "";
@@ -1957,16 +1959,22 @@ var QueryDesignerAxis;
         members = "Hierarchize(" + members + ")";
       }
       mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
-      var sortOption = this.sortOption;
-      if (sortOption) {
-        var direction = sortOption.direction.toUpperCase();
-        if (this.getUserSortBreaksHierarchy()) {
-          direction = "B" + direction;
-        }
-        var args = [mdx, sortOption.memberInfo.expression, direction];
-        mdx = "Order(" + args.join(",") + ")";
-      }
     }, this);
+
+    if (mdx && conf.isDistinct) {
+      mdx = "Distinct(" + mdx + ")";
+    }
+
+    var sortOption = this.sortOption;
+    if (sortOption) {
+      var direction = sortOption.direction.toUpperCase();
+      if (this.getUserSortBreaksHierarchy()) {
+        direction = "B" + direction;
+      }
+      var args = [mdx, sortOption.memberInfo.expression, direction];
+      mdx = "Order(" + args.join(",") + ")";
+    }
+
     return mdx;
   },
   getMdx: function(defaultSet) {

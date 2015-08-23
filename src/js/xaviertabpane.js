@@ -996,6 +996,7 @@ var XavierTableTab;
           tooltip: gMsg("Items on this axis are used to generate columns for the table"),
           hint: gMsg("Drag any levels, members or measures unto the columns axis to create columns in the data table."),
           mandatory: true,
+          isDistinct: true,
           hasEmptyCheckBox: false,
           drop: {
             include: ["level", "property", "measure", "derived-measure"]
@@ -1117,6 +1118,7 @@ var XavierPivotTableTab;
           tooltip: gMsg("Items on this axis are used to generate columns for the pivot table"),
           hint: gMsg("Drag any levels, members or measures unto the columns axis to create columns in the pivot table."),
           "class": "columns",
+          isDistinct: true,
           mandatory: true,
           intrinsicProperties: intrinsicProperties,
           userSortBreaksHierarchy: false
@@ -1127,6 +1129,7 @@ var XavierPivotTableTab;
           tooltip: gMsg("Items on this axis are used to generate rows for the pivot table"),
           hint: gMsg("Optionally, drag any levels, members or measures unto the row axis to create rows in the pivot table."),
           "class": "rows",
+          isDistinct: true,
           intrinsicProperties: intrinsicProperties,
           userSortBreaksHierarchy: false
         },
@@ -1770,6 +1773,7 @@ var XavierPieChartTab;
           hint: gMsg("Drag measures to the measures axis. A pie chart will be created for each measure, and the pie slices are sized according to the value of the measure."),
           mandatory: true,
           canBeEmpty: false,
+          isDistinct: true,
           "class": "measures",
           drop: {
             include: ["measure", "derived-measure"]
@@ -1782,6 +1786,7 @@ var XavierPieChartTab;
           hint: gMsg("Drag levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided."),
           mandatory: true,
           canBeEmpty: false,
+          isDistinct: true,
           "class": "levels",
           drop: {
             include: ["level", "member"]
@@ -1793,6 +1798,7 @@ var XavierPieChartTab;
           tooltip: gMsg("For each unique combination of members, a list item is layed out and filled with pie charts."),
           hint: gMsg("Optionally, drop levels or members on the columns axis to create a list of multiple pies."),
           canBeEmpty: false,
+          isDistinct: true,
           "class": "columns",
           drop: {
             include: ["level", "member"]
@@ -1804,6 +1810,7 @@ var XavierPieChartTab;
           tooltip: gMsg("For each unique combination of members, one row is layed out and its columns are filled with pie charts."),
           hint: gMsg("Optionally, drop levels or members on the rows axis and on the column axis to create a matrix of multiple pies."),
           canBeEmpty: false,
+          isDistinct: true,
           "class": "rows",
           drop: {
             include: ["level", "member"]
@@ -2004,6 +2011,7 @@ var XavierGroupedBarChartTab;
           hint: gMsg("Drag measures to the measures axis. The measure value determines the size of the bar."),
           mandatory: true,
           canBeEmpty: false,
+          isDistinct: true,
           "class": "measures",
           drop: {
             include: ["measure", "derived-measure"]
@@ -2017,6 +2025,7 @@ var XavierGroupedBarChartTab;
           hint: gMsg("Drag levels or members to the categories axis to create categories for which bars are drawn."),
           mandatory: true,
           canBeEmpty: false,
+          isDistinct: true,
           "class": "levels",
           drop: {
             include: ["level", "member"]
@@ -2028,6 +2037,7 @@ var XavierGroupedBarChartTab;
           tooltip: gMsg("For each unique combination of members, a bar chart is created."),
           hint: gMsg("Optionally, drop levels or members on the columns axis to create a list of multiple bar charts."),
           canBeEmpty: false,
+          isDistinct: true,
           "class": "columns",
           drop: {
             include: ["level", "member"]
@@ -2039,6 +2049,7 @@ var XavierGroupedBarChartTab;
           tooltip: gMsg("For each unique combination of members, one row is layed out and each column is filled with a bar chart."),
           hint: gMsg("Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts."),
           canBeEmpty: false,
+          isDistinct: true,
           "class": "rows",
           drop: {
             include: ["level", "member"]
