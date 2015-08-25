@@ -128,6 +128,58 @@ limitations under the License.
         //configure what is considered "low cardinality" for a level.
         //If the level has this or less members, they are automatically expanded in the treeview.
         maxLowCardinalityLevelMembers: 5,
+        //metadataRestrictions is a means to lock down the datasources, catalogs and cubes
+        //that xavier will serve to the user up front.
+        //You can also use this to set which cube is "autoSelected" - this one will be automatically selected and loaded.
+        /*
+        metadataRestrictions: {
+          datasources: [                //datasources to discover
+            {
+              restriction: {
+                //DataSourceName: "icCube",
+                //URL: "",
+                //ProviderName: ""
+              },
+              catalogs: [               //catalogs to discover for this datasource
+                {
+                  restriction: {
+                    CATALOG_NAME: "FoodMart"
+                  },
+                  cubes: [              //cubes to discover for this catalog
+                    {
+                      restriction: {
+                        CUBE_NAME: "Sales"
+                      },
+                      autoSelect: true, //whether this cube should be automatically selectd.
+                      metadata: {       //use this chached metadata rather than discovering it dynamically
+                      }
+                    },
+                    {
+                      restriction: {
+                        CUBE_NAME: "Store"
+                      }
+                    }
+                  ]
+                },
+                {
+                  restriction: {
+                    CATALOG_NAME: "SteelWheels"
+                  },
+                  cubes: [              //cubes to discover for this catalog
+                    {
+                      restriction: {
+                        CUBE_NAME: "SteelWheelsSales"
+                      },
+                      metadata: {       //use this chached metadata rather than discovering it dynamically
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        */
         //specify matchers and extra properties to apply to XML/A schema elements
         metadataFilter: [
           {

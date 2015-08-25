@@ -44,6 +44,9 @@ var XmlaTreeView;
   if (iDef(conf.maxLowCardinalityLevelMembers)) {
     this.maxLowCardinalityLevelMembers = conf.maxLowCardinalityLevelMembers;
   }
+  if (iDef(conf.metadataRestrictions)) {
+    this.metadataRestrictions = conf.metadataRestrictions;
+  }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
   //maximum number of members to allow auto-loading of a level's members
@@ -159,123 +162,172 @@ var XmlaTreeView;
   fadeInCubeTreePane: function(){
     this.fadeInTreePane(this.cubeTreePane);
   },
-  init: function(){
-    this.fireEvent("busy");
+  processProviderNodeQueue: function(providerNodeQueue){
+    if (!(++providerNodeQueue.index < providerNodeQueue.length)) {
+      return false;
+    }
+    var providerNode = providerNodeQueue[providerNodeQueue.index];
+    var conf = providerNode.conf;
+    var metadata = conf.metadata;
     var me = this;
+    this.indicateProgress(gMsg("Loading catalogs for datasource ${1}", conf.title));
     var xmla = this.xmla;
-    this.hideSchemaTreePane();
-    var schemaTreePane = this.schemaTreePane;
-    this.clearTreePane(schemaTreePane);
-    var schemaTreePaneDom = schemaTreePane.getDom();
-    if (!this.progressIndicator) {
-      this.createProgressIndicator();
-    }
-    var catalogQueueIndex = -1;
-    var catalogQueue = [];
 
-    function doCatalogQueue(){
-      if (!(++catalogQueueIndex < catalogQueue.length)) {
-        return false;
-      }
-      var providerNode = catalogQueue[catalogQueueIndex];
-      var conf = providerNode.conf;
-      var metadata = conf.metadata;
-      me.indicateProgress(gMsg("Loading catalogs for datasource ${1}", conf.title));
-      xmla.discoverDBCatalogs({
-        url: metadata.URL,
-        properties: {
-          DataSourceInfo: metadata.DataSourceInfo
-        },
-        error: function(xmla, options, error){
-          me.fireEvent("error", error);
-        },
-        success: function(xmla, options, rowset){
-          rowset.eachRow(function(row){
-            if (me.checkIsExcluded(options, row)) {
-              return;
-            }
-            var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
-            var state = TreeNode.states.expanded;
-            var objectName = row.CATALOG_NAME;
-            var treeNode = new TreeNode({
-              classes: "catalog",
-              state: state,
-              id: conf.id + ":catalog:" + row.CATALOG_NAME,
-              parentTreeNode: providerNode,
-              objectName: objectName,
-              title: objectName + tooltipAndInfoLabel.infoLabel,
-              tooltip: tooltipAndInfoLabel.tooltip || objectName,
-              metadata: row
-            });
-            cubeQueue.push(treeNode);
-          });
-          if (doCatalogQueue() === false) {
-            doCubeQueue();
+    var catalogRestrictions = metadata.catalogRestrictions;
+    if (!catalogRestrictions) {
+      catalogRestrictions = [{}];
+    }
+    catalogRestrictions.index = -1;
+
+    var options = {
+      url: metadata.URL,
+      properties: {
+        DataSourceInfo: metadata.DataSourceInfo
+      },
+      error: function(xmla, options, error){
+        me.fireEvent("error", error);
+      },
+      success: function(xmla, options, rowset){
+        rowset.eachRow(function(row){
+          if (me.checkIsExcluded(options, row)) {
+            return;
           }
-        }
-      });
-    }
-
-    var cubeQueueIndex = -1;
-    var cubeQueue = [];
-    function doCubeQueue(){
-      if (!(++cubeQueueIndex < cubeQueue.length)) {
-        me.fireEvent("done");
-        me.hideProgressIndicator();
-        me.fadeInSchemaTreePane();
-        return false;
-      }
-      var catalogNode = cubeQueue[cubeQueueIndex];
-      var providerNode = catalogNode.getParentTreeNode();
-      var conf = catalogNode.conf;
-      me.indicateProgress(gMsg("Loading cubes for catalog ${1}", conf.title));
-      var catalog = conf.metadata.CATALOG_NAME;
-      var metadata = providerNode.conf.metadata;
-      xmla.discoverMDCubes({
-        url: metadata.URL,
-        properties: {
-          DataSourceInfo: metadata.DataSourceInfo,
-          Catalog: catalog
-        },
-        error: function(xmla, options, error){
-          me.fireEvent("error", error);
-        },
-        success: function(xmla, options, rowset){
-          rowset.eachRow(function(row){
-            if (me.checkIsExcluded(options, row)) {
-              return;
-            }
-            var objectName = row.CUBE_CAPTION || row.CUBE_NAME;
-            var title = objectName;
-            var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
-            var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
-            title = catalogPrefix + title + tooltipAndInfoLabel.infoLabel;
-            var tooltip = tooltipAndInfoLabel.tooltip || row.CUBE_NAME;
-            var treeNode = new TreeNode({
-              classes: "cube",
-              state: TreeNode.states.leaf,
-              id: conf.id + ":cube:" + row.CUBE_NAME,
-              objectName: objectName,
-              parentTreeNode: catalogNode,
-              title: title,
-              tooltip: tooltip,
-              metadata: row
-            });
+          var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+          var state = TreeNode.states.expanded;
+          var objectName = row.CATALOG_NAME;
+          var treeNode = new TreeNode({
+            classes: "catalog",
+            state: state,
+            id: conf.id + ":catalog:" + row.CATALOG_NAME,
+            parentTreeNode: providerNode,
+            objectName: objectName,
+            title: objectName + tooltipAndInfoLabel.infoLabel,
+            tooltip: tooltipAndInfoLabel.tooltip || objectName,
+            metadata: row,
+            cubeRestrictions: options.cubeRestrictions
           });
-          if (!showCatalogNodesCheckbox.checked) {
-            catalogNode.setState(TreeNode.states.flattened);
-          }
-          doCubeQueue();
+          providerNodeQueue.catalogNodeQueue.push(treeNode);
+        });
+        if (me.processProviderNodeQueue(providerNodeQueue) === false) {
+          doCatalogs(catalogRestrictions)
         }
-      });
-    }
+      }
+    };
 
+    var doCatalogs = function(catalogRestrictions){
+      if (!(++catalogRestrictions.index < catalogRestrictions.length)) {
+        if (!me.processProviderNodeQueue(providerNodeQueue)){
+          me.processCatalogNodeQueue(providerNodeQueue.catalogNodeQueue);
+          return false;
+        }
+      }
+      var catalogRestriction = catalogRestrictions[catalogRestrictions.index] || {};
+      options.restrictions = catalogRestriction.restriction;
+      options.cubeRestrictions = catalogRestriction.cubes;
+      xmla.discoverDBCatalogs(options);
+    };
+
+    doCatalogs(catalogRestrictions);
+  },
+  initDone: function(){
+    this.fireEvent("done");
+    this.hideProgressIndicator();
+    if (this.autoSelectCube) {
+      this.loadCube(this.autoSelectCube);
+    }
+    else {
+      this.fadeInSchemaTreePane();
+    }
+  },
+  processCatalogNodeQueue: function(catalogNodeQueue){
+    var me = this;
+    if (!(++catalogNodeQueue.index < catalogNodeQueue.length)) {
+      this.initDone();
+      return false;
+    }
+    var catalogNode = catalogNodeQueue[catalogNodeQueue.index];
+    var providerNode = catalogNode.getParentTreeNode();
+    var conf = catalogNode.conf;
+    this.indicateProgress(gMsg("Loading cubes for catalog ${1}", conf.title));
+    var catalog = conf.metadata.CATALOG_NAME;
+    var metadata = providerNode.conf.metadata;
+
+    var cubeRestrictions = conf.cubeRestrictions;
+    if (!cubeRestrictions) {
+      cubeRestrictions = [];
+    }
+    if (cubeRestrictions.length === 0) {
+      cubeRestrictions.push({});
+    }
+    cubeRestrictions.index = -1;
+
+    var options = {
+      url: metadata.URL,
+      properties: {
+        DataSourceInfo: metadata.DataSourceInfo,
+        Catalog: catalog
+      },
+      error: function(xmla, options, error){
+        me.fireEvent("error", error);
+      },
+      success: function(xmla, options, rowset){
+        rowset.eachRow(function(row){
+          if (me.checkIsExcluded(options, row)) {
+            return;
+          }
+          var objectName = row.CUBE_CAPTION || row.CUBE_NAME;
+          var title = objectName;
+          var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
+          var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+          title = catalogPrefix + title + tooltipAndInfoLabel.infoLabel;
+          var tooltip = tooltipAndInfoLabel.tooltip || row.CUBE_NAME;
+          var treeNode = new TreeNode({
+            classes: "cube",
+            state: TreeNode.states.leaf,
+            id: conf.id + ":cube:" + row.CUBE_NAME,
+            objectName: objectName,
+            parentTreeNode: catalogNode,
+            title: title,
+            tooltip: tooltip,
+            metadata: row,
+            cubeMetaData: options.cubeMetaData
+          });
+          if (options.autoSelectCube === true && !me.autoSelectCube) {
+            me.autoSelectCube = treeNode;
+          }
+        });
+        if (!me.getShowCatalogNodesCheckbox().checked) {
+          catalogNode.setState(TreeNode.states.flattened);
+        }
+        doCubes(cubeRestrictions);
+      }
+    };
+
+    var xmla = this.xmla;
+    var doCubes = function(cubeRestrictions){
+      if (!(++cubeRestrictions.index < cubeRestrictions.length)) {
+        if (!me.processCatalogNodeQueue(catalogNodeQueue)){
+          return false;
+        }
+      }
+      var cubeRestriction = cubeRestrictions[cubeRestrictions.index] || {};
+      options.restrictions = cubeRestriction.restriction;
+      options.autoSelectCube = cubeRestriction.autoSelect;
+      options.cubeMetaData = cubeRestriction.metadata;
+      xmla.discoverMDCubes(options);
+    };
+
+    doCubes(cubeRestrictions);
+  },
+  initCatalogNodesCheckbox: function(){
     var showCatalogNodesCheckbox = cEl("INPUT", {
       type: "checkbox"
     });
     showCatalogNodesCheckbox.checked = !this.catalogNodesInitiallyFlattened;
     listen(showCatalogNodesCheckbox, "click", this.showCatalogNodes, this);
+    this.showCatalogNodesCheckbox = showCatalogNodesCheckbox;
 
+    var schemaTreePaneDom = this.schemaTreePane.getDom();
     cEl("DIV", {
       "class": "show-catalog-nodes"
     }, [
@@ -286,8 +338,14 @@ var XmlaTreeView;
         "class": "tooltip"
       }, gMsg("Check the box to display catalog nodes in the treeview. Uncheck to hide."))
     ], schemaTreePaneDom);
+  },
+  getShowCatalogNodesCheckbox: function(){
+    return this.showCatalogNodesCheckbox;
+  },
+  initSchemaTreeListeners: function() {
+    var schemaTreePaneDom = this.schemaTreePane.getDom();
 
-    this.schemaTreeListener = new TreeListener({container: this.schemaTreePane.getDom()});
+    this.schemaTreeListener = new TreeListener({container: schemaTreePaneDom});
     this.cubeSelection = new TreeSelection({treeListener: this.schemaTreeListener});
 
     this.cubeSelection.listen({
@@ -335,6 +393,8 @@ var XmlaTreeView;
         }
       }
     });
+  },
+  initCubeTreeListeners: function() {
     var cubeTreePaneDom = this.cubeTreePane.getDom();
     this.cubeTreeListener = new TreeListener({
       container: cubeTreePaneDom,
@@ -352,21 +412,72 @@ var XmlaTreeView;
         scope: this
       }
     });
+  },
+  initListeners: function(){
+    this.initSchemaTreeListeners();
+    this.initCubeTreeListeners();
+  },
+  init: function(){
+    this.fireEvent("busy");
+    var me = this;
+    var xmla = this.xmla;
+    this.hideSchemaTreePane();
+    var schemaTreePane = this.schemaTreePane;
+    this.clearTreePane(schemaTreePane);
+    var schemaTreePaneDom = schemaTreePane.getDom();
+    if (!this.progressIndicator) {
+      this.createProgressIndicator();
+    }
 
+    this.initCatalogNodesCheckbox();
+    this.initListeners();
     this.indicateProgress(
       "<IMG src=\"" + muiImgDir + "ajax-loader-small.gif" + "\"/>" +
       gMsg("Loading datasources...")
     );
-    xmla.discoverDataSources({
+    this.getDataSources();
+  },
+  getDataSources: function(){
+    var me = this;
+    var xmla = me.xmla;
+    var datasources = [];
+
+    var metadataRestrictions = this.metadataRestrictions;
+    if (!metadataRestrictions) {
+      metadataRestrictions = {};
+    }
+
+    var datasourcesQueue = metadataRestrictions.datasources;
+    if (!datasourcesQueue) {
+      datasourcesQueue = [];
+    }
+    if (!datasourcesQueue.length){
+      datasourcesQueue.push({});
+    }
+    datasourcesQueue.index = -1;
+
+    var doDataSourcesQueue = function(datasourcesQueue){
+      if (!(++datasourcesQueue.index < datasourcesQueue.length)) {
+        me.handleDataSources(datasources);
+        return false;
+      }
+      var datasource = datasourcesQueue[datasourcesQueue.index];
+      var restriction = datasource.restriction || {};
+      options.restrictions = restriction;
+      options.catalogRestrictions = datasource.catalogs;
+      xmla.discoverDataSources(options);
+    }
+
+    var options = {
       error: function(xmla, options, error){
         me.fireEvent("error", error);
       },
       success: function(xmla, options, rowset){
-        rowset.eachRow(function(row){
+        rowset.eachRow(function(datasource){
           //first, check the provider type.
           //we only handle MDP providers (OLAP)
           var isMDP = false;
-          var providerType = row.ProviderType;
+          var providerType = datasource.ProviderType;
           if (iArr(providerType)) {
             var n = providerType.length;
             for (var i = 0; i < n; i++){
@@ -388,39 +499,64 @@ var XmlaTreeView;
           //now, check if we are dealing with a relative URL.
           //if so, then prepend with the url of the preceding XMLA request
           //(if we don't, it will be resolved against the location of the current document, which is clearly wrong)
-          var url = parseUri(row.URL);
+          var url = parseUri(datasource.URL);
           if (url.isRelative) {
-            var url = row.URL;
-            row.URL = options.url;
+            url = datasource.URL;
+            datasource.URL = options.url;
             //If the original url does not end with a slash, add it.
             if (options.url.charAt(options.url.length - 1) !== "/") {
-              row.URL += "/";
+              datasource.URL += "/";
             }
-            row.URL += url;
+            datasource.URL += url;
           }
 
           //For now, overwrite the value of the URL field.
           //Too many servers misbehave when they return an actual value
           //see http://issues.iccube.com/issue/ic3pub-62
-          row.URL = options.url;
+          datasource.URL = options.url;
 
-          //Render MDP providers as treenodes.
-          var treeNode = new TreeNode({
-            classes: "datasource",
-            state: TreeNode.states.expanded,
-            id: "datasource:" + row.DataSourceName,
-            parentElement: schemaTreePaneDom,
-            title: row.DataSourceName,
-            tooltip: row.Description || row.DataSourceName,
-            metadata: row
-          });
-
-          //push to the queue so we can find the catalogs in a next round.
-          catalogQueue.push(treeNode);
+          //store the datasource so we can render them in the ui later.
+          datasource.catalogRestrictions = options.catalogRestrictions;
+          datasources.push(datasource);
         });
-        doCatalogQueue();
+        doDataSourcesQueue(datasourcesQueue);
       }
-    });
+    };
+
+    doDataSourcesQueue(datasourcesQueue);
+  },
+  handleDataSources: function(datasources){
+    if (datasources.length === 0) {
+      this.indicateProgress(gMsg("No datasources found."));
+      this.fireEvent("done");
+      return;
+    }
+    var schemaTreePaneDom = this.schemaTreePane.getDom();
+    var providerNodeQueue = [];
+    providerNodeQueue.index = -1;
+    providerNodeQueue.catalogNodeQueue = [];
+    providerNodeQueue.catalogNodeQueue.index = -1;
+
+    var i, n = datasources.length, datasource;
+    for (i = 0; i < n; i++) {
+      datasource = datasources[i];
+
+      //Render MDP providers as treenodes.
+      var dataSourceName = datasource.DataSourceName;
+      var treeNode = new TreeNode({
+        classes: "datasource",
+        state: TreeNode.states.expanded,
+        id: "datasource:" + dataSourceName,
+        parentElement: schemaTreePaneDom,
+        title: dataSourceName,
+        tooltip: datasource.Description || dataSourceName,
+        metadata: datasource
+      });
+
+      //push to the queue so we can find the catalogs in a next round.
+      providerNodeQueue.push(treeNode);
+    }
+    this.processProviderNodeQueue(providerNodeQueue);
   },
   eachDatasourceNode: function(callback, scope){
     var schemaTreePane = this.schemaTreePane;
@@ -1533,6 +1669,10 @@ var XmlaTreeView;
     this.fadeInCubeTreePane();
     this.fireEvent("done");
     this.fireEvent("cubeLoaded");
+    if (this.autoSelectCube) {
+      this.autoSelectCube = null;
+      this.fadeInSchemaTreePane();
+    }
   },
   loadCube: function(cubeTreeNode){
     if (!(cubeTreeNode instanceof TreeNode)) {

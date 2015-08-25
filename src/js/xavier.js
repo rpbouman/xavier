@@ -135,6 +135,7 @@ mainToolbar.listen({
 var xmlaTreeView = new XmlaTreeView({
   xmla: xmla,
   xmlaMetadataFilter: xmlaMetadataFilter,
+  metadataRestrictions: xavierOptions.metadataRestrictions,
   catalogNodesInitiallyFlattened: iDef(xavierOptions.catalogNodesInitiallyFlattened) ? xavierOptions.catalogNodesInitiallyFlattened : XmlaTreeView.prototype.catalogNodesInitiallyFlattened,
   dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : XmlaTreeView.prototype.dimensionNodesInitiallyFlattened,
   maxLowCardinalityLevelMembers: iDef(xavierOptions.maxLowCardinalityLevelMembers) ? xavierOptions.maxLowCardinalityLevelMembers : XmlaTreeView.prototype.maxLowCardinalityLevelMembers,
