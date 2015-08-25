@@ -974,4 +974,4 @@ adopt(PivotTable, Observable);
 PivotTable.id = 0;
 PivotTable.prefix = "pivot-table";
 
-linkCss("../css/mdpivottable.css");
+linkCss(cssDir + "mdpivottable.css");

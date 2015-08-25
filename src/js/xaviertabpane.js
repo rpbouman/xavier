@@ -221,7 +221,7 @@ var DataTable;
   }
 };
 adopt(XavierTabPane, TabPane);
-linkCss("../css/xaviertabpane.css");
+linkCss(cssDir + "xaviertabpane.css");
 
 /**
 *   Generic tab

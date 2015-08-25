@@ -2039,4 +2039,4 @@ QueryDesignerAxis.lookup = function(el){
   return QueryDesignerAxis.getInstance(el.id);
 };
 
-linkCss("../css/mdquerydesigner.css");
+linkCss(cssDir + "mdquerydesigner.css");

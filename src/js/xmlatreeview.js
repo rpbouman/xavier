@@ -1779,5 +1779,5 @@ var XmlaTreeView;
 
 adopt(XmlaTreeView, Observable);
 
-linkCss("../css/xmlatreeview.css");
+linkCss(cssDir + "xmlatreeview.css");
 })();

@@ -40,7 +40,7 @@ else {
 }
 
 
-linkCss("../css/xavier.css");
+linkCss(cssDir + "xavier.css");
 
 var dnd = new DDHandler({
   node: body
