@@ -662,7 +662,7 @@ var XavierDocumentTab;
   text: gMsg("Welcome!"),
   createDom: function(){
     var conf = this.conf;
-    var url = conf.url || "../doc/" + gMsg("en/welcome.html");
+    var url = conf.url || docDir + gMsg("en/welcome.html");
     var dom = cEl("IFRAME", {
       id: this.getId(),
       src: url,
