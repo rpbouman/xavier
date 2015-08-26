@@ -529,14 +529,17 @@ var PivotTable;
     }
     this.dataset = dataset;
 
-    if (dataset.hasColumnAxis(queryDesigner.getColumnAxis())) {
-      this.renderColumnAxis();
+    if (dataset.hasColumnAxis()) {
+      var columnAxis = queryDesigner.getColumnAxis();
+      this.renderColumnAxis(columnAxis);
     }
-    if (dataset.hasRowAxis(queryDesigner.getRowAxis())) {
-      this.renderRowAxis();
+    if (dataset.hasRowAxis()) {
+      var rowAxis = queryDesigner.getRowAxis();
+      this.renderRowAxis(rowAxis);
     }
     if (dataset.hasPageAxis()) {
-      this.renderPageAxis();
+      var pageAxis = queryDesigner.getPageAxis();
+      this.renderPageAxis(pageAxis);
     }
     me.renderCells();
     me.loadCells();
