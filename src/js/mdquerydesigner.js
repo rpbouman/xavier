@@ -1315,13 +1315,13 @@ var QueryDesignerAxis;
     return identifier.charAt(0) === "[" && identifier.charAt(identifier.length-1) === "]";
   },
   braceIdentifier: function(identifier) {
-    if (!this.isIdentifierBraced(identifier)) {
+    if (!QueryDesignerAxis.prototype.isIdentifierBraced(identifier)) {
       identifier = "[" + identifier + "]";
     }
     return identifier;
   },
   stripBracesFromIdentifier: function(identifier){
-    if (this.isIdentifierBraced(identifier)) {
+    if (QueryDesignerAxis.prototype.isIdentifierBraced(identifier)) {
       identifier = identifier.substr(1, identifier.length-2);
     }
     return identifier;
