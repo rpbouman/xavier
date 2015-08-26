@@ -1378,6 +1378,9 @@ var QueryDesignerAxis;
     return hierarchyName;
   },
   getDimensionName: function(hierarchy) {
+    if (iStr(hierarchy)) {
+      return hierarchy;
+    }
     var dimensionName;
     if (hierarchy.DIMENSION_UNIQUE_NAME) {
       dimensionName = hierarchy.DIMENSION_UNIQUE_NAME;
