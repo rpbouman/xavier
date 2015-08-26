@@ -47,8 +47,17 @@ var XmlaTreeView;
   if (iDef(conf.metadataRestrictions)) {
     this.metadataRestrictions = conf.metadataRestrictions;
   }
+  if (iDef(conf.defaultMemberDiscoveryMethod)) {
+    this.defaultMemberDiscoveryMethod = conf.defaultMemberDiscoveryMethod;
+  }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
+  //how to retrieve captions for default members of hierarchies.
+  //options are
+  //- "Discover" (Xmla.METHOD_DISCOVER) - get them one by one, requiring a discover request for each hierarchy. Slow but correct.
+  //- "Execute" (Xmla.METHOD_EXECUTE) - get all members in a single MDX request. should be quicker than Discover, but less correct
+  //- anything else (false) - don't get default members. This means users can't drag entire hierarchies into their query.
+  defaultMemberDiscoveryMethod: Xmla.METHOD_DISCOVER,
   //maximum number of members to allow auto-loading of a level's members
   maxLowCardinalityLevelMembers: 10,
   //whether catalog nodes should initially be hidden
@@ -755,12 +764,13 @@ var XmlaTreeView;
         parentNodeConf = parentNode.conf,
         metadata = parentNodeConf.metadata
     ;
-    var properties = {
-      DataSourceInfo: conf.dataSourceInfo,
-      Catalog: metadata.CATALOG_NAME,
-      Format: "Multidimensional",
-      AxisFormat: "TupleFormat",
-    };
+
+    var properties = {};
+    properties[Xmla.PROP_DATASOURCEINFO] = conf.dataSourceInfo;
+    properties[Xmla.PROP_CATALOG] = metadata.CATALOG_NAME;
+    properties[Xmla.PROP_FORMAT] = Xmla.PROP_FORMAT_MULTIDIMENSIONAL;
+    properties[Xmla.PROP_AXISFORMAT] = Xmla.PROP_AXISFORMAT_TUPLE;
+
     var mdx = "WITH MEMBER [Measures].numChildren " +
               "AS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count " +
               "SELECT CrossJoin(" + metadata.MEMBER_UNIQUE_NAME + ".Children," +
@@ -1229,42 +1239,6 @@ var XmlaTreeView;
     var levelTreeNode = this.getLevelTreeNode(levelUniqueName);
     return levelTreeNode.conf.metadata;
   },
-  getDefaultMember: function(conf, defaultMemberQueue, defaultMemberQueueIndex){
-    if (defaultMemberQueueIndex >= defaultMemberQueue.length) {
-      this.doneLoadingCube();
-      return;
-    }
-    var me = this;
-    var url = conf.url;
-    var properties = {
-      DataSourceInfo: conf.dataSourceInfo,
-      Catalog: conf.catalog
-    };
-    var hierarchyTreeNode = defaultMemberQueue[defaultMemberQueueIndex];
-    var hierarchyTreeNodeConf = hierarchyTreeNode.conf;
-    var hierarchyMetadata = hierarchyTreeNodeConf.metadata;
-    var restrictions = {
-      CATALOG_NAME: hierarchyMetadata.CATALOG_NAME,
-      CUBE_NAME: hierarchyMetadata.CUBE_NAME,
-      HIERARCHY_UNIQUE_NAME: hierarchyMetadata.HIERARCHY_UNIQUE_NAME,
-      MEMBER_UNIQUE_NAME: hierarchyMetadata.DEFAULT_MEMBER
-    };
-    this.xmla.discoverMDMembers({
-      hierarchyTreeNodeConf: hierarchyTreeNodeConf,
-      url: url,
-      properties: properties,
-      restrictions: restrictions,
-      success: function(xmla, options, rowset){
-        //actually render the member tree nodes residing beneath the level tree nodes
-        rowset.eachRow(function(row){
-          hierarchyTreeNodeConf.defaultMember = row;
-        });
-        me.getDefaultMember(conf, defaultMemberQueue, ++defaultMemberQueueIndex);
-      },
-      error: function(xmla, options, error){
-      }
-    });
-  },
   renderHierarchyTreeNode: function(conf, row){
     var me = this;
     var dimensionNode = TreeNode.getInstance("node:dimension:" + row.DIMENSION_UNIQUE_NAME);
@@ -1359,9 +1333,137 @@ var XmlaTreeView;
         if (hasMultipleHierarchies) {
           me.createShowDimensionNodesCheckbox();
         }
-        me.getDefaultMember(conf, defaultMemberQueue, 0);
+        switch (me.defaultMemberDiscoveryMethod) {
+          //get the default members one by one with one discover request for each hierarchy.
+          case Xmla.METHOD_DISCOVER:
+            me.getDefaultMember(conf, defaultMemberQueue, 0);
+            break;
+          //take a shortcut to get the default members in a single execute request
+          case Xmla.METHOD_EXECUTE:
+            me.getDefaultMembers(conf, defaultMemberQueue);
+            break;
+          //if no particular method is specified we don't get default members at all.
+          default:
+            this.doneLoadingCube();
+        }
         //done rendering hierarchy treenodes
       }
+    });
+  },
+  //this processes the queue of hierarchies to get their member definitions with a discover request.
+  //it is the "right" way but way too expensive since it evokes a request storm
+  //(one request for each hierarchy)
+  //check out getDefaultMembers() instead - that takes a bit of a shortcut and requires only one request.
+  getDefaultMember: function(conf, defaultMemberQueue, defaultMemberQueueIndex){
+    if (defaultMemberQueueIndex >= defaultMemberQueue.length) {
+      this.doneLoadingCube();
+      return;
+    }
+    var me = this;
+    var url = conf.url;
+    var properties = {
+      DataSourceInfo: conf.dataSourceInfo,
+      Catalog: conf.catalog
+    };
+    var hierarchyTreeNode = defaultMemberQueue[defaultMemberQueueIndex];
+    var hierarchyTreeNodeConf = hierarchyTreeNode.conf;
+    var hierarchyMetadata = hierarchyTreeNodeConf.metadata;
+    var restrictions = {
+      CATALOG_NAME: hierarchyMetadata.CATALOG_NAME,
+      CUBE_NAME: hierarchyMetadata.CUBE_NAME,
+      HIERARCHY_UNIQUE_NAME: hierarchyMetadata.HIERARCHY_UNIQUE_NAME,
+      MEMBER_UNIQUE_NAME: hierarchyMetadata.DEFAULT_MEMBER
+    };
+    this.xmla.discoverMDMembers({
+      hierarchyTreeNodeConf: hierarchyTreeNodeConf,
+      url: url,
+      properties: properties,
+      restrictions: restrictions,
+      success: function(xmla, options, rowset){
+        //actually render the member tree nodes residing beneath the level tree nodes
+        rowset.eachRow(function(row){
+          hierarchyTreeNodeConf.defaultMember = row;
+        });
+        me.getDefaultMember(conf, defaultMemberQueue, ++defaultMemberQueueIndex);
+      },
+      error: function(xmla, options, error){
+      }
+    });
+  },
+  //this is here to get the captions of all default members of all hierarchies
+  getDefaultMembers: function(conf, hierarchyTreeNodes){
+    var i, n = hierarchyTreeNodes.length, hierarchyTreeNode,
+        hierarchyMetaData, memberName, members = [],
+        measuresHierarchyName = QueryDesigner.prototype.measuresHierarchyName
+    ;
+    for (i = 0; i < n; i++) {
+      hierarchyTreeNode = hierarchyTreeNodes[i];
+      hierarchyMetaData = hierarchyTreeNode.conf.metadata;
+      hierarchyName = hierarchyMetaData.HIERARCHY_UNIQUE_NAME;
+      if (measuresHierarchyName === hierarchyName) {
+        continue;
+      }
+      memberName = hierarchyMetaData.DEFAULT_MEMBER;
+      members.push(memberName);
+    }
+
+    //no members, nothing to do.
+    if (!members.length){
+      return;
+    }
+
+    var cubeName = hierarchyMetaData.CUBE_NAME;
+    var mdx = "WITH MEMBER " + measuresHierarchyName + ".[One] AS 1" +
+              "\nSELECT (" + members.join(",") + ") ON COLUMNS" +
+              "\nFROM " + QueryDesignerAxis.prototype.braceIdentifier(cubeName)
+    ;
+
+    var properties = {};
+    properties[Xmla.PROP_DATASOURCEINFO] = conf.dataSourceInfo;
+    properties[Xmla.PROP_CATALOG] = hierarchyMetaData.CATALOG_NAME;
+    properties[Xmla.PROP_FORMAT] = Xmla.PROP_FORMAT_MULTIDIMENSIONAL;
+    properties[Xmla.PROP_AXISFORMAT] = Xmla.PROP_AXISFORMAT_TUPLE;
+
+    var me = this;
+    this.xmla.execute({
+      url: conf.url,
+      properties: properties,
+      statement: mdx,
+      success: function(xmla, req, resp){
+        resp.getColumnAxis().eachTuple(function(tuple){
+          var members = tuple.members, i, n = members.length, member,
+              hierarchyTreeNode, hierarchyTreeNodeConf, hierarchyTreeNodeMetadata,
+              defaultMember, field, fields = {
+                "CATALOG_NAME": "CATALOG_NAME",
+                "SCHEMA_NAME": "SCHEMA_NAME",
+                "CUBE_NAME": "CUBE_NAME",
+                "DIMENSION_UNIQUE_NAME": "DIMENSION_UNIQUE_NAME",
+                "HIERARCHY_UNIQUE_NAME": "HIERARCHY_UNIQUE_NAME",
+                "LEVEL_UNIQUE_NAME": "LEVEL_UNIQUE_NAME",
+                "LEVEL_NUMBER": "LEVEL_NUMBER",
+                "MEMBER_UNIQUE_NAME": "DEFAULT_MEMBER"
+              };
+          ;
+          for (i = 0; i < n; i++) {
+            hierarchyTreeNode = hierarchyTreeNodes[i];
+            hierarchyTreeNodeConf = hierarchyTreeNode.conf;
+            hierarchyTreeNodeConfMetadata = hierarchyTreeNodeConf.metadata;
+            defaultMember = {};
+            //copy fields from the hierarchy to the "member"
+            for (field in fields) {
+              defaultMember[field] = hierarchyTreeNodeConfMetadata[fields[field]];
+            }
+            member = members[i];
+            defaultMember.MEMBER_CAPTION = member[Xmla.Dataset.Axis.MEMBER_CAPTION];
+            hierarchyTreeNodeConf.defaultMember = defaultMember;
+          }
+        });
+        resp.close();
+        me.doneLoadingCube();
+      },
+      error: function(xmla, options, error){
+        me.fireEvent("error", error);
+      },
     });
   },
   setDefaultMeasure: function(measureUniqueName){

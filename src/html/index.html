@@ -119,6 +119,10 @@ limitations under the License.
 
     <script type="text/javascript">
       var xavierOptions = {
+        //defaultMemberDiscoveryMethod determines how captions of default members are discovered.
+        //defaultMemberDiscoveryMethod: false,                //don't get default member captions
+        defaultMemberDiscoveryMethod: Xmla.METHOD_EXECUTE,  //get default member captions with a MDX query
+        //defaultMemberDiscoveryMethod: Xmla.METHOD_DISCOVER, //get default member captions with disover requests
         //if you want to connect to a specific XML/A provider, put its url here
         xmlaUrl: undefined,
         //configure whether catalog nodes are flattened (hidden) or not

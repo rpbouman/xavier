@@ -139,6 +139,7 @@ var xmlaTreeView = new XmlaTreeView({
   catalogNodesInitiallyFlattened: iDef(xavierOptions.catalogNodesInitiallyFlattened) ? xavierOptions.catalogNodesInitiallyFlattened : XmlaTreeView.prototype.catalogNodesInitiallyFlattened,
   dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : XmlaTreeView.prototype.dimensionNodesInitiallyFlattened,
   maxLowCardinalityLevelMembers: iDef(xavierOptions.maxLowCardinalityLevelMembers) ? xavierOptions.maxLowCardinalityLevelMembers : XmlaTreeView.prototype.maxLowCardinalityLevelMembers,
+  defaultMemberDiscoveryMethod: iDef(xavierOptions.defaultMemberDiscoveryMethod) ? xavierOptions.defaultMemberDiscoveryMethod : XmlaTreeView.prototype.defaultMemberDiscoveryMethod,
   listeners: {
     busy: function(){
       busy(true);
