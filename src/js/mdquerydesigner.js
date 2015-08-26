@@ -1824,10 +1824,16 @@ var QueryDesignerAxis;
         metadata = dragInfo.defaultMember || dragInfo.metadata,
         hierarchyName = this.getHierarchyName(metadata),
         hierarchyIndex = this.getHierarchyIndex(hierarchyName),
-        dropIndexes, dropHierarchyName,
-        memberType, memberExpression, memberCaption,
-        target
+        dropIndexes, target
     ;
+    switch (requestType) {
+      case "hierarchy":
+        requestType = "member";
+        break;
+      case "measures":
+        requestType = "measure";
+        break;
+    }
     if (hCls(target, "show-empty")) {
       target = gAnc(target, "TD");
     }
