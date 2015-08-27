@@ -50,8 +50,12 @@ var XmlaTreeView;
   if (iDef(conf.defaultMemberDiscoveryMethod)) {
     this.defaultMemberDiscoveryMethod = conf.defaultMemberDiscoveryMethod;
   }
+  if (iDef(conf.levelCardinalitiesDiscoveryMethod)) {
+    this.levelCardinalitiesDiscoveryMethod = conf.levelCardinalitiesDiscoveryMethod;
+  }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
+  levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER,
   //how to retrieve captions for default members of hierarchies.
   //options are
   //- "Discover" (Xmla.METHOD_DISCOVER) - get them one by one, requiring a discover request for each hierarchy. Slow but correct.
@@ -900,10 +904,32 @@ var XmlaTreeView;
       restrictions: restrictions,
       success: function(xmla, options, rowset){
         //actually render the member tree nodes residing beneath the level tree nodes
+        var i = 0;
         rowset.eachRow(function(row){
           me.renderLevelMemberNode(conf, row);
+          i++;
         });
         //done rendering member treenodes
+
+        //now that we actually retrieved the members, see if we can adjust the tree according to actual cardinality.
+        var levelNode = membersTreeNode.getParentTreeNode();
+        var levelNodeConf = levelNode.conf;
+        var levelMetadata = levelNodeConf.metadata;
+        if (levelMetadata.LEVEL_CARDINALITY !== i) {
+          levelMetadata.LEVEL_CARDINALITY = i;
+          if (i <= me.maxLowCardinalityLevelMembers) {
+            //actual number of members is small. Flatten the members folder node.
+            membersTreeNode.setState(TreeNode.states.flattened);
+          }
+          else
+          if (i >= me.maxLowCardinalityLevelMembers){
+            //the estimate was lower than actual number. Expand this node. (unflatten if it was flattened)
+            membersTreeNode.setState(TreeNode.states.expanded);
+          }
+          var title = gMsg("${1} Members", i);
+          membersTreeNode.setTitle(title);
+        }
+
         if (callback) {
           callback.call(scope);
         }
@@ -922,7 +948,7 @@ var XmlaTreeView;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     var levelTreeNode = this.getLevelTreeNode(row.LEVEL_UNIQUE_NAME);
     var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME) + ":members";
-    var title = row.LEVEL_CARDINALITY + " " + gMsg("Members");
+    var title = gMsg("${1} Members", row.LEVEL_CARDINALITY);
     return new TreeNode({
       parentTreeNode: levelTreeNode,
       classes: "members",
@@ -985,28 +1011,7 @@ var XmlaTreeView;
       metadata: row
     })
   },
-  flattenLevelMembersNodes: function(levelMembersNodes, index, callback){
-    var me = this;
-    if (index < levelMembersNodes.length) {
-      var levelMembersNode = levelMembersNodes[index++];
-      var datasourceTreeNode = me.getCurrentDatasourceTreeNode();
-      var datasourceTreeNodeConf = datasourceTreeNode.conf;
-      var datasourceMetadata = datasourceTreeNodeConf.metadata;
-      var conf = {
-        url: datasourceMetadata.URL,
-        dataSourceInfo: datasourceMetadata.DataSourceInfo,
-        membersTreeNode: levelMembersNode,
-      };
-      this.renderLevelMemberNodes(conf, function(){
-        levelMembersNode.setState(TreeNode.states.flattened);
-        this.flattenLevelMembersNodes(levelMembersNodes, index, callback);
-      }, this);
-    }
-    else {
-      callback();
-    }
-  },
-  renderLevelPropertyNodes: function(conf) {
+  renderLevelPropertyNodes: function(conf, callback) {
     var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     var hierarchyMetaData = hierarchyTreeNode.conf.metadata;
@@ -1039,39 +1044,67 @@ var XmlaTreeView;
           }
           me.renderLevelPropertyNode(conf, row);
         });
-        var levelMembersNodes = [];
-        conf.levelsRowset.eachRow(function(row){
-          //if (!row.LEVEL_IS_VISIBLE) {
-          //return;
-          //}
-          var membersNode = me.renderLevelMembersNode(conf, row);
-          var cardinality;
-          //SAP thinks "All" levels could have a cardinality > 1, like, what the hell - 10.000
-          if (row.LEVEL_TYPE === 1) { //1: MDLEVEL_TYPE_ALL
-            cardinality = 1;
-          }
-          else {
-            cardinality = row.LEVEL_CARDINALITY;
-          }
-          if (cardinality <= me.maxLowCardinalityLevelMembers) {
-            levelMembersNodes.push(membersNode);
-          }
-        });
 
-        var callback = conf.callback;
-        delete conf.callback;
-
-        me.flattenLevelMembersNodes(levelMembersNodes, 0, function(){
-          callback();
-          me.fireEvent("done");
-        });
-
+        callback();
       },
       error: function(xmla, options, error){
         conf.callback();
         me.fireEvent("error", error);
+        callback();
       }
     });
+  },
+  renderMemberNodes: function(conf, levels){
+    var me = this;
+    var levelMembersNodes = [];
+    var i, level, n = levels.length;
+    for (i = 0; i < n; i++){
+      level = levels[i];
+      //if (!row.LEVEL_IS_VISIBLE) {
+      //return;
+      //}
+      var membersNode = this.renderLevelMembersNode(conf, level);
+      var cardinality;
+      //SAP thinks "All" levels could have a cardinality > 1, like, what the hell - 10.000
+      if (level.LEVEL_TYPE === 1) { //1: MDLEVEL_TYPE_ALL
+        cardinality = 1;
+      }
+      else {
+        cardinality = level.LEVEL_CARDINALITY;
+      }
+      if (cardinality <= this.maxLowCardinalityLevelMembers) {
+        levelMembersNodes.push(membersNode);
+      }
+    }
+
+    var callback = conf.callback;
+    delete conf.callback;
+
+    this.flattenLevelMembersNodes(levelMembersNodes, 0, function(){
+      callback();
+      me.fireEvent("done");
+    });
+  },
+  flattenLevelMembersNodes: function(levelMembersNodes, index, callback){
+    var me = this;
+    if (index < levelMembersNodes.length) {
+      var levelMembersNode = levelMembersNodes[index++];
+      var datasourceTreeNode = me.getCurrentDatasourceTreeNode();
+      var datasourceTreeNodeConf = datasourceTreeNode.conf;
+      var datasourceMetadata = datasourceTreeNodeConf.metadata;
+      var conf = {
+        url: datasourceMetadata.URL,
+        dataSourceInfo: datasourceMetadata.DataSourceInfo,
+        membersTreeNode: levelMembersNode,
+      };
+      this.renderLevelMemberNodes(conf, function(){
+        levelMembersNode.setState(TreeNode.states.flattened);
+        this.flattenLevelMembersNodes(levelMembersNodes, index, callback);
+      }, this);
+    }
+    else {
+      callback();
+    }
   },
   renderLevelTreeNode: function(conf, row){
     var hierarchyTreeNode = conf.hierarchyTreeNode;
@@ -1107,8 +1140,6 @@ var XmlaTreeView;
       state: state
     });
   },
-  //levels with 10 members or less will get their members folder flattened.
-  levelLowCardinality: 10,
   renderLevelTreeNodes: function(conf){
     var me = this;
     me.fireEvent("busy");
@@ -1120,21 +1151,26 @@ var XmlaTreeView;
       DataSourceInfo: conf.dataSourceInfo,
       Catalog: row.CATALOG_NAME
     };
+    var cubeName = row.CUBE_NAME;
     var restrictions = {
       CATALOG_NAME: row.CATALOG_NAME,
-      CUBE_NAME: row.CUBE_NAME,
+      CUBE_NAME: cubeName,
       HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME
     };
+    var url = conf.url;
     me.xmla.discoverMDLevels({
-      url: conf.url,
+      url: url,
       properties: properties,
       restrictions: restrictions,
       success: function(xmla, options, rowset){
+        var levels = [], i = 0;
         //create a treenode for each level
         rowset.eachRow(function(row){
           if (me.checkIsExcluded(options, row)) {
             return;
           }
+
+          levels.push(row);
           //https://technet.microsoft.com/en-us/library/ms126038(v=sql.110).aspx reads:
           //A Boolean that indicates whether the level is visible. Always returns True. If the level is not visible, it will not be included in the schema rowset.
           //So, we might as well not check it at all. Besides, SAP doesn't support it.
@@ -1145,15 +1181,81 @@ var XmlaTreeView;
           me.renderLevelTreeNode(conf, row);
         });
 
-        rowset.reset();
-        conf.levelsRowset = rowset;
-
-        me.renderLevelPropertyNodes(conf);
+        me.renderLevelPropertyNodes(conf, function(){
+          switch (me.levelCardinalitiesDiscoveryMethod) {
+            case Xmla.METHOD_EXECUTE:
+              me.queryLevelCardinalities(levels, url, properties.DataSourceInfo, function(){
+                me.renderMemberNodes(conf, levels);
+              }, me);
+              break;
+            case Xmla.METHOD_DISCOVER:
+            default:
+              me.renderMemberNodes(conf, levels);
+          }
+        });
       },
       error: function(xmla, options, error){
         conf.callback();
         me.fireEvent("error", error);
       },
+    });
+  },
+  queryLevelCardinalities: function(levels, url, datasourceInfo, callback, scope) {
+    var measuresHierarchyName = QueryDesigner.prototype.measuresHierarchyName;
+    var measureName, measureExpression,
+        withList = "",
+        selectList = ""
+    ;
+    var i, n = levels.length, level;
+    for (i = 0; i < n; i++) {
+      level = levels[i];
+
+      measureName = QueryDesignerAxis.prototype.braceIdentifier(String(i));
+      measureName = measuresHierarchyName + "." + measureName;
+      measureExpression = QueryDesignerAxis.prototype.braceIdentifier(level.LEVEL_UNIQUE_NAME) +
+                          ".Members.Count"
+      ;
+      withList += "\nMEMBER " + measureName + " AS " + measureExpression;
+      if (selectList.length) {
+        selectList += ", "
+      }
+      selectList += measureName;
+    }
+    var levelCardinalityMdx = "WITH " + withList +
+                              "\n" + "SELECT {" + selectList + "} ON COLUMNS" +
+                              "\n" + "FROM " +
+                              QueryDesignerAxis.prototype.braceIdentifier(level.CUBE_NAME)
+    ;
+    var me = this;
+    this.xmla.execute({
+      url: url,
+      properties: {
+        DataSourceInfo: datasourceInfo,
+        Catalog: level.CATALOG_NAME
+      },
+      statement: levelCardinalityMdx,
+      success: function(xhr, options, dataset) {
+        var cardinalities = dataset.getCellset().fetchRangeAsArray();
+        var i, n = levels.length, level, value;
+        for (i = 0; i < n; i++) {
+          level = levels[i];
+          value = cardinalities[i].Value;
+          if (value !== level.LEVEL_CARDINALITY) {
+            console.log(
+              "Adjusting cardinality for level " +
+              level.LEVEL_UNIQUE_NAME + ". " +
+              " Estimate: " + level.LEVEL_CARDINALITY +
+              "; Actual: " + value
+            );
+          }
+          level.LEVEL_CARDINALITY = value;
+        }
+        callback.call(scope);
+      },
+      error: function(xhr, options, exception){
+        me.fireEvent("error", exception);
+        callback.call(scope);
+      }
     });
   },
   renderDimensionTreeNode: function(conf, row, mandatory){
