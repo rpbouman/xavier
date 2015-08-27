@@ -127,18 +127,83 @@ var QueryDesigner;
     });
   },
   findDropTarget: function(dragInfo){
-    var dropTarget;
+    var dropTargets = [];
     this.eachAxis(function(id, axis){
       var axisDropTarget = axis.findDropTarget(dragInfo);
-      if (axisDropTarget) {
-        dropTarget = {
-          axis: axis,
-          target: axisDropTarget
-        };
-        return false;
+      if (!axisDropTarget) {
+        return;
       }
+      dropTargets.push({
+        axis: axis,
+        target: axisDropTarget
+      });
     });
-    return dropTarget;
+    if (!dropTargets.length) {
+      return null;
+    }
+
+    //get the most appropriate axis on top:
+    dropTargets.sort(function(a, b){
+      var aAxis = a.axis, aPopulated = aAxis.isPopulated(),
+          aConf = aAxis.conf, aMandatory = aConf.mandatory,
+          aHierarchyCount = aAxis.getHierarchyCount(),
+          aTarget = a.target, aSiblings = aTarget.parentNode.childNodes.length
+      ;
+      var bAxis = b.axis, bPopulated = bAxis.isPopulated(),
+          bConf = bAxis.conf, bMandatory = bConf.mandatory
+          bHierarchyCount = bAxis.getHierarchyCount(),
+          bTarget = b.target, bSiblings = bTarget.parentNode.childNodes.length
+      ;
+
+      if (  //if a is mandatory and not yet populated, and b is not mandatory, or b is populated,
+            //a is more appropriate and thus a < b (i.e. a should in front of b)
+        (aMandatory && !aPopulated) && (!bMandatory || bPopulated)  ||
+        !aPopulated && bPopulated
+      ) {
+        return -1;
+      }
+      else
+      if (  //if b is mandatory and not yet populated, and a is not mandatory, or a is populated,
+            //b is more appropriate and thus b < a (i.e. b should be in front of a)
+        (bMandatory && !bPopulated) && (!aMandatory || aPopulated)  ||
+        !bPopulated && aPopulated
+      ) {
+        return 1;
+      }
+      else
+      if (!aPopulated && bPopulated) {
+        return -1;
+      }
+      else
+      if (aPopulated && !bPopulated) {
+        return 1;
+      }
+      else
+      if (aHierarchyCount < bHierarchyCount) {
+        return -1;
+      }
+      else
+      if (aHierarchyCount > bHierarchyCount) {
+        return 1;
+      }
+      if (aSiblings < bSiblings) {
+        return -1;
+      }
+      else
+      if (aSiblings > bSiblings) {
+        return 1;
+      }
+      else
+      if (a.id < b.id) {
+        return -1;
+      }
+      else
+      if (a.id > b.id) {
+        return 1;
+      }
+      return 0;
+    });
+    return dropTargets[0];
   },
   checkStartDrag: function(event, ddHandler){
     var target = event.getTarget();
@@ -1332,7 +1397,7 @@ var QueryDesignerAxis;
     var n = memberCells.length;
     if (n) {
       var i, lastMemberCell;
-      for (i = 0; i < n; i++) {
+      for (i = n - 1; i >= 0; i--) {
         lastMemberCell = memberCells[i];
         if (this.canDropItem(lastMemberCell, dragInfo)) {
           return lastMemberCell;
