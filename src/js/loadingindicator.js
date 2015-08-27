@@ -28,7 +28,7 @@ if (iFun(window.top.showLoadingIndicator)) {
 }
 else {
   var spinner = new Spinner({
-    timeout: 250
+    timeout: 125
   });
   win.top.showLoadingIndicator = function(){
     spinner.show();

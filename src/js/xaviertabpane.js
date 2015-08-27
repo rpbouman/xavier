@@ -460,11 +460,12 @@ var XavierTab;
       return false;
     }
     try {
+      busy(true);
       visualizer.clear();
       if (!queryDesigner.checkValid()) {
+        busy(false);
         return;
       }
-      busy(true);
       this.doLayout();
       var datasource = this.getDatasource();
       var catalog = this.getCatalog();
@@ -485,11 +486,12 @@ var XavierTab;
             //console.time("renderDataset");
             visualizer.renderDataset(dataset, queryDesigner);
             //console.timeEnd("renderDataset");
+            busy(false);
           }
           catch (exception) {
+            busy(false);
             showAlert(gMsg("Error rendering dataset"), exception.toString() || exception.message || gMsg("Unexpected error"));
           }
-          busy(false);
         },
         error: function(xmla, options, exception){
           //console.timeEnd("executeQuery");
@@ -504,18 +506,23 @@ var XavierTab;
     }
   },
   doLayout: function(){
+    busy(true);
     var visualizer = this.getVisualizer();
     if (!visualizer) {
+      busy(false);
       return;
     }
     visualizer.doLayout();
+    busy(false);
   },
   exportToExcel: function(){
+    busy(true);
     try {
       var visualizer = this.getVisualizer();
       var dataset = this.getDataset();
       var queryDesigner = this.getQueryDesigner();
       if (!visualizer || !queryDesigner || !dataset) {
+        busy(false);
         throw "There is nothing to export. Please enter a query first.";
       }
       xlsxExporter = this.getXlsxExporter();
@@ -613,8 +620,10 @@ var XavierTab;
       xlsxExporter.doExport(name, catalog.CATALOG_NAME, cube.CUBE_NAME, visualizer, queryDesigner);
     }
     catch (exception){
+      busy(false);
       showAlert(gMsg("Export Error"), gMsg(exception));
     }
+    busy(false);
   },
   createQueryDesigner: function(dom, tab){
     //noop

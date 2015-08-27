@@ -16,7 +16,6 @@ limitations under the License.
 
 */
 .spinner {
-  display: block;
   top: 50%;
   left: 50%;
   z-index: 1000;
@@ -24,4 +23,328 @@ limitations under the License.
   height: 64px;
   background-image: url('../images/spinner.gif');
   position:absolute;
+}
+
+@-webkit-keyframes spinner-fadein {
+  0% {
+    opacity: 0;
+    display: none;
+  }
+  10% {
+    opacity: 0.10;
+    display: block;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes spinner-fadein {
+  0% {
+    opacity: 0;
+    display: none;
+  }
+  10% {
+    opacity: 0.10;
+    display: block;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-o-keyframes spinner-fadein {
+  0% {
+    opacity: 0;
+    display: none;
+  }
+  10% {
+    opacity: 0.10;
+    display: block;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes spinner-fadein {
+  0% {
+    opacity: 0;
+    display: none;
+  }
+  10% {
+    opacity: 0.10;
+    display: block;
+  }
+  20% {
+    opacity: 0.20;
+  }
+  30% {
+    opacity: 0.30;
+  }
+  40% {
+    opacity: 0.40;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.60;
+  }
+  70% {
+    opacity: 0.70;
+  }
+  80% {
+    opacity: 0.80;
+  }
+  90% {
+    opacity: 0.90;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.spinner-fade-in {
+  -webkit-animation-name: spinner-fadein;
+  -webkit-animation-duration: 1s;
+  -moz-animation-name: spinner-fadein;
+  -moz-animation-duration: 1s;
+  -o-animation-name: spinner-fadein;
+  -o-animation-duration: 1s;
+  animation-name: spinner-fadein;
+  animation-duration: 1s;
+}
+
+@-webkit-keyframes spinner-fadeout {
+  0% {
+    opacity: 1;
+    display: block;
+  }
+  10% {
+    opacity: 0.90;
+  }
+  20% {
+    opacity: 0.80;
+  }
+  30% {
+    opacity: 0.70;
+  }
+  40% {
+    opacity: 0.60;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.40;
+  }
+  70% {
+    opacity: 0.30;
+  }
+  80% {
+    opacity: 0.20;
+  }
+  90% {
+    opacity: 0.10;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}
+@-moz-keyframes spinner-fadeout {
+  0% {
+    opacity: 1;
+    display: block;
+  }
+  10% {
+    opacity: 0.90;
+  }
+  20% {
+    opacity: 0.80;
+  }
+  30% {
+    opacity: 0.70;
+  }
+  40% {
+    opacity: 0.60;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.40;
+  }
+  70% {
+    opacity: 0.30;
+  }
+  80% {
+    opacity: 0.20;
+  }
+  90% {
+    opacity: 0.10;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}
+@-o-keyframes spinner-fadeout {
+  0% {
+    opacity: 1;
+    display: block;
+  }
+  10% {
+    opacity: 0.90;
+  }
+  20% {
+    opacity: 0.80;
+  }
+  30% {
+    opacity: 0.70;
+  }
+  40% {
+    opacity: 0.60;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.40;
+  }
+  70% {
+    opacity: 0.30;
+  }
+  80% {
+    opacity: 0.20;
+  }
+  90% {
+    opacity: 0.10;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}
+@keyframes spinner-fadeout {
+  0% {
+    opacity: 1;
+    display: block;
+  }
+  10% {
+    opacity: 0.90;
+  }
+  20% {
+    opacity: 0.80;
+  }
+  30% {
+    opacity: 0.70;
+  }
+  40% {
+    opacity: 0.60;
+  }
+  50% {
+    opacity: 0.50;
+  }
+  60% {
+    opacity: 0.40;
+  }
+  70% {
+    opacity: 0.30;
+  }
+  80% {
+    opacity: 0.20;
+  }
+  90% {
+    opacity: 0.10;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}
+
+.spinner-fade-out {
+  -webkit-animation-name: spinner-fadeout;
+  -webkit-animation-duration: 1s;
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-name: spinner-fadeout;
+  -moz-animation-duration: 1s;
+  -moz-animation-fill-mode: forwards;
+  -o-animation-name: spinner-fadeout;
+  -o-animation-duration: 1s;
+  -o-animation-fill-mode: forwards;
+  animation-name: spinner-fadeout;
+  animation-duration: 1s;
+  animation-fill-mode: forwards;
 }
