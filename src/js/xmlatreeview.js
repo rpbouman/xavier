@@ -404,6 +404,14 @@ var XmlaTreeView;
     });
   },
   initCubeTreeListeners: function() {
+    var doInfoRequest = function(target, data) {
+      var url = gAtt(target, "data-url");
+      this.fireEvent("requestinfo", {
+        title: d.treeNode.conf.objectName,
+        url: url,
+      });
+    };
+
     var cubeTreePaneDom = this.cubeTreePane.getDom();
     this.cubeTreeListener = new TreeListener({
       container: cubeTreePaneDom,
@@ -411,10 +419,18 @@ var XmlaTreeView;
         nodeClicked: function(treeListener, event, d){
           var target = d.event.getTarget();
           if (hCls(target, "info-icon")) {
-            var url = gAtt(target, "data-url");
-            this.fireEvent("requestinfo", {
-              title: d.treeNode.conf.objectName,
-              url: url,
+            doInfoRequest.call(treeListener, target, d);
+          }
+        },
+        nodeDoubleClicked: function(treeListener, event, d){
+          var target = d.event.getTarget();
+          if (hCls(target, "info-icon")) {
+            doInfoRequest.call(treeListener, target, d);
+          }
+          else
+          if (hCls(target, "label")) {
+            this.fireEvent("nodeDoubleClicked", {
+              treeNode: d.treeNode
             });
           }
         },
@@ -681,13 +697,19 @@ var XmlaTreeView;
     }, this)
   },
   checkStartDrag: function(event, ddHandler){
-    var target = event.getTarget();
-    if (!hCls(target, "label")) {
-      return false;
+    var treeNode;
+    if (event instanceof TreeNode) {
+      treeNode = event;
     }
-    var treeNode = TreeNode.lookup(target);
-    if (!treeNode) {
-      return false;
+    else {
+      var target = event.getTarget();
+      if (!hCls(target, "label")) {
+        return false;
+      }
+      treeNode = TreeNode.lookup(target);
+      if (!treeNode) {
+        return false;
+      }
     }
     var classes = confCls(treeNode.conf.classes);
     className = classes[0];

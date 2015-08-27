@@ -126,6 +126,20 @@ var QueryDesigner;
       axis.removeHighlight();
     });
   },
+  findDropTarget: function(dragInfo){
+    var dropTarget;
+    this.eachAxis(function(id, axis){
+      var axisDropTarget = axis.findDropTarget(dragInfo);
+      if (axisDropTarget) {
+        dropTarget = {
+          axis: axis,
+          target: axisDropTarget
+        };
+        return false;
+      }
+    });
+    return dropTarget;
+  },
   checkStartDrag: function(event, ddHandler){
     var target = event.getTarget();
     var queryDesignerAxis = QueryDesignerAxis.lookup(target);
@@ -1274,6 +1288,66 @@ var QueryDesignerAxis;
     }
     return true;
   },
+  getLastMemberCellsVertical: function(){
+    var lastMemberCells = [];
+    var dom = this.getDom();
+    var rows = dom.rows;
+    var row = rows[2];
+    var cells = row.cells;
+    var i, n = cells.length, cell;
+    for (i = 0; i < n; i++){
+      cell = cells[i];
+      lastMemberCells.push(cell.lastChild);
+    }
+    return lastMemberCells;
+  },
+  getLastMemberCellsHorizontal: function(){
+    var lastMemberCells = [];
+    var dom = this.getDom();
+    var rows = dom.rows;
+    var i, row, cell;
+    //last row is sort option, don't include that.
+    var n = rows.length - 1;
+    for (i = 1; i < n; i++) {
+      row = rows[i];
+      cell = row.cells[1];
+      lastMemberCells.push(cell.lastChild);
+    }
+    return lastMemberCells;
+  },
+  getLastMemberCells: function(){
+    var lastMemberCells;
+    switch (this.getLayout()) {
+      case QueryDesignerAxis.layouts.vertical:
+        lastMemberCells = this.getLastMemberCellsVertical();
+        break;
+      case QueryDesignerAxis.layouts.horizontal:
+        lastMemberCells = this.getLastMemberCellsHorizontal();
+        break;
+    }
+    return lastMemberCells;
+  },
+  findDropTarget: function(dragInfo){
+    var memberCells = this.getLastMemberCells();
+    var n = memberCells.length;
+    if (n) {
+      var i, lastMemberCell;
+      for (i = 0; i < n; i++) {
+        lastMemberCell = memberCells[i];
+        if (this.canDropItem(lastMemberCell, dragInfo)) {
+          return lastMemberCell;
+        }
+      }
+    }
+    else {
+      var dom = this.getDom();
+      dom = dom.rows[0].cells[0];
+      if (this.canDropItem(dom, dragInfo)) {
+        return dom;
+      }
+    }
+    return null;
+  },
   getMemberUniqueName: function(metadata) {
     var expression;
     if (metadata.PROPERTY_NAME) {
@@ -1827,7 +1901,7 @@ var QueryDesignerAxis;
         metadata = dragInfo.defaultMember || dragInfo.metadata,
         hierarchyName = this.getHierarchyName(metadata),
         hierarchyIndex = this.getHierarchyIndex(hierarchyName),
-        dropIndexes, target
+        dropIndexes
     ;
     switch (requestType) {
       case "hierarchy":

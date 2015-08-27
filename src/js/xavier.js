@@ -180,6 +180,25 @@ var xmlaTreeView = new XmlaTreeView({
     //called when an information icon is clicked.
     requestinfo: function(xmlaTreeView, event, data){
       workArea.newInfoTab(data);
+    },
+    nodeDoubleClicked: function(xmlaTreeView, event, data){
+      var queryDesigner = workArea.getQueryDesigner();
+      if (!queryDesigner) {
+        return;
+      }
+      var treeNode = data.treeNode;
+      var dragInfo = xmlaTreeView.checkStartDrag(treeNode);
+      if (!dragInfo) {
+        return;
+      }
+      var dropTarget = queryDesigner.findDropTarget(dragInfo);
+      if (!dropTarget) {
+        return;
+      }
+      dropTarget.axis.itemDropped(
+        dropTarget.target,
+        dragInfo
+      );
     }
   }
 });
