@@ -506,14 +506,11 @@ var XavierTab;
     }
   },
   doLayout: function(){
-    busy(true);
     var visualizer = this.getVisualizer();
     if (!visualizer) {
-      busy(false);
       return;
     }
     visualizer.doLayout();
-    busy(false);
   },
   exportToExcel: function(){
     busy(true);
