@@ -56,15 +56,36 @@ var mainToolbar = new Toolbar({
 mainToolbar.addButton([
   {"class": "refresh", tooltip: gMsg("Refresh metadata")},
   {"class": "separator"},
-  {"class": "new-table", group: "vis", tooltip: gMsg("New Table")},
-  {"class": "new-pivot-table", group: "vis", tooltip: gMsg("New Pivot Table")}
 ]);
 
-mainToolbar.addButton([
-  {"class": "new-pie-chart", group: "vis", tooltip: gMsg("New Pie Chart")},
-  {"class": "new-grouped-bar-chart", group: "vis", tooltip: gMsg("New Grouped Bar Chart")},
-  {"class": "new-combi-chart", group: "vis", tooltip: gMsg("New Combi Chart")}
-]);
+function newVisualizationTab(){
+  var buttonConf = this.conf;
+  var visualizations = xavierOptions.visualizations;
+  var n = visualizations.length, i, visualization;
+  for (i = 0; i < n; i++) {
+    visualization = visualizations[i];
+    if (buttonConf["class"] === "new-" + visualization.id) {
+      var componentConstructor = visualization.componentConstructor;
+      var vizualizationInstance = componentConstructor.newInstance({
+        tabPane: workArea
+      });
+      workArea.newTab(vizualizationInstance);
+    }
+  }
+}
+
+var visualizations = xavierOptions.visualizations, n = visualizations.length, i, visualization, componentConstructor, buttonConf;
+for (i = 0; i < n; i++){
+  visualization = visualizations[i];
+  componentConstructor = visualization.componentConstructor;
+  buttonConf = {
+    "class": "new-" + visualization.id,
+    tooltip: gMsg(visualization.tooltip),
+    group: "vis",
+    buttonHandler: newVisualizationTab
+  };
+  mainToolbar.addButton(buttonConf);
+}
 
 mainToolbar.addButton([
   {"class": "separator"},
@@ -89,34 +110,24 @@ function toggleAutoRunEnabled() {
 mainToolbar.listen({
   buttonPressed: function(toolbar, event, button){
     var conf = button.conf;
-    var className = conf["class"];
-    switch (className) {
-      case "new-table":
-        workArea.newTableTab();
-        break;
-      case "new-pivot-table":
-        workArea.newPivotTableTab();
-        break;
-      case "new-pie-chart":
-        workArea.newPieChartTab();
-        break;
-      case "new-grouped-bar-chart":
-        workArea.newGroupedBarChartTab();
-        break;
-      case "new-combi-chart":
-        workArea.newCombiChartTab();
-        break;
-      case "run":
-        workArea.executeQuery();
-        break;
-      case "clear":
-        workArea.clear();
-        break
-      case "excel":
-        workArea.exportToExcel();
-        break
-      default:
-        throw "Not implemented";
+    if (iFun(conf.buttonHandler)) {
+      conf.buttonHandler.call(button);
+    }
+    else {
+      var className = conf["class"];
+      switch (className) {
+        case "run":
+          workArea.executeQuery();
+          break;
+        case "clear":
+          workArea.clear();
+          break
+        case "excel":
+          workArea.exportToExcel();
+          break
+        default:
+          throw "Not implemented";
+      }
     }
   },
   afterToggleGroupStateChanged: function(toolbar, event, data){

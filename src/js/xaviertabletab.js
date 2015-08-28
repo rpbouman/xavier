@@ -383,4 +383,7 @@ var XavierTableTab;
     visualizer.doLayout();
   }
 };
+XavierTableTab.newInstance = function(conf){
+  return new XavierTableTab(conf);
+}
 adopt(XavierTableTab, XavierTab);

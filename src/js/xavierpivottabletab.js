@@ -243,4 +243,7 @@ var XavierPivotTableTab;
     return dom;
   }
 };
+XavierPivotTableTab.newInstance = function(conf){
+  return new XavierPivotTableTab(conf);
+}
 adopt(XavierPivotTableTab, XavierTab);

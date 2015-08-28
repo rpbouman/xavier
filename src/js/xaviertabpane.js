@@ -100,41 +100,6 @@ var XavierTabPane;
     this.newTab(infoTab);
     return infoTab;
   },
-  newPivotTableTab: function(){
-    var pivotTableTab = new XavierPivotTableTab({
-      tabPane: this
-    });
-    this.newTab(pivotTableTab);
-    return pivotTableTab;
-  },
-  newTableTab: function(){
-    var tableTab = new XavierTableTab({
-      tabPane: this
-    });
-    this.newTab(tableTab);
-    return tableTab;
-  },
-  newPieChartTab: function(){
-    var pieChartTab = new XavierPieChartTab({
-      tabPane: this
-    });
-    this.newTab(pieChartTab);
-    return pieChartTab;
-  },
-  newGroupedBarChartTab: function(){
-    var groupedBarChartTab = new XavierGroupedBarChartTab({
-      tabPane: this
-    });
-    this.newTab(groupedBarChartTab);
-    return groupedBarChartTab;
-  },
-  newCombiChartTab: function(){
-    var combiChartTab = new XavierCombiChartTab({
-      tabPane: this
-    });
-    this.newTab(combiChartTab);
-    return combiChartTab;
-  },
   getMetadata: function(){
     return {
       datasource: this.getDatasource(),

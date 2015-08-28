@@ -573,6 +573,9 @@ var XavierPieChartTab;
   }
 };
 XavierPieChartTab.prefix = "xavier-pie-chart-tab";
+XavierPieChartTab.newInstance = function(conf){
+  return new XavierPieChartTab(conf);
+}
 adopt(XavierPieChartTab, XavierChartTab);
 
 var XavierGroupedBarChart;
@@ -811,6 +814,9 @@ var XavierGroupedBarChartTab;
     return chart;
   }
 };
+XavierGroupedBarChartTab.newInstance = function(conf){
+  return new XavierGroupedBarChartTab(conf);
+}
 XavierGroupedBarChartTab.prefix = "xavier-grouped-bar-chart-tab";
 adopt(XavierGroupedBarChartTab, XavierChartTab);
 
@@ -1048,4 +1054,7 @@ var XavierCombiChartTab;
   }
 };
 XavierCombiChartTab.prefix = "xavier-combi-chart-tab";
+XavierCombiChartTab.newInstance = function(conf){
+  return new XavierCombiChartTab(conf);
+}
 adopt(XavierCombiChartTab, XavierTab);
