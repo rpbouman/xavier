@@ -176,13 +176,13 @@ limitations under the License.
 
 .spinner-fade-in {
   -webkit-animation-name: spinner-fadein;
-  -webkit-animation-duration: 1s;
+  -webkit-animation-duration: 1.5s;
   -moz-animation-name: spinner-fadein;
-  -moz-animation-duration: 1s;
+  -moz-animation-duration: 1.5s;
   -o-animation-name: spinner-fadein;
-  -o-animation-duration: 1s;
+  -o-animation-duration: 1.5s;
   animation-name: spinner-fadein;
-  animation-duration: 1s;
+  animation-duration: 1.5s;
 }
 
 @-webkit-keyframes spinner-fadeout {
@@ -336,15 +336,15 @@ limitations under the License.
 
 .spinner-fade-out {
   -webkit-animation-name: spinner-fadeout;
-  -webkit-animation-duration: 1s;
+  -webkit-animation-duration: .5s;
   -webkit-animation-fill-mode: forwards;
   -moz-animation-name: spinner-fadeout;
-  -moz-animation-duration: 1s;
+  -moz-animation-duration: .5s;
   -moz-animation-fill-mode: forwards;
   -o-animation-name: spinner-fadeout;
-  -o-animation-duration: 1s;
+  -o-animation-duration: .5s;
   -o-animation-fill-mode: forwards;
   animation-name: spinner-fadeout;
-  animation-duration: 1s;
+  animation-duration: .5s;
   animation-fill-mode: forwards;
 }
