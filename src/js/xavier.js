@@ -194,12 +194,14 @@ var xmlaTreeView = new XmlaTreeView({
       }
       var dropTarget = queryDesigner.findDropTarget(dragInfo);
       if (!dropTarget) {
+        xmlaTreeView.notifyEndDrag(null, null);
         return;
       }
       dropTarget.axis.itemDropped(
         dropTarget.target,
         dragInfo
       );
+      xmlaTreeView.notifyEndDrag(null, null);
     }
   }
 });
