@@ -752,7 +752,7 @@ var PivotTable;
             }
             else {
               c = row.insertCell(cells.length);
-              sAtt(c, "data-lNum", lNum);
+              sAtt(c, "data-LNum", lNum);
               c[span2] = 1 + (maxLevel - j);
               headerCells[tupleNameIndex] = c;
               label = "&#160;";
@@ -775,7 +775,6 @@ var PivotTable;
               else
               if (vertical) {
                 c = row.insertCell(cells.length);
-                sAtt(c, "data-lNum", j);
                 headerCells[tupleNameIndex] = c;
                 className = "th";
                 if (isNewHierarchy) {
