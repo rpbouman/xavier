@@ -653,6 +653,9 @@ var XavierTab;
 XavierTab.id = 0;
 XavierTab.prefix = "xavier-tab";
 
+if (iUnd(docDir)) {
+  var docDir = "../doc/";
+}
 /**
 *   Welcome tab
 */
