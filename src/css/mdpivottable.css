@@ -173,3 +173,50 @@ table.pivot-table td.no-children span.toggle:before {
   content: "\0000a0";
 }
 
+
+/* http://www.colourlovers.com/palette/357746/one_fine_morning */
+/*
+table.pivot-table tbody > tr > td[data-lnum="0"] {
+  background-color: rgb(128,185,242);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="1"] {
+  background-color: rgb(145,194,242);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="2"] {
+  background-color: rgb(174,208,242);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="3"] {
+  background-color: rgb(184,213,242);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="4"] {
+  background-color: rgb(210,228,252);
+}
+*/
+/* http://www.colourlovers.com/palette/362413/tokyo_sky */
+/*
+table.pivot-table tbody > tr > td[data-lnum="5"] {
+  background-color: rgb(193,223,238);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="6"] {
+  background-color: rgb(205,226,237);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="7"] {
+  background-color: rgb(217,229,235);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="8"] {
+  background-color: rgb(226,233,236);
+}
+
+table.pivot-table tbody > tr > td[data-lnum="9"] {
+  background-color: rgb(235,237,238);
+}
+*/
+
+

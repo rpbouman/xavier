@@ -596,8 +596,10 @@ var PivotTable;
     var hasChildren = displayInfo & Xmla.Dataset.Axis.MDDISPINFO_CHILDREN_CARDINALITY;
     var sameParentAsPrev = displayInfo & Xmla.Dataset.Axis.MDDISPINFO_SAME_PARENT_AS_PREV;
 
+    var lNum = member[Xmla.Dataset.Axis.MEMBER_LEVEL_NUMBER];
+    sAtt(memberCell, "data-lnum", lNum);
     var uName = member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME];
-    sAtt(memberCell, "data-UName", uName);
+    sAtt(memberCell, "data-uname", uName);
 
     var className = "th MDSCHEMA_MEMBERS";
     if (newHierarchy) {
@@ -750,6 +752,7 @@ var PivotTable;
             }
             else {
               c = row.insertCell(cells.length);
+              sAtt(c, "data-lNum", lNum);
               c[span2] = 1 + (maxLevel - j);
               headerCells[tupleNameIndex] = c;
               label = "&#160;";
@@ -772,6 +775,7 @@ var PivotTable;
               else
               if (vertical) {
                 c = row.insertCell(cells.length);
+                sAtt(c, "data-lNum", j);
                 headerCells[tupleNameIndex] = c;
                 className = "th";
                 if (isNewHierarchy) {
