@@ -28,7 +28,8 @@ if (iFun(window.top.showLoadingIndicator)) {
 }
 else {
   var spinner = new Spinner({
-    timeout: 125
+    delayHide: 125,
+    useTransitions: typeof(useTransitions)==="undefined" ? true : Boolean(useTransitions)
   });
   win.top.showLoadingIndicator = function(){
     spinner.show();
