@@ -771,7 +771,7 @@ var XmlaTreeView;
       success: function(xmla, options, rowset){
         //actually render the member tree nodes residing beneath the level tree nodes
         rowset.eachRow(function(row){
-          me.renderLevelMemberNode(conf, row);
+          me.renderLevelMemberNode(conf, row, "estimate");
         });
         //done rendering member treenodes
         conf.callback();
@@ -809,6 +809,7 @@ var XmlaTreeView;
                       numChildrenMeasure + ") ON COLUMNS " +
               "\nFROM [" + metadata.CUBE_NAME + "]"
     ;
+    cardinalityEstimateOrExact = "exact";
     me.xmla.execute({
       url: url,
       properties: properties,
@@ -819,6 +820,7 @@ var XmlaTreeView;
       //requestType: options.requestType,
       success: function(xmla, req, resp){
         var cellset = resp.getCellset();
+        var tupleCount = 0;
         resp.getColumnAxis().eachTuple(function(tuple){
           cellset.nextCell();
           var childCount = cellset.cellValue(),
@@ -831,35 +833,45 @@ var XmlaTreeView;
               state
           ;
           //Only make this a leaf node if we're really sure there are no children.
-          if (memberCountIsExact && childCount === 0) {
+          if (cardinalityEstimateOrExact === "exact" && childCount === 0) {
             state = TreeNode.states.leaf;
           }
           else {
           //If this node might have children, allow it to be expanded.
             state = TreeNode.states.collapsed;
           }
+          var childMetaData = merge({
+            MEMBER_UNIQUE_NAME: memberUniqueName,
+            MEMBER_CAPTION: memberCaption,
+            LEVEL_UNIQUE_NAME: member.LName,
+            LEVEL_NUMBER: member.LNum,
+            CHILDREN_CARDINALITY: childCount
+          }, metadata);
+          var classes = ["member", "cardinality-" + cardinalityEstimateOrExact];
+          var title = me.getMemberNodeTitle(childMetaData);
           new TreeNode({
             id: parentNode.conf.id + ":" + memberUniqueName,
             parentTreeNode: parentNode,
-            classes: "member",
-            title: memberCaption,
+            classes: classes,
+            title: title,
             tooltip: memberUniqueName,
             state: childCount ? TreeNode.states.collapsed : TreeNode.states.leaf,
-            metadata: merge({
-              MEMBER_UNIQUE_NAME: memberUniqueName,
-              MEMBER_CAPTION: memberCaption,
-              LEVEL_UNIQUE_NAME: member.LName,
-              LEVEL_NUMBER: member.LNum,
-              CHILDREN_CARDINALITY: childCount
-            }, metadata),
+            metadata: childMetaData,
             loadChildren: function(callback){
               conf.parentNode = this;
               conf.callback = callback;
               me.renderChildMemberNodes(conf);
             }
           });
+          tupleCount++;
         });
         resp.close();
+        var parentNodeDom = parentNode.getDom();
+        if (hCls(parentNodeDom, "cardinality-estimate") && cardinalityEstimateOrExact === "exact") {
+          rCls(parentNodeDom, "cardinality-estimate", "cardinality-exact");
+          metadata.CHILDREN_CARDINALITY = tupleCount;
+          parentNode.setTitle(me.getMemberNodeTitle(metadata));
+        }
         conf.callback();
       },
       error: function(){
@@ -868,7 +880,17 @@ var XmlaTreeView;
       }
     });
   },
-  renderLevelMemberNode: function(conf, row){
+  getMemberNodeTitle: function(metadata){
+    var title = metadata.MEMBER_CAPTION || metadata.MEMBER_NAME;
+    var cardinality = metadata.CHILDREN_CARDINALITY;
+    if (iDef(cardinality)) {
+      var childMsg = cardinality === 1 ? "${1} child" : "${1} children";
+      childMsg = gMsg(childMsg, cardinality);
+      title += " (<span class=\"cardinality\">" + childMsg + "</span>)";
+    }
+    return title;
+  },
+  renderLevelMemberNode: function(conf, row, cardinalityEstimateOrExact){
     var me = this;
     var membersTreeNode = conf.membersTreeNode || conf.levelTreeNode;
     var url = conf.url;
@@ -885,12 +907,20 @@ var XmlaTreeView;
       LEVEL_UNIQUE_NAME: row.LEVEL_UNIQUE_NAME
     };
     var memberNodeId = membersTreeNode.conf.id  + ":" + row.MEMBER_UNIQUE_NAME;
+    var classes = ["member", "cardinality-" + cardinalityEstimateOrExact];
+    var state = TreeNode.states.collapsed;
+    if (iDef(row.CHILDREN_CARDINALITY)) {
+      if (cardinalityEstimateOrExact === "exact" && row.CHILDREN_CARDINALITY === 0) {
+        state = TreeNode.states.leaf;
+      }
+    }
+    var title = this.getMemberNodeTitle(row);
     return new TreeNode({
       parentTreeNode: membersTreeNode,
-      classes: "member",
+      classes: classes,
       id: memberNodeId,
       tooltip: row.MEMBER_UNIQUE_NAME,
-      title: row.MEMBER_CAPTION || row.MEMBER_NAME,
+      title: title,
       metadata: row,
       loadChildren: function(callback){
         conf.parentNode = this;
@@ -922,7 +952,7 @@ var XmlaTreeView;
         //actually render the member tree nodes residing beneath the level tree nodes
         var i = 0;
         rowset.eachRow(function(row){
-          me.renderLevelMemberNode(conf, row);
+          me.renderLevelMemberNode(conf, row, "estimate");
           i++;
         });
         //done rendering member treenodes
