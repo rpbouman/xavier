@@ -848,14 +848,15 @@ var XmlaTreeView;
             CHILDREN_CARDINALITY: childCount
           }, metadata);
           var classes = ["member", "cardinality-" + cardinalityEstimateOrExact];
-          var title = me.getMemberNodeTitle(childMetaData);
+          var title = me.getMemberNodeTitle(childMetaData, cardinalityEstimateOrExact);
+          var state = me.getMemberNodeState(childMetaData, cardinalityEstimateOrExact);
           new TreeNode({
             id: parentNode.conf.id + ":" + memberUniqueName,
             parentTreeNode: parentNode,
             classes: classes,
             title: title,
             tooltip: memberUniqueName,
-            state: childCount ? TreeNode.states.collapsed : TreeNode.states.leaf,
+            state: state,
             metadata: childMetaData,
             loadChildren: function(callback){
               conf.parentNode = this;
@@ -867,10 +868,13 @@ var XmlaTreeView;
         });
         resp.close();
         var parentNodeDom = parentNode.getDom();
-        if (hCls(parentNodeDom, "cardinality-estimate") && cardinalityEstimateOrExact === "exact") {
+        if (hCls(parentNodeDom, "cardinality-estimate")) {
           rCls(parentNodeDom, "cardinality-estimate", "cardinality-exact");
           metadata.CHILDREN_CARDINALITY = tupleCount;
-          parentNode.setTitle(me.getMemberNodeTitle(metadata));
+        }
+        parentNode.setTitle(me.getMemberNodeTitle(metadata, "exact"));
+        if (tupleCount === 0) {
+          parentNode.setState(TreeNode.states.leaf);
         }
         conf.callback();
       },
@@ -880,15 +884,26 @@ var XmlaTreeView;
       }
     });
   },
-  getMemberNodeTitle: function(metadata){
+  getMemberNodeTitle: function(metadata, cardinalityEstimateOrExact){
     var title = metadata.MEMBER_CAPTION || metadata.MEMBER_NAME;
     var cardinality = metadata.CHILDREN_CARDINALITY;
     if (iDef(cardinality)) {
-      var childMsg = cardinality === 1 ? "${1} child" : "${1} children";
-      childMsg = gMsg(childMsg, cardinality);
-      title += " (<span class=\"cardinality\">" + childMsg + "</span>)";
+      if (cardinalityEstimateOrExact !== "exact" || cardinality > 0) {
+        var childMsg = cardinality === 1 ? "${1} child" : "${1} children";
+        childMsg = gMsg(childMsg, cardinality);
+        title += " (<span class=\"cardinality\">" + childMsg + "</span>)";
+      }
     }
     return title;
+  },
+  getMemberNodeState: function(metadata, cardinalityEstimateOrExact){
+    var state = TreeNode.states.collapsed;
+    if (iDef(metadata.CHILDREN_CARDINALITY)) {
+      if (cardinalityEstimateOrExact === "exact" && metadata.CHILDREN_CARDINALITY === 0) {
+        state = TreeNode.states.leaf;
+      }
+    }
+    return state;
   },
   renderLevelMemberNode: function(conf, row, cardinalityEstimateOrExact){
     var me = this;
@@ -908,13 +923,8 @@ var XmlaTreeView;
     };
     var memberNodeId = membersTreeNode.conf.id  + ":" + row.MEMBER_UNIQUE_NAME;
     var classes = ["member", "cardinality-" + cardinalityEstimateOrExact];
-    var state = TreeNode.states.collapsed;
-    if (iDef(row.CHILDREN_CARDINALITY)) {
-      if (cardinalityEstimateOrExact === "exact" && row.CHILDREN_CARDINALITY === 0) {
-        state = TreeNode.states.leaf;
-      }
-    }
-    var title = this.getMemberNodeTitle(row);
+    var state = this.getMemberNodeState(row, cardinalityEstimateOrExact);
+    var title = this.getMemberNodeTitle(row, cardinalityEstimateOrExact);
     return new TreeNode({
       parentTreeNode: membersTreeNode,
       classes: classes,
@@ -922,6 +932,7 @@ var XmlaTreeView;
       tooltip: row.MEMBER_UNIQUE_NAME,
       title: title,
       metadata: row,
+      state: state,
       loadChildren: function(callback){
         conf.parentNode = this;
         conf.callback = callback;
