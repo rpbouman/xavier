@@ -797,11 +797,17 @@ var XmlaTreeView;
     properties[Xmla.PROP_FORMAT] = Xmla.PROP_FORMAT_MULTIDIMENSIONAL;
     properties[Xmla.PROP_AXISFORMAT] = Xmla.PROP_AXISFORMAT_TUPLE;
 
-    var mdx = "WITH MEMBER [Measures].numChildren " +
-              "AS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count " +
-              "SELECT CrossJoin(" + metadata.MEMBER_UNIQUE_NAME + ".Children," +
-                      "[Measures].numChildren) ON COLUMNS " +
-              "FROM [" + metadata.CUBE_NAME + "]"
+    var numChildrenMeasure =  QueryDesigner.prototype.measuresHierarchyName +
+                              "." +
+                              QueryDesignerAxis.prototype.braceIdentifier("NumChildren")
+    ;
+
+    var mdx = "WITH" +
+              "\nMEMBER " + numChildrenMeasure +
+              "\nAS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count " +
+              "\nSELECT CrossJoin(" + metadata.MEMBER_UNIQUE_NAME + ".Children," +
+                      numChildrenMeasure + ") ON COLUMNS " +
+              "\nFROM [" + metadata.CUBE_NAME + "]"
     ;
     me.xmla.execute({
       url: url,
@@ -820,8 +826,18 @@ var XmlaTreeView;
               member = tuple.members[0],
               memberUniqueName = member.UName,
               memberCaption = member.Caption,
-              nodeId
+              title = memberCaption,
+              nodeId,
+              state
           ;
+          //Only make this a leaf node if we're really sure there are no children.
+          if (memberCountIsExact && childCount === 0) {
+            state = TreeNode.states.leaf;
+          }
+          else {
+          //If this node might have children, allow it to be expanded.
+            state = TreeNode.states.collapsed;
+          }
           new TreeNode({
             id: parentNode.conf.id + ":" + memberUniqueName,
             parentTreeNode: parentNode,
@@ -926,9 +942,10 @@ var XmlaTreeView;
             //the estimate was lower than actual number. Expand this node. (unflatten if it was flattened)
             membersTreeNode.setState(TreeNode.states.expanded);
           }
-          var title = gMsg("${1} Members", i);
+          var title = me.getLevelMembersNodeTitle(i);
           membersTreeNode.setTitle(title);
         }
+        rCls(membersTreeNode.getDom(), "cardinality-estimate", "cardinality-exact");
 
         if (callback) {
           callback.call(scope);
@@ -943,18 +960,21 @@ var XmlaTreeView;
       }
     });
   },
-  renderLevelMembersNode: function(conf, row){
+  getLevelMembersNodeTitle: function(cardinality){
+    return gMsg("${1} Members", "<span class=\"cardinality\">" + cardinality + "</span>");
+  },
+  renderLevelMembersNode: function(conf, row, cardinalityEstimateOrExact){
     var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     var levelTreeNode = this.getLevelTreeNode(row.LEVEL_UNIQUE_NAME);
     var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME) + ":members";
-    var title = gMsg("${1} Members", row.LEVEL_CARDINALITY);
+    var title = this.getLevelMembersNodeTitle(row.LEVEL_CARDINALITY);
+    var classes = ["members", "cardinality-" + cardinalityEstimateOrExact];
     return new TreeNode({
       parentTreeNode: levelTreeNode,
-      classes: "members",
+      classes: classes,
       id: id,
       title: title,
-      tooltip: title,
       metadata: row,
       state: TreeNode.states.collapsed,
       loadChildren: function(callback){
@@ -1054,24 +1074,26 @@ var XmlaTreeView;
       }
     });
   },
-  renderMemberNodes: function(conf, levels){
+  renderMemberNodes: function(conf, levels, cardinalityEstimateOrExact){
     var me = this;
     var levelMembersNodes = [];
-    var i, level, n = levels.length;
+    var i, level, n = levels.length, estimateOrExact;
     for (i = 0; i < n; i++){
       level = levels[i];
       //if (!row.LEVEL_IS_VISIBLE) {
       //return;
       //}
-      var membersNode = this.renderLevelMembersNode(conf, level);
       var cardinality;
       //SAP thinks "All" levels could have a cardinality > 1, like, what the hell - 10.000
       if (level.LEVEL_TYPE === 1) { //1: MDLEVEL_TYPE_ALL
         cardinality = 1;
+        estimateOrExact = "exact";
       }
       else {
+        estimateOrExact = cardinalityEstimateOrExact;
         cardinality = level.LEVEL_CARDINALITY;
       }
+      var membersNode = this.renderLevelMembersNode(conf, level, estimateOrExact);
       if (cardinality <= this.maxLowCardinalityLevelMembers) {
         levelMembersNodes.push(membersNode);
       }
@@ -1185,12 +1207,12 @@ var XmlaTreeView;
           switch (me.levelCardinalitiesDiscoveryMethod) {
             case Xmla.METHOD_EXECUTE:
               me.queryLevelCardinalities(levels, url, properties.DataSourceInfo, function(){
-                me.renderMemberNodes(conf, levels);
+                me.renderMemberNodes(conf, levels, "exact");
               }, me);
               break;
             case Xmla.METHOD_DISCOVER:
             default:
-              me.renderMemberNodes(conf, levels);
+              me.renderMemberNodes(conf, levels, "estimate");
           }
         });
       },

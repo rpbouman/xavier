@@ -393,6 +393,10 @@ span.current-cube,
   background-image: url('../images/folder-open.png');
 }
 
+.tree .cardinality-estimate > .head > .label > span.cardinality:before {
+  content: "~";
+}
+
 .member-dragging,
 .tree .member > .head > .toggle {
   background-image: url('../images/member1.png');
