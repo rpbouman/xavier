@@ -805,8 +805,8 @@ var XmlaTreeView;
     var mdx = "WITH" +
               "\nMEMBER " + numChildrenMeasure +
               "\nAS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count " +
-              "\nSELECT CrossJoin(" + metadata.MEMBER_UNIQUE_NAME + ".Children," +
-                      numChildrenMeasure + ") ON COLUMNS " +
+              "\nSELECT {" + numChildrenMeasure + "} ON COLUMNS " +
+              "\n," + metadata.MEMBER_UNIQUE_NAME + ".Children ON ROWS" +
               "\nFROM [" + metadata.CUBE_NAME + "]"
     ;
     cardinalityEstimateOrExact = "exact";
@@ -821,8 +821,7 @@ var XmlaTreeView;
       success: function(xmla, req, resp){
         var cellset = resp.getCellset();
         var tupleCount = 0;
-        resp.getColumnAxis().eachTuple(function(tuple){
-          cellset.nextCell();
+        resp.getRowAxis().eachTuple(function(tuple){
           var childCount = cellset.cellValue(),
               metadata = req.metadata,
               member = tuple.members[0],
@@ -864,6 +863,7 @@ var XmlaTreeView;
               me.renderChildMemberNodes(conf);
             }
           });
+          cellset.nextCell();
           tupleCount++;
         });
         resp.close();
@@ -878,9 +878,9 @@ var XmlaTreeView;
         }
         conf.callback();
       },
-      error: function(){
+      error: function(xhr, options, exception){
         conf.callback();
-        debugger;
+        me.fireEvent("error", exception);
       }
     });
   },
