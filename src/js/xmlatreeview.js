@@ -1721,47 +1721,23 @@ var XmlaTreeView;
     var id = this.getMeasuresTreeNodeId();
     return TreeNode.getInstance("node:" + id);
   },
-  getDerivedMeasureTreeNodeId: function(measure, derivedMeasure) {
+  getDerivedMeasureTreeNodeId: function(derivedMeasure) {
+    var measure = derivedMeasure.derivedFrom;
     var measureUniqueName = measure.MEASURE_UNIQUE_NAME;
     var measuresTreeNodeId = this.getMeasureTreeNodeId(measureUniqueName);
     var derivedMeasureName = derivedMeasure.name;
     var derivedMeasureTreeNodeId = measuresTreeNodeId + ":" + derivedMeasureName;
     return derivedMeasureTreeNodeId;
   },
-  createDerivedMeasureTreeNode: function(derivedMeasure, measureCaption) {
-    //TODO: put all this MDX and metadata related stuff in the query designer.
-    //it doesn't really belong in the tree.
-    //it also doesn't belong in the query designer but it's less of a misfit there.
-    var measuresHierarchyUniqueName = QueryDesigner.prototype.measuresHierarchyName;
-    var measure = derivedMeasure.derivedFrom;
-    var measureName = measure.MEASURE_NAME;
-    measureName = QueryDesignerAxis.prototype.stripBracesFromIdentifier(measureName);
-    var name = gMsg(derivedMeasure.name, measureName);
-    var caption = gMsg(derivedMeasure.captionMessageKey, measureCaption);
-
-
-    derivedMeasure.MEASURE_CAPTION = caption;
-    derivedMeasure.HIERARCHY_UNIQUE_NAME = measuresHierarchyUniqueName;
-    derivedMeasure.MEASURE_NAME = name;
-    derivedMeasure.MEASURE_UNIQUE_NAME = QueryDesignerAxis.prototype.braceIdentifier(measuresHierarchyUniqueName) +
-                                         "." +
-                                         //use the caption rather than the name because
-                                         //mondrian does not support the CAPTION property for calc members.
-                                         //QueryDesignerAxis.prototype.braceIdentifier(name);
-                                         QueryDesignerAxis.prototype.braceIdentifier(caption);
-    if (derivedMeasure.formatString) {
-      derivedMeasure.DEFAULT_FORMAT_STRING = derivedMeasure.formatString;
-    }
-
-    var classes = ["derived-measure", "measure"];
-    if (derivedMeasure.classes) {
-      classes = classes.concat(derivedMeasure.classes);
-    }
+  createDerivedMeasureTreeNode: function(derivedMeasureConf, measureMetadata, measureCaption) {
+    var derivedMeasure = XavierDerivedMeasureFactory.prototype.createDerivedMeasure(
+      derivedMeasureConf, measureMetadata, measureCaption
+    );
     var derivedMeasureTreeNode = new TreeNode({
       state: TreeNode.states.leaf,
-      classes: classes,
-      id: this.getDerivedMeasureTreeNodeId(measure, derivedMeasure),
-      title: caption,
+      classes: derivedMeasure.classes,
+      id: this.getDerivedMeasureTreeNodeId(derivedMeasure),
+      title: derivedMeasure.MEASURE_CAPTION,
       tooltip: gMsg(derivedMeasure.tooltipMessageKey, measureCaption),
       metadata: derivedMeasure
     });
@@ -1781,10 +1757,8 @@ var XmlaTreeView;
     var derivedMeasures = derivedMeasureProperties.derivedMeasures;
     var i, n = derivedMeasures.length, derivedMeasure, child, children = [];
     for (i = 0; i < n; i++) {
-      derivedMeasure = merge({
-        derivedFrom: measure
-      }, derivedMeasures[i]);
-      child = this.createDerivedMeasureTreeNode(derivedMeasure, measureCaption);
+      derivedMeasure = derivedMeasures[i];
+      child = this.createDerivedMeasureTreeNode(derivedMeasure, measure, measureCaption);
       children.push(child);
     }
     return children;
