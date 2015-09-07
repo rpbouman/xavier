@@ -363,6 +363,33 @@ span.current-cube,
   background-image: url('../images/derived-measure-percentage.png');
 }
 
+.derived-measure-minimum-dragging,
+.tree .derived-measure-minimum > .head > .toggle {
+  background-image: url('../images/minimum.png');
+}
+
+.derived-measure-maximum-dragging,
+.tree .derived-measure-maximum > .head > .toggle {
+  background-image: url('../images/maximum.png');
+}
+
+.derived-measure-average-dragging,
+.tree .derived-measure-average > .head > .toggle {
+  background-image: url('../images/average.png');
+}
+
+.derived-measure-median-dragging,
+.tree .derived-measure-median > .head > .toggle {
+  background-image: url('../images/median.png');
+}
+
+.derived-measure-rank-dragging,
+.tree .derived-measure-rank > .head > .toggle {
+  background-image: url('../images/rank.png');
+}
+
+/* end of derived measures */
+
 .level-dragging,
 .tree .level > .head > .toggle {
   background-image: url('../images/level.png');

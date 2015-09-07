@@ -227,21 +227,21 @@ limitations under the License.
                     ifMatch: {
                       derivedMeasures: [
                         {
-                          classes: ["derived-measure-avg"],
+                          classes: ["derived-measure-average"],
                           name: "${1} avg",
                           captionMessageKey: "${1} avg",
                           tooltipMessageKey: "${1} as the average over categories that appear on all axes in only this query",
                           formula: "Max(<SET-OF-CURRENT>, <MEASURE>)"
                         },
                         {
-                          classes: ["derived-measure-min"],
+                          classes: ["derived-measure-minimum"],
                           name: "${1} min",
                           captionMessageKey: "${1} min",
                           tooltipMessageKey: "${1} as the minimum over categories that appear on all axes in only this query",
                           formula: "Min(<SET-OF-CURRENT>, <MEASURE>)"
                         },
                         {
-                          classes: ["derived-measure-max"],
+                          classes: ["derived-measure-maximum"],
                           name: "${1} max",
                           captionMessageKey: "${1} max",
                           tooltipMessageKey: "${1} as the maximum over categories that appear on all axes in only this query",

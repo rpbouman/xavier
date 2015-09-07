@@ -166,6 +166,38 @@ table.query-designer-axis {
   background-image: url('../images/derived-measure-percentage.png');
 }
 
+.query-designer-axis tr.user-sort-option td.derived-measure-minimum,
+.derived-measure-minimum-dragging,
+.query-designer-axis td span.derived-measure-minimum {
+  background-image: url('../images/minimum.png');
+}
+
+.query-designer-axis tr.user-sort-option td.derived-measure-maximum,
+.derived-measure-maximum-dragging,
+.query-designer-axis td span.derived-measure-maximum {
+  background-image: url('../images/maximum.png');
+}
+
+.query-designer-axis tr.user-sort-option td.derived-measure-average,
+.derived-measure-average-dragging,
+.query-designer-axis td span.derived-measure-average {
+  background-image: url('../images/average.png');
+}
+
+.query-designer-axis tr.user-sort-option td.derived-measure-median,
+.derived-measure-median-dragging,
+.query-designer-axis td span.derived-measure-median {
+  background-image: url('../images/median.png');
+}
+
+.query-designer-axis tr.user-sort-option td.derived-measure-rank,
+.derived-measure-rank-dragging,
+.query-designer-axis td span.derived-measure-rank {
+  background-image: url('../images/rank.png');
+}
+
+/* end of derived measures*/
+
 
 .query-designer-axis td span.level {
   background-image: url('../images/level.png');
