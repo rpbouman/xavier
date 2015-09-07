@@ -231,28 +231,28 @@ limitations under the License.
                           name: "${1} avg",
                           captionMessageKey: "${1} avg",
                           tooltipMessageKey: "${1} as the average over categories that appear on all axes in only this query",
-                          formula: "Max(<SET-OF-CURRENT>, <MEASURE>)"
+                          formula: "Avg(<SET-OF-CHILDREN>, <MEASURE>)"
                         },
                         {
                           classes: ["derived-measure-minimum"],
                           name: "${1} min",
                           captionMessageKey: "${1} min",
                           tooltipMessageKey: "${1} as the minimum over categories that appear on all axes in only this query",
-                          formula: "Min(<SET-OF-CURRENT>, <MEASURE>)"
+                          formula: "Min(<SET-OF-CHILDREN>, <MEASURE>)"
                         },
                         {
                           classes: ["derived-measure-maximum"],
                           name: "${1} max",
                           captionMessageKey: "${1} max",
                           tooltipMessageKey: "${1} as the maximum over categories that appear on all axes in only this query",
-                          formula: "Max(<SET-OF-CURRENT>, <MEASURE>)"
+                          formula: "Max(<SET-OF-CHILDREN>, <MEASURE>)"
                         },
                         {
                           classes: ["derived-measure-median"],
                           name: "${1} median",
                           captionMessageKey: "${1} median",
                           tooltipMessageKey: "${1} as the median over categories that appear on all axes in only this query",
-                          formula: "Median(<SET-OF-CURRENT>, <MEASURE>)"
+                          formula: "Median(<SET-OF-CHILDREN>, <MEASURE>)"
                         },
                         {
                           classes: ["derived-measure-rank"],
@@ -260,6 +260,20 @@ limitations under the License.
                           captionMessageKey: "${1} rank",
                           tooltipMessageKey: "${1} as the rank over categories that appear on all axes in only this query",
                           formula: "Rank(<TUPLE-OF-CURRENT>, <SET-OF-SIBLINGS>, <MEASURE>)"
+                        },
+                        {
+                          classes: ["derived-measure-sample-standard-deviation"],
+                          name: "${1} stdev",
+                          captionMessageKey: "${1} stdev",
+                          tooltipMessageKey: "${1} as the sample standard deviation over categories that appear on all axes in only this query",
+                          formula: "Stdev(<SET-OF-CHILDREN>, <MEASURE>)"
+                        },
+                        {
+                          classes: ["derived-measure-population-standard-deviation"],
+                          name: "${1} stdevp",
+                          captionMessageKey: "${1} stdevp",
+                          tooltipMessageKey: "${1} as the population standard deviation over categories that appear on all axes in only this query",
+                          formula: "StdevP(<SET-OF-CHILDREN>, <MEASURE>)"
                         }
                       ]
                     }

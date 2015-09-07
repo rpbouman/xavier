@@ -21,7 +21,10 @@ var XavierDerivedMeasureFactory;
         mdx += selfExpression
       });
     });
-    return "(" + mdx + ")";
+    if (mdx) {
+      mdx = "(" + mdx + ")";
+    }
+    return mdx;
   },
   getSetMdxForCurrent: function(queryDesigner) {
     var mdx = XavierDerivedMeasureFactory.prototype.getTupleMdxForCurrent(queryDesigner);
@@ -47,6 +50,9 @@ var XavierDerivedMeasureFactory;
         }
       });
     });
+    if (!mdx) {
+      mdx = "{}";
+    }
     return mdx;
   },
   getSetMdxForParents: function(queryDesigner) {
@@ -68,6 +74,48 @@ var XavierDerivedMeasureFactory;
         mdx += "Iif( Count(" + parentExpression + ") = 1, " + parentExpression + ", " + currentMemberExpression + ")"
       });
     });
+    if (!mdx) {
+      mdx = "{}";
+    }
+    return mdx;
+  },
+  getSetMdxForChildren: function(queryDesigner) {
+    var mdx = "";
+    queryDesigner.eachAxis(function(id, axis, i){
+      if (id === Xmla.Dataset.AXIS_SLICER) {
+        return;
+      }
+      axis.eachHierarchy(function(hierarchy, i){
+        if (axis.isMeasureHierarchy(hierarchy)) {
+          return;
+        }
+        var hierarchyName = axis.getHierarchyName(hierarchy);
+        var currentMemberExpression = axis.braceIdentifier(hierarchyName) + ".CurrentMember";
+        var childrenExpression = currentMemberExpression + ".Children";
+        childrenExpression = "Iif( Count(" + childrenExpression + ") = 0, " + currentMemberExpression + ", " + childrenExpression + ")"
+
+        var members = "";
+        axis.eachSetDef(function(setDef, setDefIndex){
+          var type = setDef.type;
+          switch (type) {
+            case "property":
+            case "derived-measure":
+              return;
+          }
+          if (members.length) {
+            members += ", ";
+          }
+          members += setDef.expression;
+        }, null, hierarchy);
+        members = "{" + members + "}";
+        members = "InterSect(" + members + ", " + childrenExpression + ")";
+
+        mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
+      });
+    });
+    if (!mdx) {
+      mdx = "{}";
+    }
     return mdx;
   },
   getSetMdxForSiblings: function(queryDesigner) {
@@ -101,6 +149,9 @@ var XavierDerivedMeasureFactory;
         mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
       });
     });
+    if (!mdx) {
+      mdx = "{}";
+    }
     return mdx;
   },
   createDerivedMeasure: function(derivedMeasureConf, measureMetadata, measureCaption){
@@ -146,6 +197,7 @@ var XavierDerivedMeasureFactory;
         mdx = mdx.replace(/<SET-OF-EVERYTHING>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForEverything(queryDesigner));
         mdx = mdx.replace(/<SET-OF-PARENTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForParents(queryDesigner));
         mdx = mdx.replace(/<SET-OF-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-CHILDREN>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForChildren(queryDesigner));
 
         mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS\n" + mdx;
 

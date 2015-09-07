@@ -196,6 +196,18 @@ table.query-designer-axis {
   background-image: url('../images/rank.png');
 }
 
+.query-designer-axis tr.user-sort-option td.derived-measure-sample-standard-deviation,
+.derived-measure-sample-standard-deviation-dragging,
+.query-designer-axis td span.derived-measure-sample-standard-deviation {
+  background-image: url('../images/sample-standard-deviation.png');
+}
+
+.query-designer-axis tr.user-sort-option td.derived-measure-population-standard-deviation,
+.derived-measure-population-standard-deviation-dragging,
+.query-designer-axis td span.derived-measure-population-standard-deviation {
+  background-image: url('../images/population-standard-deviation.png');
+}
+
 /* end of derived measures*/
 
 

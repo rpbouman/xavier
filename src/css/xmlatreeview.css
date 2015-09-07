@@ -388,6 +388,16 @@ span.current-cube,
   background-image: url('../images/rank.png');
 }
 
+.derived-measure-sample-standard-deviation-dragging,
+.tree .derived-measure-sample-standard-deviation > .head > .toggle {
+  background-image: url('../images/sample-standard-deviation.png');
+}
+
+.derived-measure-population-standard-deviation-dragging,
+.tree .derived-measure-population-standard-deviation > .head > .toggle {
+  background-image: url('../images/population-standard-deviation.png');
+}
+
 /* end of derived measures */
 
 .level-dragging,
