@@ -401,7 +401,8 @@ table.invalid-drop-axis {
 
 input.show-empty {
   margin-left: 10px;
-  float: right;
+  /* float looks ugly on firefox, get rid of it. */
+  /* float: right; */
 }
 
 input.show-empty:before {
