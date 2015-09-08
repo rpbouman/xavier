@@ -1729,6 +1729,32 @@ var XmlaTreeView;
     var derivedMeasureTreeNodeId = measuresTreeNodeId + ":" + derivedMeasureName;
     return derivedMeasureTreeNodeId;
   },
+  derivedMeasureTreeNodeComparator: function(a, b){
+    if (arguments.length === 1) {
+      b = a;
+      a = this;
+    }
+    var aFolder = a.conf.classes.join("").indexOf("derived-measures-folder") !== -1;
+    var bFolder = b.conf.classes.join("").indexOf("derived-measures-folder") !== -1;
+    if (aFolder && !bFolder) {
+      return -1;
+    }
+    else
+    if (!aFolder && bFolder) {
+      return 1;
+    }
+
+    var aTitle = a.getTitle();
+    var bTitle = b.getTitle();
+    if (aTitle > bTitle) {
+      return 1;
+    }
+    else
+    if (aTitle < bTitle) {
+      return -1;
+    }
+    return 0;
+  },
   createDerivedMeasureTreeNode: function(derivedMeasureConf, measureMetadata, measureCaption) {
     var derivedMeasure = XavierDerivedMeasureFactory.prototype.createDerivedMeasure(
       derivedMeasureConf, measureMetadata, measureCaption
@@ -1739,11 +1765,63 @@ var XmlaTreeView;
       id: this.getDerivedMeasureTreeNodeId(derivedMeasure),
       title: derivedMeasure.MEASURE_CAPTION,
       tooltip: gMsg(derivedMeasure.tooltipMessageKey, measureCaption),
-      metadata: derivedMeasure
+      metadata: derivedMeasure,
+      compare: XmlaTreeView.prototype.derivedMeasureTreeNodeComparator
     });
     return derivedMeasureTreeNode;
   },
+  getDerivedMeasureFolderNode: function(measure, folders, folder){
+    var measureTreeNodeId = this.getMeasureTreeNodeId(measure.MEASURE_UNIQUE_NAME);
+    var folderList, folderNode, parentFolderNode, folderNodeId = measureTreeNodeId;
+    if (iStr(folder)) {
+      folderList = [folder];
+    }
+    else
+    if (iArr(folder)) {
+      folderList = folder;
+    }
+    else {
+      throw "Invalid object for folder";
+    }
+
+    var i, n = folderList.length, folderNodeConf;
+    for (i = 0; i < n; i++) {
+      folder = folderList[i];
+      folderNodeId += ":folder-" + folder;
+      if (i) {
+        folderNode = null;
+        parentFolderNode.eachChild(function(childNode, childNodeIndex){
+          folderNode = childNode;
+        }, this, {
+          id: folderNodeId
+        });
+      }
+      else {
+        folderNode = folders[folderNodeId];
+      }
+
+      if (!folderNode) {
+        folderNode = new TreeNode({
+          classes: ["derived-measures-folder"],
+          title: folder,
+          id: folderNodeId,
+          children: [],
+          compare: XmlaTreeView.prototype.derivedMeasureTreeNodeComparator,
+          sorted: true
+        });
+        if (i) {
+          parentFolderNode.conf.children.push(folderNode);
+        }
+        else {
+          folders[folderNodeId] = folderNode;
+        }
+      }
+      parentFolderNode = folderNode;
+    }
+    return parentFolderNode;
+  },
   createDerivedMeasureTreeNodes: function(measure, measureCaption){
+    var folder, folderNode, folders = {};
     var xmlaMetadataFilter = this.xmlaMetadataFilter;
     if (!xmlaMetadataFilter) {
       return null;
@@ -1759,7 +1837,31 @@ var XmlaTreeView;
     for (i = 0; i < n; i++) {
       derivedMeasure = derivedMeasures[i];
       child = this.createDerivedMeasureTreeNode(derivedMeasure, measure, measureCaption);
-      children.push(child);
+
+      folderNode = null;
+      folder = derivedMeasure.folder;
+      switch (typeof(folder)) {
+        case "undefined":     //nothing to do, this derived measure is not in a folder.
+          break;
+        case "string":        //this derived measure is in a single top level folder
+        case "object":
+          if (iArr(folder) || iStr(folder)) { //this derived measure is in a subfolder.
+            folderNode = this.getDerivedMeasureFolderNode(measure, folders, folder);
+            break;
+          }
+        default:              //we don't know how to deal with this folder.
+          throw "Invalid object for folder, expected array or string";
+      }
+      if (folderNode) {
+        folderNode.conf.children.push(child);
+      }
+      else {
+        children.push(child);
+      }
+    }
+    for (folder in folders) {
+      folderNode = folders[folder];
+      children.push(folderNode);
     }
     return children;
   },
@@ -1770,10 +1872,12 @@ var XmlaTreeView;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = title + tooltipAndInfoLabel.infoLabel;
 
+    var measureTreeNodeId = this.getMeasureTreeNodeId(row.MEASURE_UNIQUE_NAME);
     var nodeConf = {
       parentTreeNode: conf.measuresTreeNode,
       classes: ["measure", "aggregator" + row.MEASURE_AGGREGATOR],
-      id: this.getMeasureTreeNodeId(row.MEASURE_UNIQUE_NAME),
+      sorted: true,
+      id: measureTreeNodeId,
       objectName: objectName,
       title: title,
       tooltip: tooltip,

@@ -160,6 +160,18 @@ table.query-designer-axis {
 }
 
 /* Derived measures */
+.query-designer-axis tr.user-sort-option td.derived-measure-sum,
+.derived-measure-sum-dragging,
+.query-designer-axis td span.derived-measure-sum {
+  background-image: url('../images/sum.png');
+}
+
+.query-designer-axis tr.user-sort-option td.derived-measure-count,
+.derived-measure-count-dragging,
+.query-designer-axis td span.derived-measure-count {
+  background-image: url('../images/count.png');
+}
+
 .query-designer-axis tr.user-sort-option td.derived-measure-percentage,
 .derived-measure-percentage-dragging,
 .query-designer-axis td span.derived-measure-percentage {

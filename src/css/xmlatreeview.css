@@ -357,10 +357,29 @@ span.current-cube,
 
 /* end of time dimension */
 
+/* Derived measures folder */
+
+.tree .derived-measures-folder-collapsed > .head > .toggle {
+  background-image: url('../images/folder-closed.png');
+}
+.tree .derived-measures-folder-expanded > .head > .toggle {
+  background-image: url('../images/folder-open.png');
+}
+
 /* Derived measures */
+.derived-measure-percentage-dragging,
+.tree .derived-measure-sum > .head > .toggle {
+  background-image: url('../images/sum.png');
+}
+
 .derived-measure-percentage-dragging,
 .tree .derived-measure-percentage > .head > .toggle {
   background-image: url('../images/derived-measure-percentage.png');
+}
+
+.derived-measure-count-dragging,
+.tree .derived-measure-count > .head > .toggle {
+  background-image: url('../images/count.png');
 }
 
 .derived-measure-minimum-dragging,

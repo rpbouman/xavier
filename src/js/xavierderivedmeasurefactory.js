@@ -74,9 +74,10 @@ var XavierDerivedMeasureFactory;
         mdx += "Iif( Count(" + parentExpression + ") = 1, " + parentExpression + ", " + currentMemberExpression + ")"
       });
     });
-    if (!mdx) {
-      mdx = "{}";
+    if (mdx) {
+      mdx = "(" + mdx + ")";
     }
+    mdx = "{" + mdx + "}";
     return mdx;
   },
   getSetMdxForChildren: function(queryDesigner) {
@@ -118,10 +119,19 @@ var XavierDerivedMeasureFactory;
     }
     return mdx;
   },
-  getSetMdxForSiblings: function(queryDesigner) {
+  getSetMdxForSiblingsOnRowsAxis: function(queryDesigner){
+    return XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner, Xmla.Dataset.AXIS_ROWS);
+  },
+  getSetMdxForSiblingsOnColumnsAxis: function(queryDesigner){
+    return XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner, Xmla.Dataset.AXIS_COLUMNS);
+  },
+  getSetMdxForSiblings: function(queryDesigner, filterAxis) {
     var mdx = "";
     queryDesigner.eachAxis(function(id, axis, i){
       if (id === Xmla.Dataset.AXIS_SLICER) {
+        return;
+      }
+      if (iDef(filterAxis) && axis.conf.id !== filterAxis) {
         return;
       }
       axis.eachHierarchy(function(hierarchy, i){
@@ -197,6 +207,8 @@ var XavierDerivedMeasureFactory;
         mdx = mdx.replace(/<SET-OF-EVERYTHING>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForEverything(queryDesigner));
         mdx = mdx.replace(/<SET-OF-PARENTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForParents(queryDesigner));
         mdx = mdx.replace(/<SET-OF-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-ROWS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnRowsAxis(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-COLUMNS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnColumnsAxis(queryDesigner));
         mdx = mdx.replace(/<SET-OF-CHILDREN>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForChildren(queryDesigner));
 
         mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS\n" + mdx;
