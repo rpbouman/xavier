@@ -207,6 +207,7 @@ limitations under the License.
   padding-top: 2px;
 }
 
+/* Current catalog and cube indicators */
 div.current-catalog-and-cube {
   border-bottom-style: solid;
   border-bottom-width: 2px;
@@ -221,6 +222,12 @@ span.current-cube {
   padding-left: 20px;
   margin: 2px;
 }
+
+div.current-catalog-and-cube > span {
+  display: block;   /* make it blocks, in practice catalog name and cube names can be so long the are out of view. */
+  margin-left: 0px;
+}
+/* End Current catalog and cube indicators */
 
 span.current-cube {
   margin-left: 8px;
