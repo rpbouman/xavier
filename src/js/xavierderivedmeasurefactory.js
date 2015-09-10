@@ -93,7 +93,6 @@ var XavierDerivedMeasureFactory;
         var hierarchyName = axis.getHierarchyName(hierarchy);
         var currentMemberExpression = axis.braceIdentifier(hierarchyName) + ".CurrentMember";
         var childrenExpression = currentMemberExpression + ".Children";
-        childrenExpression = "Iif( Count(" + childrenExpression + ") = 0, " + currentMemberExpression + ", " + childrenExpression + ")"
 
         var members = "";
         axis.eachSetDef(function(setDef, setDefIndex){
@@ -110,6 +109,7 @@ var XavierDerivedMeasureFactory;
         }, null, hierarchy);
         members = "{" + members + "}";
         members = "InterSect(" + members + ", " + childrenExpression + ")";
+        members = "Iif( Count(" + members + ") = 0 AND Count(" + childrenExpression + ") <> 0, " + childrenExpression + ", " + members + ")";
 
         mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
       });
