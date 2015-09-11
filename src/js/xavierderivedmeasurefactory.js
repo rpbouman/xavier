@@ -119,6 +119,53 @@ var XavierDerivedMeasureFactory;
     }
     return mdx;
   },
+  getSetMdxForDescendants: function(queryDesigner) {
+    var mdx = "";
+    queryDesigner.eachAxis(function(id, axis, i){
+      if (id === Xmla.Dataset.AXIS_SLICER) {
+        return;
+      }
+      axis.eachHierarchy(function(hierarchy, i){
+        if (axis.isMeasureHierarchy(hierarchy)) {
+          return;
+        }
+        var hierarchyName = axis.getHierarchyName(hierarchy);
+
+        var members = "";
+        axis.eachSetDef(function(setDef, setDefIndex){
+          var type = setDef.type;
+          switch (type) {
+            case "property":
+            case "derived-measure":
+              return;
+          }
+          if (members.length) {
+            members += ", ";
+          }
+          members += setDef.expression;
+        }, null, hierarchy);
+        members = "{" + members + "}";
+
+        var currentMemberExpression = axis.braceIdentifier(hierarchyName) + ".CurrentMember";
+        var ascendantsExpression = "Ascendants(" + currentMemberExpression + ")";
+        var levelExpression = currentMemberExpression + ".Level";
+        var distanceExpression = levelExpression + ".Ordinal";
+        var tailExpression = "Tail(" + ascendantsExpression + ", " + distanceExpression + ")";
+
+        var intersectExpression = "InterSect(" + members + ", " + tailExpression + ")";
+        var headExpression = "Head(" + intersectExpression + ", 1)";
+
+        var descendantsExpression = "Descendants(" + headExpression + ", " + levelExpression + ", SELF)";
+        intersectExpression = "InterSect(" + members + ", " + descendantsExpression + ")";
+
+        mdx = mdx ? "CrossJoin(" + mdx + ", " + intersectExpression + ")" : intersectExpression;
+      });
+    });
+    if (!mdx) {
+      mdx = "{}";
+    }
+    return mdx;
+  },
   getSetMdxForSiblingsOnRowsAxis: function(queryDesigner){
     return XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner, Xmla.Dataset.AXIS_ROWS);
   },
@@ -207,6 +254,7 @@ var XavierDerivedMeasureFactory;
         mdx = mdx.replace(/<SET-OF-EVERYTHING>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForEverything(queryDesigner));
         mdx = mdx.replace(/<SET-OF-PARENTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForParents(queryDesigner));
         mdx = mdx.replace(/<SET-OF-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-DESCENDANTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForDescendants(queryDesigner));
         mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-ROWS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnRowsAxis(queryDesigner));
         mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-COLUMNS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnColumnsAxis(queryDesigner));
         mdx = mdx.replace(/<SET-OF-CHILDREN>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForChildren(queryDesigner));
@@ -216,7 +264,7 @@ var XavierDerivedMeasureFactory;
         if (iDef(metadata.formatString)) {
           mdx += ",\nFORMAT_STRING = '" + metadata.formatString + "'";
         }
-        mdx += ",\nCAPTION = '" + metadata.MEASURE_CAPTION + "'";
+        mdx += ",\nCAPTION = \"" + metadata.MEASURE_CAPTION + "\"";
 
         return mdx;
       }
