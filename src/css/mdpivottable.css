@@ -63,7 +63,8 @@ table.pivot-table tr.positioning-row div {
 
 table.pivot-table {
     /*border-collapse: collapse;*/
-    font-family: sans-serif;
+    /* font-family: sans-serif; */
+    font-family: Arial;
     font-size: 10pt;
     position: absolute;
     border-style: none;
