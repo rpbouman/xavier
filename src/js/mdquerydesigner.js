@@ -1778,6 +1778,8 @@ var QueryDesignerAxis;
         type: type
       }];
     }
+    //dont sent events for partial actions.
+    this.fireEvents(false);
     //remove items.
     //TODO: currently, we report success if one or more items are removed.
     //there is no way to know if only some items got removed.
@@ -1790,6 +1792,8 @@ var QueryDesignerAxis;
         change = true;
       }
     }
+    //start firing events again.
+    this.fireEvents(true);
     //if some changes were made, send an event (so listener can re-execute the query)
     if (change) {
       this.fireEvent("changed");
