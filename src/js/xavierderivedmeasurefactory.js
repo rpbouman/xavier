@@ -77,7 +77,7 @@ var XavierDerivedMeasureFactory;
         if (mdx) {
           mdx += ", ";
         }
-        mdx += "Iif( Count(" + parentExpression + ") = 1, " + parentExpression + ", " + currentMemberExpression + ")"
+        mdx += "Iif(" + parentExpression + ".Count = 1, " + parentExpression + ", " + currentMemberExpression + ")"
       });
     });
     if (mdx) {
@@ -114,10 +114,12 @@ var XavierDerivedMeasureFactory;
           members += setDef.expression;
         }, null, hierarchy);
         members = "{" + members + "}";
-        members = "InterSect(" + members + ", " + childrenExpression + ")";
-        members = "Iif( Count(" + members + ") = 0 AND Count(" + childrenExpression + ") <> 0, " + childrenExpression + ", " + members + ")";
 
-        mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
+        var intersectExpression = "InterSect(" + members + ", " + childrenExpression + ")";
+        var iifCondition = intersectExpression + ".Count = 0 AND " + childrenExpression + ".Count > 0";
+        var iifExpression = "Iif(" + iifCondition + ", " + childrenExpression + ", " + intersectExpression + ")";
+
+        mdx = mdx ? "CrossJoin(" + mdx + ", " + iifExpression + ")" : iifExpression;
       });
     });
     if (!mdx) {
@@ -272,31 +274,90 @@ var XavierDerivedMeasureFactory;
     else
     if (derivedMeasure.formula) {
       derivedMeasure.calculation = function(metadata, queryDesigner){
-        var mdx = metadata.formula;
-        mdx = mdx.replace(/<MEASURE>/ig, measureMetadata.MEASURE_UNIQUE_NAME);
-        mdx = mdx.replace(/<TUPLE-OF-CURRENT>/ig, XavierDerivedMeasureFactory.prototype.getTupleMdxForCurrent(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-CURRENT>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForCurrent(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-EVERYTHING>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForEverything(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-PARENTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForParents(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-DESCENDANTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForDescendants(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-ROWS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnRowsAxis(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-COLUMNS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnColumnsAxis(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-PRECEDING-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblings(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-PRECEDING-SIBLINGS-ON-ROWS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblingsOnRowsAxis(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-PRECEDING-SIBLINGS-ON-COLUMNS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblingsOnColumnsAxis(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-CHILDREN>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForChildren(queryDesigner));
 
-        mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS\n" + mdx;
+        var calculatedMeasure = metadata.formula;
+        calculatedMeasure = calculatedMeasure.replace(/<MEASURE>/ig, measureMetadata.MEASURE_UNIQUE_NAME);
+        calculatedMeasure = calculatedMeasure.replace(/<TUPLE-OF-CURRENT>/ig, XavierDerivedMeasureFactory.prototype.getTupleMdxForCurrent(queryDesigner));
+        calculatedMeasure = XavierDerivedMeasureFactory.prototype.replaceBuiltInSets(calculatedMeasure, queryDesigner);
+
+        calculatedMeasure = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS\n" + calculatedMeasure;
 
         if (derivedMeasure.formatString) {
-          mdx += ",\nFORMAT_STRING = '" + derivedMeasure.formatString + "'";
+          calculatedMeasure += ",\nFORMAT_STRING = '" + derivedMeasure.formatString + "'";
         }
-        mdx += ",\nCAPTION = \"" + metadata.MEASURE_CAPTION + "\"";
+        calculatedMeasure += ",\nCAPTION = \"" + metadata.MEASURE_CAPTION + "\"";
 
-        return mdx;
+        return calculatedMeasure;
       }
     }
     return derivedMeasure;
+  },
+  isFirstDerivedMeasure: function(metadata, queryDesigner){
+    if (queryDesigner.eachAxis(function(id, queryDesignerAxis, index){
+      if (queryDesignerAxis.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
+        if (setDef.type === "derived-measure" && metadata === setDef.metadata) {
+          return false;
+        }
+      }, queryDesignerAxis) === false) {
+        return false;
+      }
+    }, queryDesigner) === false) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  },
+  getMdxIdentifierForBuiltInName: function(name){
+    var identifier = QueryDesignerAxis.prototype.braceIdentifier(name);
+    return identifier;
+  },
+  getMdxPlaceHolderForBuiltInName: function(name) {
+    var placeHolder = "<" + name + ">";
+    return placeHolder;
+  },
+  getRegExpForBuiltInName: function(builtInName){
+    var regExps = XavierDerivedMeasureFactory.RegExpsForBuiltInNames;
+    if (!regExps) {
+      regExps = XavierDerivedMeasureFactory.RegExpsForBuiltInNames = {};
+    }
+    var regExp = regExps[builtInName];
+    if (!regExp){
+      var placeHolder = XavierDerivedMeasureFactory.prototype.getMdxPlaceHolderForBuiltInName(builtInName);
+      regExps[name] = regExp = new RegExp(placeHolder, "ig");
+    }
+    regExp.lastIndex = 0;
+    return regExp;
+  },
+  testStringMatchesBuiltInName: function(string, builtInName){
+    var regExp = XavierDerivedMeasureFactory.prototype.getRegExpForBuiltInName(builtInName);
+    return regExp.test(string);
+  },
+  replaceBuiltInName: function(search, builtInName, replace){
+    var regExp = XavierDerivedMeasureFactory.prototype.getRegExpForBuiltInName(builtInName);
+    return search.replace(regExp, replace);
+  },
+  replaceBuiltInSets: function(formula, queryDesigner, full){
+    var builtInSets = XavierDerivedMeasureFactory.builtInSets, builtInSet, method, setMdx, re;
+    for (builtInSet in builtInSets) {
+      method = builtInSets[builtInSet];
+      setMdx = method.call(null, queryDesigner);
+      formula = XavierDerivedMeasureFactory.prototype.replaceBuiltInName(formula, builtInSet, setMdx);
+    }
+    return formula;
   }
+};
+
+XavierDerivedMeasureFactory.builtInSets = {
+  "SET-OF-CHILDREN": XavierDerivedMeasureFactory.prototype.getSetMdxForChildren,
+  "SET-OF-CURRENT": XavierDerivedMeasureFactory.prototype.getTupleMdxForCurrent,
+  "SET-OF-DESCENDANTS": XavierDerivedMeasureFactory.prototype.getSetMdxForDescendants,
+  "SET-OF-EVERYTHING": XavierDerivedMeasureFactory.prototype.getSetMdxForEverything,
+  "SET-OF-PARENTS": XavierDerivedMeasureFactory.prototype.getSetMdxForParents,
+  "SET-OF-PRECEDING-SIBLINGS": XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblings,
+  "SET-OF-PRECEDING-SIBLINGS-ON-ROWS-AXIS": XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblingsOnRowsAxis,
+  "SET-OF-PRECEDING-SIBLINGS-ON-COLUMNS-AXIS": XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblingsOnColumnsAxis,
+  "SET-OF-SIBLINGS": XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings,
+  "SET-OF-SIBLINGS-ON-ROWS-AXIS": XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnRowsAxis,
+  "SET-OF-SIBLINGS-ON-COLUMNS-AXIS": XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnColumnsAxis
 };
