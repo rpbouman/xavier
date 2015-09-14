@@ -121,8 +121,9 @@ limitations under the License.
     <!-- xavier specific stuff -->
     <script type="text/javascript" src="../js/messages.js"></script>
     <!--
-    <script type="text/javascript" src="../js/messages-nl.js"></script>
     -->
+    <script type="text/javascript" src="../js/messages-nl.js"></script>
+
     <script type="text/javascript" src="../js/xlsxexport.js"></script>
     <script type="text/javascript" src="../js/msgbox.js"></script>
     <script type="text/javascript" src="../js/xmlatreeview.js"></script>
@@ -232,6 +233,7 @@ limitations under the License.
                           captionMessageKey: "Average of ${1}",
                           tooltipMessageKey: "${1} as the average over categories that appear on all axes in only this query",
                           formula: "Avg(<SET-OF-CHILDREN>, <MEASURE>)",
+                          formatString: "Standard",
                           folder: gMsg("Statistics")
                         },
                         {
@@ -248,6 +250,7 @@ limitations under the License.
                           captionMessageKey: "Count of ${1}",
                           tooltipMessageKey: "${1} as the count over categories that appear on all axes in only this query",
                           formula: "Count(<SET-OF-CHILDREN>, EXCLUDEEMPTY)",
+                          formatString: "#",
                           folder: gMsg("Statistics")
                         },
                         {
@@ -280,6 +283,7 @@ limitations under the License.
                           captionMessageKey: "Rank of ${1}",
                           tooltipMessageKey: "${1} as the rank over categories that appear on all axes in only this query",
                           formula: "Rank(<TUPLE-OF-CURRENT>, <SET-OF-SIBLINGS>, <MEASURE>)",
+                          formatString: "#",
                           folder: gMsg("Statistics")
                         },
                         {
@@ -288,6 +292,7 @@ limitations under the License.
                           captionMessageKey: "Sample standard deviation of ${1}",
                           tooltipMessageKey: "${1} as the sample standard deviation over categories that appear on all axes in only this query",
                           formula: "Stdev(<SET-OF-CHILDREN>, <MEASURE>)",
+                          formatString: "Standard",
                           folder: [gMsg("Statistics"), gMsg("Standard deviation")]
                         },
                         {
@@ -296,7 +301,40 @@ limitations under the License.
                           captionMessageKey: "Population standard deviation of ${1}",
                           tooltipMessageKey: "${1} as the population standard deviation over categories that appear on all axes in only this query",
                           formula: "StdevP(<SET-OF-CHILDREN>, <MEASURE>)",
+                          formatString: "Standard",
                           folder: [gMsg("Statistics"), gMsg("Standard deviation")]
+                        },
+                        {
+                          classes: ["derived-measure-cumulative-sum"],
+                          name: "Cumulative sum of ${1}",
+                          captionMessageKey: "Cumulative sum of ${1}",
+                          tooltipMessageKey: "The cumulative sum of ${1}",
+                          formula: "Sum(<SET-OF-PRECEDING-SIBLINGS>, <MEASURE>)",
+                          folder: [gMsg("Statistics"), gMsg("Running calculations")]
+                        },
+                        {
+                          classes: ["derived-measure-cumulative-sum"],
+                          name: "Cumulative sum of ${1} over rows",
+                          captionMessageKey: "Cumulative sum of ${1} over rows",
+                          tooltipMessageKey: "The cumulative sum of ${1} over rows",
+                          formula: "Sum(<SET-OF-PRECEDING-SIBLINGS-ON-ROWS>, <MEASURE>)",
+                          folder: [gMsg("Statistics"), gMsg("Running calculations")]
+                        },
+                        {
+                          classes: ["derived-measure-cumulative-sum"],
+                          name: "Cumulative sum of ${1} over columns",
+                          captionMessageKey: "Cumulative sum of ${1} over columns",
+                          tooltipMessageKey: "The cumulative sum of ${1} over columns",
+                          formula: "Sum(<SET-OF-PRECEDING-SIBLINGS-ON-COLUMNS>, <MEASURE>)",
+                          folder: [gMsg("Statistics"), gMsg("Running calculations")]
+                        },
+                        {
+                          classes: ["derived-measure-delta"],
+                          name: "Delta of ${1}",
+                          captionMessageKey: "Delta of ${1}",
+                          tooltipMessageKey: "The delta of ${1}",
+                          formula: "<MEASURE> - (<MEASURE>, <SET-OF-SIBLINGS>.Item(Rank(<TUPLE-OF-CURRENT>, <SET-OF-SIBLINGS>) - 2))",
+                          folder: [gMsg("Statistics"), gMsg("Running calculations")]
                         }
                       ]
                     }

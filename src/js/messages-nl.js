@@ -98,5 +98,18 @@ aMsg({
   "Selection": "Selectie",
   "Export Date": "Exportdatum",
   //filter:
-  "At least one Date dimension is required.": "Ten minste één datum dimensie is verplicht."
+  "At least one Date dimension is required.": "Ten minste één datum dimensie is verplicht.",
+  //
+  "Statistics": "Statistieken",
+  "Min/Max": "Minimum en Maximum",
+  "Running calculations": "Doorlopende berekeningen",
+  "Standard deviation": "Standaarddeviatie",
+  "Average of ${1}": "Gemiddelde van ${1}",
+  "Count of ${1}": "Aantal ${1}",
+  "Median of ${1}": "Mediaan van ${1}",
+  "Rank of ${1}": "Rangnummer voor ${1}",
+  "Sum of ${1}": "Som van ${1}",
+  //
+  "${1} child": "${1} kind",
+  "${1} children": "${1} kinderen"
 });

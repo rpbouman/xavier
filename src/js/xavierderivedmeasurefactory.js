@@ -3,10 +3,13 @@ var XavierDerivedMeasureFactory;
 (XavierDerivedMeasureFactory = function(conf){
   this.conf = conf;
 }).prototype = {
-  getTupleMdxForCurrent: function(queryDesigner) {
+  getTupleMdxForCurrent: function(queryDesigner, filterAxis) {
     var mdx = "";
     queryDesigner.eachAxis(function(id, axis, i){
       if (id === Xmla.Dataset.AXIS_SLICER) {
+        return;
+      }
+      if (iDef(filterAxis) && axis.conf.id !== filterAxis) {
         return;
       }
       axis.eachHierarchy(function(hierarchy, i){
@@ -24,10 +27,13 @@ var XavierDerivedMeasureFactory;
     if (mdx) {
       mdx = "(" + mdx + ")";
     }
+    else {
+      mdx = "{}.Item(0)";
+    }
     return mdx;
   },
-  getSetMdxForCurrent: function(queryDesigner) {
-    var mdx = XavierDerivedMeasureFactory.prototype.getTupleMdxForCurrent(queryDesigner);
+  getSetMdxForCurrent: function(queryDesigner, filterAxis) {
+    var mdx = XavierDerivedMeasureFactory.prototype.getTupleMdxForCurrent(queryDesigner, filterAxis);
     return "{" + mdx + "}";
   },
   getSetMdxForEverything: function(queryDesigner) {
@@ -172,7 +178,7 @@ var XavierDerivedMeasureFactory;
   getSetMdxForSiblingsOnColumnsAxis: function(queryDesigner){
     return XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner, Xmla.Dataset.AXIS_COLUMNS);
   },
-  getSetMdxForSiblings: function(queryDesigner, filterAxis) {
+  getSetMdxForSiblings: function(queryDesigner, filterAxis, ordered) {
     var mdx = "";
     queryDesigner.eachAxis(function(id, axis, i){
       if (id === Xmla.Dataset.AXIS_SLICER) {
@@ -205,11 +211,28 @@ var XavierDerivedMeasureFactory;
         members = "InterSect(" + members + ", " + siblingExpression + ")";
         mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
       });
+      if (ordered === true) {
+        mdx = axis.getOrderMdx(mdx);
+      }
     });
+
     if (!mdx) {
       mdx = "{}";
     }
     return mdx;
+  },
+  getSetMdxForPrecedingSiblingsOnRowsAxis: function(queryDesigner){
+    return XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblings(queryDesigner, Xmla.Dataset.AXIS_ROWS);
+  },
+  getSetMdxForPrecedingSiblingsOnColumnsAxis: function(queryDesigner){
+    return XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblings(queryDesigner, Xmla.Dataset.AXIS_COLUMNS);
+  },
+  getSetMdxForPrecedingSiblings: function(queryDesigner, filterAxis){
+    var mdxForSiblings = XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner, filterAxis, true);
+    var mdxForCurrent = XavierDerivedMeasureFactory.prototype.getTupleMdxForCurrent(queryDesigner, filterAxis);
+    var mdxForRank = "Rank(" + mdxForCurrent + ", " + mdxForSiblings + ")";
+    var mdxForHead = "Head(" + mdxForSiblings + ", " + mdxForRank + ")";
+    return mdxForHead;
   },
   createDerivedMeasure: function(derivedMeasureConf, measureMetadata, measureCaption){
     var derivedMeasure = merge({}, derivedMeasureConf, {
@@ -232,8 +255,10 @@ var XavierDerivedMeasureFactory;
                                          //mondrian does not support the CAPTION property for calc members.
                                          QueryDesignerAxis.prototype.braceIdentifier(caption);
                                          //QueryDesignerAxis.prototype.braceIdentifier(name);
-    if (derivedMeasure.formatString) {
-      derivedMeasure.DEFAULT_FORMAT_STRING = derivedMeasure.formatString;
+
+    var formatString;
+    if (!derivedMeasure.formatString) {
+      derivedMeasure.formatString = measureMetadata.DEFAULT_FORMAT_STRING;
     }
 
     var classes = ["derived-measure", "measure"];
@@ -253,16 +278,19 @@ var XavierDerivedMeasureFactory;
         mdx = mdx.replace(/<SET-OF-CURRENT>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForCurrent(queryDesigner));
         mdx = mdx.replace(/<SET-OF-EVERYTHING>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForEverything(queryDesigner));
         mdx = mdx.replace(/<SET-OF-PARENTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForParents(queryDesigner));
-        mdx = mdx.replace(/<SET-OF-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner));
         mdx = mdx.replace(/<SET-OF-DESCENDANTS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForDescendants(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblings(queryDesigner));
         mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-ROWS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnRowsAxis(queryDesigner));
         mdx = mdx.replace(/<SET-OF-SIBLINGS-ON-COLUMNS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForSiblingsOnColumnsAxis(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-PRECEDING-SIBLINGS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblings(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-PRECEDING-SIBLINGS-ON-ROWS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblingsOnRowsAxis(queryDesigner));
+        mdx = mdx.replace(/<SET-OF-PRECEDING-SIBLINGS-ON-COLUMNS-AXIS>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForPrecedingSiblingsOnColumnsAxis(queryDesigner));
         mdx = mdx.replace(/<SET-OF-CHILDREN>/ig, XavierDerivedMeasureFactory.prototype.getSetMdxForChildren(queryDesigner));
 
         mdx = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS\n" + mdx;
 
-        if (iDef(metadata.formatString)) {
-          mdx += ",\nFORMAT_STRING = '" + metadata.formatString + "'";
+        if (derivedMeasure.formatString) {
+          mdx += ",\nFORMAT_STRING = '" + derivedMeasure.formatString + "'";
         }
         mdx += ",\nCAPTION = \"" + metadata.MEASURE_CAPTION + "\"";
 

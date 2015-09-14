@@ -2091,6 +2091,18 @@ var QueryDesignerAxis;
     }, this);
     return mdx;
   },
+  getOrderMdx: function(mdx){
+    var sortOption = this.sortOption;
+    if (sortOption) {
+      var direction = sortOption.direction.toUpperCase();
+      if (this.getUserSortBreaksHierarchy()) {
+        direction = "B" + direction;
+      }
+      var args = [mdx, sortOption.memberInfo.expression, direction];
+      mdx = "Order(" + args.join(",") + ")";
+    }
+    return mdx;
+  },
   getMemberSetMdx: function(){
     var conf = this.conf;
     var mdx = "";
@@ -2117,16 +2129,7 @@ var QueryDesignerAxis;
       mdx = "Distinct(" + mdx + ")";
     }
 
-    var sortOption = this.sortOption;
-    if (sortOption) {
-      var direction = sortOption.direction.toUpperCase();
-      if (this.getUserSortBreaksHierarchy()) {
-        direction = "B" + direction;
-      }
-      var args = [mdx, sortOption.memberInfo.expression, direction];
-      mdx = "Order(" + args.join(",") + ")";
-    }
-
+    mdx = this.getOrderMdx(mdx);
     return mdx;
   },
   getMdx: function(defaultSet) {
