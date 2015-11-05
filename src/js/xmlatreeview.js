@@ -53,8 +53,15 @@ var XmlaTreeView;
   if (iDef(conf.levelCardinalitiesDiscoveryMethod)) {
     this.levelCardinalitiesDiscoveryMethod = conf.levelCardinalitiesDiscoveryMethod;
   }
+  if (iRxp(conf.urlRegExp)){
+    this.urlRegExp = conf.urlRegExp;
+  }
+  if (iFun(conf.checkIfDescriptionIsAnUrl)){
+    this.checkIfDescriptionIsAnUrl = conf.checkIfDescriptionIsAnUrl;
+  }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
+  urlRegExp: /^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(([\w\.]|%\d\d)+\/)*(([\w\.]|%\d\d)+\.\w+)(\?([\w\.=\&]|%\d\d)*)?(#\w*)?$/,
   levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER,
   //how to retrieve captions for default members of hierarchies.
   //options are
@@ -91,12 +98,18 @@ var XmlaTreeView;
     }
     treePane.clearAll();
   },
+  checkIfDescriptionIsAnUrl: function(description){
+    var urlRegExp = this.urlRegExp;
+    urlRegExp.lastIndex = 0;
+    var match = urlRegExp.test(description);
+    return match;
+  },
   getDescriptionContentType: function(description){
     description = description.trim();
     var type;
     var len = description.length;
     //      protocol       domain name      ip address                port      path                resource         query name/value       anchor
-    if (/^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(([\w\.]|%\d\d)+\/)+(([\w\.]|%\d\d)+)(\?([\w\.=\&]|%\d\d)*)?(#\w*)?$/.test(description)) {
+    if (this.checkIfDescriptionIsAnUrl(description)) {
       type = "url";
     }
     else
@@ -371,7 +384,7 @@ var XmlaTreeView;
         if (hCls(target, "info-icon")){
           var url = gAtt(target, "data-url");
           this.fireEvent("requestinfo", {
-            title: d.treeNode.conf.objectName,
+            title: data.treeNode.conf.objectName,
             url: url,
           });
           ret = false;
@@ -411,7 +424,7 @@ var XmlaTreeView;
     var doInfoRequest = function(target, data) {
       var url = gAtt(target, "data-url");
       this.fireEvent("requestinfo", {
-        title: d.treeNode.conf.objectName,
+        title: data.treeNode.conf.objectName,
         url: url,
       });
     };
@@ -423,13 +436,13 @@ var XmlaTreeView;
         nodeClicked: function(treeListener, event, d){
           var target = d.event.getTarget();
           if (hCls(target, "info-icon")) {
-            doInfoRequest.call(treeListener, target, d);
+            doInfoRequest.call(this, target, d);
           }
         },
         nodeDoubleClicked: function(treeListener, event, d){
           var target = d.event.getTarget();
           if (hCls(target, "info-icon")) {
-            doInfoRequest.call(treeListener, target, d);
+            doInfoRequest.call(this, target, d);
           }
           else
           if (hCls(target, "label")) {
@@ -771,6 +784,7 @@ var XmlaTreeView;
       success: function(xmla, options, rowset){
         //actually render the member tree nodes residing beneath the level tree nodes
         rowset.eachRow(function(row){
+          row.DIMENSION_TYPE = hierarchyMetaData.DIMENSION_TYPE;
           me.renderLevelMemberNode(conf, row, "estimate");
         });
         //done rendering member treenodes
@@ -844,7 +858,7 @@ var XmlaTreeView;
             MEMBER_CAPTION: memberCaption,
             LEVEL_UNIQUE_NAME: member.LName,
             LEVEL_NUMBER: member.LNum,
-            CHILDREN_CARDINALITY: childCount
+            CHILDREN_CARDINALITY: childCount,
           }, metadata);
           var classes = ["member", "cardinality-" + cardinalityEstimateOrExact];
           var title = me.getMemberNodeTitle(childMetaData, cardinalityEstimateOrExact);
@@ -943,17 +957,23 @@ var XmlaTreeView;
   renderLevelMemberNodes: function(conf, callback, scope){
     var me = this;
     var membersTreeNode = conf.membersTreeNode;
-    var row = membersTreeNode.conf.metadata;
+
+    var levelTreeNode = membersTreeNode.getParentTreeNode()
+    var levelMetaData = levelTreeNode.conf.metadata;
+
+    var hierarchyTreeNode = levelTreeNode.getParentTreeNode()
+    var hierarchyMetaData = hierarchyTreeNode.conf.metadata;
+
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: row.CATALOG_NAME
+      Catalog: levelMetaData.CATALOG_NAME
     };
     var restrictions = {
-      CATALOG_NAME: row.CATALOG_NAME,
-      CUBE_NAME: row.CUBE_NAME,
-      HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME,
-      LEVEL_UNIQUE_NAME: row.LEVEL_UNIQUE_NAME
+      CATALOG_NAME: levelMetaData.CATALOG_NAME,
+      CUBE_NAME: levelMetaData.CUBE_NAME,
+      HIERARCHY_UNIQUE_NAME: levelMetaData.HIERARCHY_UNIQUE_NAME,
+      LEVEL_UNIQUE_NAME: levelMetaData.LEVEL_UNIQUE_NAME
     };
     this.xmla.discoverMDMembers({
       url: url,
@@ -963,6 +983,7 @@ var XmlaTreeView;
         //actually render the member tree nodes residing beneath the level tree nodes
         var i = 0;
         rowset.eachRow(function(row){
+          row.DIMENSION_TYPE = hierarchyMetaData.DIMENSION_TYPE;
           me.renderLevelMemberNode(conf, row, "estimate");
           i++;
         });
@@ -1207,18 +1228,17 @@ var XmlaTreeView;
     var me = this;
     me.fireEvent("busy");
     var hierarchyTreeNode = conf.hierarchyTreeNode;
-    var row = hierarchyTreeNode.conf.metadata;
-    var hierarchyCaption = row.HIERARCHY_CAPTION;
+    var hierarchyMetadata = hierarchyTreeNode.conf.metadata;
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: row.CATALOG_NAME
+      Catalog: hierarchyMetadata.CATALOG_NAME
     };
-    var cubeName = row.CUBE_NAME;
+    var cubeName = hierarchyMetadata.CUBE_NAME;
     var restrictions = {
-      CATALOG_NAME: row.CATALOG_NAME,
+      CATALOG_NAME: hierarchyMetadata.CATALOG_NAME,
       CUBE_NAME: cubeName,
-      HIERARCHY_UNIQUE_NAME: row.HIERARCHY_UNIQUE_NAME
+      HIERARCHY_UNIQUE_NAME: hierarchyMetadata.HIERARCHY_UNIQUE_NAME
     };
     var url = conf.url;
     me.xmla.discoverMDLevels({
@@ -1232,7 +1252,8 @@ var XmlaTreeView;
           if (me.checkIsExcluded(options, row)) {
             return;
           }
-
+          row.DIMENSION_TYPE = hierarchyMetadata.DIMENSION_TYPE;
+          row.HIERARCHY_CAPTION = hierarchyMetadata.HIERARCHY_CAPTION;
           levels.push(row);
           //https://technet.microsoft.com/en-us/library/ms126038(v=sql.110).aspx reads:
           //A Boolean that indicates whether the level is visible. Always returns True. If the level is not visible, it will not be included in the schema rowset.
@@ -1240,7 +1261,6 @@ var XmlaTreeView;
           //if (!row.LEVEL_IS_VISIBLE) {
           //  return;
           //}
-          row.HIERARCHY_CAPTION = hierarchyCaption;
           me.renderLevelTreeNode(conf, row);
         });
 

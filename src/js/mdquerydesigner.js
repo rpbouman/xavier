@@ -647,38 +647,46 @@ var QueryDesigner;
   getContainer: function() {
     return gEl(this.conf.container);
   },
+  checkAxisValid: function(axis, empty){
+    var valid = axis.checkValid();
+    var add, remove;
+    if (axis.isPopulated()) {
+      var n = empty.length;
+      if (!axis.isSlicerAxis() && n) {
+        valid = false;  //we have gap
+        var i;
+        add = "axis-message-area-invalid";
+        remove = ["axis-message-area-empty", "axis-message-area-populated"];
+        for (i = 0; i < n; i++) {
+          rCls(empty[i].getMessageAreaId(), remove, add);
+        }
+        empty.length = 0;
+      }
+      add = "axis-message-area-populated";
+      remove = ["axis-message-area-empty", "axis-message-area-invalid"];
+    }
+    else {
+      if (axis.conf.mandatory === true) {
+        add = "axis-message-area-invalid";
+        remove = ["axis-message-area-empty", "axis-message-area-populated"];
+        valid = false;
+      }
+      else {
+        empty.push(axis);
+        add = "axis-message-area-empty";
+        remove = ["axis-message-area-invalid", "axis-message-area-populated"];
+      }
+    }
+    rCls(axis.getMessageAreaId(), remove, add);
+    return valid;
+  },
   checkAxesValid: function(){
     var valid = true, empty = [];
     this.eachAxis(function(id, axis) {
-      var add, remove;
-      if (axis.isPopulated()) {
-        var n = empty.length;
-        if (!axis.isSlicerAxis() && n) {
-          valid = false;  //we have gap
-          var i;
-          add = "axis-message-area-invalid";
-          remove = ["axis-message-area-empty", "axis-message-area-populated"];
-          for (i = 0; i < n; i++) {
-            rCls(empty[i].getMessageAreaId(), remove, add);
-          }
-          empty.length = 0;
-        }
-        add = "axis-message-area-populated";
-        remove = ["axis-message-area-empty", "axis-message-area-invalid"];
+      var axisValidity = this.checkAxisValid(axis, empty);
+      if (axisValidity === false) {
+        valid = false;
       }
-      else {
-        if (axis.conf.mandatory === true) {
-          add = "axis-message-area-invalid";
-          remove = ["axis-message-area-empty", "axis-message-area-populated"];
-          valid = false;
-        }
-        else {
-          empty.push(axis);
-          add = "axis-message-area-empty";
-          remove = ["axis-message-area-invalid", "axis-message-area-populated"];
-        }
-      }
-      rCls(axis.getMessageAreaId(), remove, add);
     }, this, true);
     return valid;
   },
@@ -1287,11 +1295,15 @@ var QueryDesignerAxis;
     }
     return true;
   },
-  canDropItem: function(target, dragInfo) {
+  checkValid: function(){ //override to check specific requirements.
+    return true;
+  },
+  _canDropItem: function(target, dragInfo) {
     var conf = this.conf,
         requestType = dragInfo.className,
         metadata = dragInfo.metadata
     ;
+
     if (target.tagName === "TD") {
       var classes = target.parentNode.className.split(" ");
       if (classes[0] === "user-sort-option") {
@@ -1312,39 +1324,130 @@ var QueryDesignerAxis;
       //we can do this only if the two axes are not the same.
       return !hCls(this.getDom().parentNode, requestType);
     }
+
+    //check the metadata
+    if (iDef(conf.metadataFilter) && !eq(conf.metadataFilter, metadata)) {
+      return false;
+    }
+
     //if (target.tagName !== "TD") return;
     var dimensionName = this.getDimensionName(metadata),
         hierarchyName = this.getHierarchyName(metadata),
         axis,
         queryDesigner = this.getQueryDesigner()
     ;
+
+    //if the max hierarchy count is equal to or increases the hierarchy count,
+    //and the new item belongs to another hierarchy, then we have to reject the item
+    //sine we are not supposed to add yet another hierarchy
+    var thisAxisHasHierarchy = this.hasHierarchy(hierarchyName);
+    var queryDesignerHasHierarchy = thisAxisHasHierarchy || queryDesigner.hasHierarchy(hierarchyName);
+    if (iDef(conf.maxHierarchyCount) && conf.maxHierarchyCount <= this.getHierarchyCount() && !thisAxisHasHierarchy) {
+      return false;
+    }
+
+    var metadataFilter = conf.metadataFilter;
+    if (iDef(metadataFilter)) {
+      switch (typeof(metadataFilter)) {
+        case "object":
+          if (eq(metadataFilter, metadata)){
+            return true;
+          }
+          else {
+            //...TODO: look up in the hierarchy?
+          }
+          break;
+        case "function":
+          break;
+      }
+    }
+
+    //if we are dragging from the tree to this axis, but we already have such an item then dissallow.
+    if (dragInfo.dragOrigin !== this.getQueryDesigner() && this.containsSetDef(requestType, metadata)) {
+      return false;
+    }
+
     switch (requestType) {
       case "hierarchy":
+        //if this axis already has a hierarchy with this dimension, then we can't accept another.
+        if (!thisAxisHasHierarchy && this.hasDimension(dimensionName)) {
+          return false;
+        }
+        //fallthrough
       case "measures":
         if (dragInfo.dragOrigin instanceof QueryDesigner) {
           return true;
         }
-        if (queryDesigner.hasHierarchy(hierarchyName)){
-          return false;
-        }
         //if this axis already has this hierarchy then we can't drop it again.
-        if (this.hasHierarchy(hierarchyName)) {
+        if (thisAxisHasHierarchy) {
           return false;
         }
-        //if this axis already has a hierarchy with this dimension, then we can only replace
-        if (this.hasDimension(dimensionName) && target.className.indexOf("hierarchy")) {
+        if (queryDesignerHasHierarchy){
           return false;
         }
         break;
       case "level":
       case "member":
+        if (thisAxisHasHierarchy) {
+          var newLevel = metadata.LEVEL_UNIQUE_NAME;
+          var maxLevelsPerHierarchyCount = conf.maxLevelsPerHierarchyCount;
+          var minItemsPerHierarchy = conf.minItemsPerHierarchy;
+          var maxItemsPerHierarchy = conf.maxItemsPerHierarchy;
+          var minMembersPerHierarchy = conf.minMembersPerHierarchy;
+          var maxMembersPerHierarchy = conf.maxMembersPerHierarchy;
+          if (
+            (iDef(newLevel) && iDef(maxLevelsPerHierarchyCount)) ||
+            iDef(maxItemsPerHierarchy)
+          ) {
+            var levels = {};
+            var levelCount;
+            if (newLevel) {
+              levelCount = levels[newLevel] = 1;
+            }
+            else {
+              levelCount = 0;
+            }
+            var itemCount = 1, memberCount;
+            memberCount = (requestType === "member") ? 1 : 0;
+
+            this.eachSetDef(function(setDef, setDefIndex){
+              itemCount++;
+              var setDefMetadata = setDef.metadata;
+              var levelUniqueName = setDefMetadata.LEVEL_UNIQUE_NAME;
+              var count;
+              if (setDef.type === "member") {
+                memberCount++;
+              }
+              if (iDef(levelUniqueName)) {
+                if (iDef(levels[levelUniqueName])){
+                  ++levels[levelUniqueName];
+                }
+                else {
+                  levelCount++;
+                  levels[levelUniqueName] = 1;
+                }
+              }
+            }, this, hierarchyName);
+
+            if (iDef(maxLevelsPerHierarchyCount) && (levelCount > maxLevelsPerHierarchyCount)) {
+              return false;
+            }
+            else
+            if (iDef(maxItemsPerHierarchy) && itemCount > maxItemsPerHierarchy) {
+              return false;
+            }
+            else
+            if (iDef(maxMembersPerHierarchy) && memberCount > maxMembersPerHierarchy) {
+              return false;
+            }
+          }
+        }
+        //fall through
       case "derived-measure":
       case "measure":
       case "property":
-        axis = queryDesigner.getAxisForHierarchy(hierarchyName);
-        if (axis && axis !== this) {
-          //if the item has a hierarchy and the hierarchy is already present on another axis
-          //then disallow drop.
+        if (queryDesignerHasHierarchy && !thisAxisHasHierarchy) {
+          //if the hierarchy is already present on another axis then disallow drop.
           return false;
         }
         break;
@@ -1352,6 +1455,13 @@ var QueryDesignerAxis;
         return false;
     }
     return true;
+  },
+  canDropItem: function(target, dragInfo) {
+    var conf = this.conf;
+    if (iFun(conf.canDropItem)){
+      return conf.canDropItem.call(this, target, dragInfo);
+    }
+    return this._canDropItem(target, dragInfo);
   },
   getLastMemberCellsVertical: function(){
     var lastMemberCells = [];
@@ -1487,8 +1597,14 @@ var QueryDesignerAxis;
     if (iStr(hierarchy)) {
       hierarchy = this.getHierarchyByName(hierarchy);
     }
-    if (hierarchy.HIERARCHY_CAPTION) {
-      return hierarchy.HIERARCHY_CAPTION;
+    var caption = hierarchy.HIERARCHY_CAPTION;
+    if (this.isMeasureHierarchy(hierarchy)) {
+      if (iDef(caption) && caption === "Measures"){
+        caption = gMsg(caption);
+      }
+    }
+    if (caption) {
+      return caption;
     }
     var name = this.getHierarchyName(hierarchy);
     name = this.stripBracesFromIdentifier(name);
@@ -1844,6 +1960,23 @@ var QueryDesignerAxis;
     memberInfo.caption = caption;
     memberInfo.captionNeedsUpdate = captionNeedsUpdate;
     return memberInfo;
+  },
+  containsSetDef: function(requestType, metadata){
+    var memberInfo = this.getMemberInfo(requestType, metadata);
+    if (this.eachSetDef(function(setDef){
+      if (
+        setDef.type === memberInfo.type &&
+        setDef.expression === memberInfo.expression
+      ){
+        return false;
+      }
+    }, this) === false) {
+      contains = true;
+    }
+    else {
+      contains = false;
+    }
+    return contains;
   },
   _addMember: function(memberIndex, requestType, metadata) {
     var hierarchyName = this.getHierarchyName(metadata),

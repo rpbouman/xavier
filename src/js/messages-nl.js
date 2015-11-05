@@ -23,11 +23,12 @@ aMsg({
   "The members on this axis form a selection of the total data set (a slice) or which data are shown.": "Lid-elementen op deze as vormen de selectie (slice) van de totale gegevensverzameling",
   "Optionally, drag any members unto the slicer axis to control which selection of data will be visualized.": "Sleep leden naar de selectie as om de data selectie te bepalen (optioneel).",
   //table
-  "New Table": "Nieuwe Tabel",
+  "New Data table": "Nieuwe Tabel",
   "Table": "Tabel",
   "Items on this axis are used to generate columns for the table": "Elementen op deze as worden gebruikt om kolommen in de resultaat tabel te genereren.",
   "Drag any levels, members or measures unto the columns axis to create columns in the data table.": "Sleep niveaus, leden, of meetwaarden naar de kolom as om kolommen in de data tabel te maken.",
   //pivot table
+  "New Pivot table": "Nieuwe Draaitabel",
   "Show column hierarchy headers": "Toon kolomkoppen",
   "Show row hierarchy headers": "Toon rijlabels",
   "New Pivot Table": "Nieuwe Draaitabel",
@@ -36,9 +37,14 @@ aMsg({
   "Drag any levels, members or measures unto the columns axis to create columns in the pivot table.": "Sleep niveaus, leden, of meetwaarden naar de kolom as om kolommen in de draaitabel te maken.",
   "Items on this axis are used to generate rows for the pivot table": "Elementen op deze as worden gebruikt om rijen te genereren",
   "Optionally, drag any levels, members or measures unto the row axis to create rows in the pivot table.": "Sleep niveaus, leden, of meetwaarden naar de rijen as om rijen in de draaitabel te maken (optioneel).",
+  //Chart - generic options
+  "For each unique combination of members, a chart is created.": "Voor iedere unieke combinatie van leden wordt er 1 diagram gemaakt.",
+  "Optionally, drop levels or members on the columns axis to create a list of multiple charts.": "Plaats niveaus of leden op de kolom as om een lijst van meerdere diagrammen te maken. (optioneel)",
+  "For each unique combination of members, one row is layed out and each column is filled with a chart.": "Voor iedere unieke combintatie van leden wordt er een rij gemaakt, en iedere kolom bevat 1 diagram. (optioneel)",
+  "Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple charts.": "Plaats niveaus en leden op de rij-as en kolom-as om een matrix van diagrammen te maken. (optioneel)",
   //pie chart
   "Pie Chart": "Taartdiagram",
-  "New Pie Chart": "Nieuw Taartdiagram",
+  "New Pie chart": "Nieuw Taartdiagram",
   "Categories": "Categorieën",
   "Each combination of members forms a category to generate one slice of the pie chart. Choose one level, or a selection of members from a single level per hierarchy.": "Elke combinatie van lid-elementen vormt een categorie om een taartpunt van het diagram te genereren. Kies per hiërarchie één niveau, of een selectie van lid-elementen van een en hetzelfde niveau.",
   "Drag levels or members to the categories axis. This will create the categories by which the pie chart(s) will be divided.": "Sleep niveaus of leden naar de categorie as om categorieen te maken. Elke categorie resulteert in een taartpunt",
@@ -50,7 +56,7 @@ aMsg({
   "Optionally, drop levels or members on the rows axis and on the column axis to create a matrix of multiple pies.": "Plaats niveaus of leden op de rijen as en de kolom as om een matrix van taartdiagrammen te maken. (optioneel)",
   //Bar chart
   "Bar Chart": "Staafdiagram",
-  "New Bar Chart": "Nieuw Staafdiagram",
+  "New Bar chart": "Nieuw Staafdiagram",
   "Each measure creates a bar, and the value of the measures controls the extent of the bars. Use the chart options to control whether measures should be grouped or stacked.": "De waarde van de meetwaarden bepalen de lengte van de staven. Gebruik de opties om te bepalen of meetwaarden naast elkaar gegroepeerd, of op elkaar gestapeld worden afgebeeld.",
   "Each combination of members forms a category to generate bars in the bar chart. Choose one level, or a selection of members from a single level per hierarchy.": "Elke combinatie van leden vormt een categorie waarvoor staven in het staafdiagram worden gemaakt. Kies een niveau, of selecteer leden uit een enkel niveau van een hierarchy.",
   "Drag levels or members to the categories axis to create categories for which bars are drawn.": "Sleep niveaus of leden naar de categorie as om categorieen te maken.",
@@ -59,6 +65,15 @@ aMsg({
   "Optionally, drop levels or members on the columns axis to create a list of multiple bar charts.": "Plaats niveaus of leden op de kolom as om een lijst van meerdere staafdiagrammen te maken. (optioneel)",
   "For each unique combination of members, one row is layed out and each column is filled with a bar chart.": "Voor iedere unieke combintatie van laden wordt er een rij gemaakt, en iedere kolom bevat 1 staafdiagram. (optioneel)",
   "Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts.": "Plaats niveaus en leden op de rijen as en kolom as om een matrix van staafdiagrammen te maken. (optioneel)",
+  //time series chart
+  "Time Series Chart": "Tijdlijndiagram",
+  "New Time Series chart": "Nieuw Tijdlijndiagram",
+  "Each measure creates a line, and the value of the measures controls the y coordinate. Use the chart options to control whether to draw lines or areas.": "bla bla ja ja ",
+  "Drag measures to the measures axis. The measure value determines the y coordinate of the line.": "bla bla ja ja ",
+  "Drag member or levels from one particular date hierarchy.": "bla bla ja ja ",
+  "Drag levels or members to the time axis to define granularity and selected periods.": "bla bla ja ja ",
+  "Drag levels or members to the categories axis to create categories for which lines are drawn.": "bla bla ja ja ",
+  "Drag levels or members to the time axis to define granularity and selected periods.": "bla bla ja ja ",
   //query
   "Error executing query": "Fout bij uitvoering zoekopdracht",
   //treeview

@@ -86,6 +86,14 @@ limitations under the License.
   background-image: url('../images/new-bar-chart.png');
 }
 
+.xavier-tabpane > .pentaho-tab-bar > .time-series-chart {
+  background-image: url('../images/line-chart1.png');
+}
+
+.toolbar > .new-time-series-chart {
+  background-image: url('../images/new-line-chart1.png');
+}
+
 .xavier-tabpane > .pentaho-tab-bar > .combi-chart {
   background-image: url('../images/combi-chart.png');
 }
