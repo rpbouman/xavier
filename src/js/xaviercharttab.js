@@ -1007,8 +1007,8 @@ var XavierTimeSeriesChartTab;
         {
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Time"),
-          tooltip: gMsg("Drag two members of one date hierarchy to indicate the beginning and end of the time period."),
-          hint: gMsg("Drag two members of one date hierarchy to indicate the beginning and end of the time period."),
+          tooltip: gMsg("Drag two members of one date hierarchy level to define the time period."),
+          hint: gMsg("Drag two members of one date hierarchy level to define the time period."),
           mandatory: true,
           canBeEmpty: false,
           isDistinct: true,
@@ -1034,23 +1034,39 @@ var XavierTimeSeriesChartTab;
                 //is there a "from" member? If not, then this is it.
                 if (!memberFrom) {
                   memberFrom = setDef;
+                  if (dragInfo.className === "member" && eq(dragInfo.metadata, setDef.metadata)) {
+                    //new item already on axis: reject
+                    canDrop = false;
+                    return false;
+                  }
                 }
                 //is there a "to" member? If not, then this is it.
                 else
                 if (!memberTo) {
                   memberTo = setDef;
-                  if (memberFrom.metadata.LEVEL_UNIQUE_NAME !== memberTo.metadata.LEVEL_UNIQUE_NAME) {
+                  if (dragInfo.className === "member" && eq(dragInfo.metadata, setDef.metadata)) {
+                    //new item already on axis: reject
                     canDrop = false;
                     return false;
                   }
                 }
-                //both "from" and "to" are present, we don't want another one.
-                else {
+                else
+                if (dragInfo.className === "member"){
+                  //already have two members: reject
                   canDrop = false;
                   return false;
                 }
               }
             }, this);
+            
+            //if we have a from member, and the new item is a member but of the wrong level, then reject.
+            if (
+              memberFrom && !memberTo && 
+              dragInfo.className === "member" && 
+              memberFrom.metadata.LEVEL_UNIQUE_NAME !== dragInfo.metadata.LEVEL_UNIQUE_NAME
+            ) {
+              return false;
+            }
             return canDrop;
           }
 /*
