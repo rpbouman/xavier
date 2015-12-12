@@ -154,6 +154,11 @@
       <fileset dir="${src}/js"/>
     </copy>
 
+    <mkdir dir="${dist.all}/resources/messages"/>
+    <copy todir="${dist.all}/resources/messages">
+      <fileset dir="${src}/messages"/>
+    </copy>
+
     <mkdir dir="${dist.all}/resources/css"/>
     <copy todir="${dist.all}/resources/css">
       <fileset dir="${src}/css"/>
