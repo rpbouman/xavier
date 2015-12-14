@@ -1941,9 +1941,6 @@ var QueryDesignerAxis;
         break;
       case "property":
         caption = metadata.PROPERTY_CAPTION;
-        var treeView = this.getQueryDesigner().getXmlaTreeView();
-        levelMetadata = treeView.getLevelMetadata(metadata.LEVEL_UNIQUE_NAME);
-        memberInfo.levelMetadata = levelMetadata;
         break;
       case "member":
       case "member-drilldown":
@@ -1959,6 +1956,15 @@ var QueryDesignerAxis;
     }
     memberInfo.caption = caption;
     memberInfo.captionNeedsUpdate = captionNeedsUpdate;
+
+    switch (requestType) {
+      case "property":
+      case "member":
+      case "member-drilldown":
+        var treeView = this.getQueryDesigner().getXmlaTreeView();
+        levelMetadata = treeView.getLevelMetadata(metadata.LEVEL_UNIQUE_NAME);
+        memberInfo.levelMetadata = levelMetadata;
+    }
     return memberInfo;
   },
   containsSetDef: function(requestType, metadata){
