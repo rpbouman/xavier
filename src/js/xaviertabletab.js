@@ -175,6 +175,7 @@ var XavierTableTab;
             levelMetadata = setDef.metadata;
             break;
           case "property":
+          case "member":
             levelMetadata = setDef.levelMetadata;
             break;
         }
@@ -338,7 +339,7 @@ var XavierTableTab;
           isDistinct: true,
           hasEmptyCheckBox: false,
           drop: {
-            include: ["level", "property", "measure", "derived-measure"]
+            include: ["level", "property", "measure", "derived-measure", "member"]
           }
         },
         {
