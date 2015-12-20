@@ -164,7 +164,9 @@ var xmlaTreeView = new XmlaTreeView({
     error: function(xmlaTreeView, event, error){
       busy(false);
       showAlert("Unexpected Error", error.toString() || error.message);
-      console.error(error.getStackTrace());
+      if (error.getStackTrace) {
+        console.error(error.getStackTrace());
+      }
     },
     loadCube: function(xmlaTreeView, event, cubeTreeNode){
       mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
