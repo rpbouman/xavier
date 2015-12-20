@@ -68,7 +68,7 @@ aMsg({
   //time series chart
   "Time Series Chart": "Zeitreihendiagramm",
   "New Time Series chart": "Neues Zeitreihendiagramm",
-  "Each measure creates a line, and the value of the measures controls the y coordinate. Use the chart options to control whether to draw lines or areas.": "Jedes Wert entspricht eine Linie und deren Y-Koordinate. Die Diagrammoptionen entscheiden, ob Linien oder Flächen gezeichnet werden.",
+  "Each measure creates a line, and the value of the measures controls the y coordinate. Use the chart options to control whether to draw lines or areas.": "Jedes Wert entspricht eine Linie und deren Y-Koordinate. Die Diagrammoptionen entscheiden, ob Linien oder Flaechen gezeichnet werden.",
   "Drag measures to the measures axis. The measure value determines the y coordinate of the line.": "Drag measures to the measures axis. The measure value determines the y coordinate of the line.",
   "Drag member or levels from one particular date hierarchy.": "Drag member or levels from one particular date hierarchy.",
   "Drag levels or members to the time axis to define granularity and selected periods.": "Drag levels or members to the time axis to define granularity and selected periods.",
