@@ -35,6 +35,9 @@ var XmlaTreeView;
   if (iDef(conf.catalogNodesInitiallyFlattened)) {
     this.catalogNodesInitiallyFlattened = conf.catalogNodesInitiallyFlattened;
   }
+  if (iDef(conf.showCatalogNodesCheckboxDisplayed)) {
+    this.showCatalogNodesCheckboxDisplayed = conf.showCatalogNodesCheckboxDisplayed;
+  }
   if (iDef(conf.useCatalogPrefixForCubes)) {
     this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
   }
@@ -76,6 +79,8 @@ var XmlaTreeView;
   maxLowCardinalityLevelMembers: 10,
   //whether catalog nodes should initially be hidden
   catalogNodesInitiallyFlattened: true,
+  //whether or not display of flattened catalog nodes can be toggled by the user.
+  showCatalogNodesCheckboxDisplayed: false,
   //whether labels of cube nodes are prefixed by catalog name. Prefix only shown if the catalog node is flattened. This option can be used to suppress the prefix alltogether.
   useCatalogPrefixForCubes: true,
   //whether dimension nodes should initially be hidden
@@ -366,7 +371,7 @@ var XmlaTreeView;
 
     var schemaTreePaneDom = this.schemaTreePane.getDom();
     cEl("DIV", {
-      "class": "show-catalog-nodes"
+      "class": "show-catalog-nodes" + (this.showCatalogNodesCheckboxDisplayed === false ? " hidden" : "")
     }, [
       showCatalogNodesCheckbox,
       cEl("SPAN", {
@@ -481,7 +486,6 @@ var XmlaTreeView;
     if (!this.progressIndicator) {
       this.createProgressIndicator();
     }
-
     this.initCatalogNodesCheckbox();
     this.initListeners();
     this.indicateProgress(

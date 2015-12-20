@@ -506,6 +506,11 @@ div.show-catalog-nodes {
   border-bottom-width: 2px;
   border-bottom-color: #cbdde8;
   padding: 2px;
+  white-space: nowrap;
+}
+
+div.show-catalog-nodes.hidden {
+  display: none;
 }
 
 div.node > div.head > span.label > span.label-prefix {

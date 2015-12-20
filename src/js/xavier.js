@@ -148,6 +148,7 @@ var xmlaTreeView = new XmlaTreeView({
   xmlaMetadataFilter: xmlaMetadataFilter,
   metadataRestrictions: xavierOptions.metadataRestrictions,
   catalogNodesInitiallyFlattened: iDef(xavierOptions.catalogNodesInitiallyFlattened) ? xavierOptions.catalogNodesInitiallyFlattened : XmlaTreeView.prototype.catalogNodesInitiallyFlattened,
+  showCatalogNodesCheckboxDisplayed: iDef(xavierOptions.showCatalogNodesCheckboxDisplayed) ? xavierOptions.showCatalogNodesCheckboxDisplayed : XmlaTreeView.prototype.showCatalogNodesCheckboxDisplayed,
   useCatalogPrefixForCubes: iDef(xavierOptions.useCatalogPrefixForCubes) ? xavierOptions.useCatalogPrefixForCubes : XmlaTreeView.prototype.useCatalogPrefixForCubes,
   dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : XmlaTreeView.prototype.dimensionNodesInitiallyFlattened,
   maxLowCardinalityLevelMembers: iDef(xavierOptions.maxLowCardinalityLevelMembers) ? xavierOptions.maxLowCardinalityLevelMembers : XmlaTreeView.prototype.maxLowCardinalityLevelMembers,
