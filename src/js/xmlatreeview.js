@@ -35,6 +35,9 @@ var XmlaTreeView;
   if (iDef(conf.catalogNodesInitiallyFlattened)) {
     this.catalogNodesInitiallyFlattened = conf.catalogNodesInitiallyFlattened;
   }
+  if (iDef(conf.useCatalogPrefixForCubes)) {
+    this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
+  }
   if (iDef(conf.dimensionNodesInitiallyFlattened)) {
     this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
   }
@@ -73,6 +76,8 @@ var XmlaTreeView;
   maxLowCardinalityLevelMembers: 10,
   //whether catalog nodes should initially be hidden
   catalogNodesInitiallyFlattened: true,
+  //whether labels of cube nodes are prefixed by catalog name. Prefix only shown if the catalog node is flattened. This option can be used to suppress the prefix alltogether.
+  useCatalogPrefixForCubes: true,
   //whether dimension nodes should initially be hidden
   dimensionNodesInitiallyFlattened: true,
   checkIsExcluded: function(request, row){
@@ -303,7 +308,13 @@ var XmlaTreeView;
           }
           var objectName = row.CUBE_CAPTION || row.CUBE_NAME;
           var title = objectName;
-          var catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
+          var catalogPrefix;
+          if (me.useCatalogPrefixForCubes) {
+            catalogPrefix = "<span class=\"label label-prefix\">" + catalog + "</span>";
+          }
+          else {
+            catalogPrefix = "";
+          }
           var tooltipAndInfoLabel = me.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
           title = catalogPrefix + title + tooltipAndInfoLabel.infoLabel;
           var tooltip = tooltipAndInfoLabel.tooltip || row.CUBE_NAME;
