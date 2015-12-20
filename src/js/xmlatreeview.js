@@ -41,6 +41,12 @@ var XmlaTreeView;
   if (iDef(conf.useCatalogPrefixForCubes)) {
     this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
   }
+  if (iDef(conf.showCurrentCube)) {
+    this.showCurrentCube = conf.showCurrentCube;
+  }
+  if (iDef(conf.showCurrentCatalog)) {
+    this.showCurrentCatalog = conf.showCurrentCatalog;
+  }
   if (iDef(conf.dimensionNodesInitiallyFlattened)) {
     this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
   }
@@ -83,6 +89,10 @@ var XmlaTreeView;
   showCatalogNodesCheckboxDisplayed: false,
   //whether labels of cube nodes are prefixed by catalog name. Prefix only shown if the catalog node is flattened. This option can be used to suppress the prefix alltogether.
   useCatalogPrefixForCubes: true,
+  //whether or not to display the current catalog in the cube pane.
+  showCurrentCatalog: false,
+  //whether or not to display the current cube in the cube pane.
+  showCurrentCube: false,
   //whether dimension nodes should initially be hidden
   dimensionNodesInitiallyFlattened: true,
   checkIsExcluded: function(request, row){
@@ -2142,15 +2152,18 @@ var XmlaTreeView;
 
     //static indicator of the current catalog and cube
     var currentCatalog = cEl("SPAN", {
-      "class": "current-catalog",
+      "class": "current-catalog" + (this.showCurrentCatalog === false ? " hidden" : ""),
       "data-objectName": catalogName
     });
     var currentCube = cEl("SPAN", {
-      "class": "current-cube",
+      "class": "current-cube" + (this.showCurrentCube === false ? " hidden" : ""),
       "data-objectName": cubeName
     });
     var currentCatalogAndCube =  cEl("DIV", {
-      "class": "current-catalog-and-cube"
+      "class": "current-catalog-and-cube" + ((
+        this.showCurrentCatalog === false &&
+        this.showCurrentCube === false
+      ) ? " hidden" : "")
     }, [currentCatalog, currentCube], cubeTreePaneDom);
     listen(currentCatalogAndCube, "click", function(e){
       var target = e.getTarget();

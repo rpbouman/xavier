@@ -223,6 +223,12 @@ span.current-cube {
   margin: 2px;
 }
 
+div.current-catalog-and-cube.hidden,
+span.current-catalog.hidden, 
+span.current-cube.hidden {
+  display: none;
+}
+
 div.current-catalog-and-cube > span {
   display: block;   /* make it blocks, in practice catalog name and cube names can be so long the are out of view. */
   margin-left: 0px;

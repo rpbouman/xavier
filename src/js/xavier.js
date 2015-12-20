@@ -150,6 +150,8 @@ var xmlaTreeView = new XmlaTreeView({
   catalogNodesInitiallyFlattened: iDef(xavierOptions.catalogNodesInitiallyFlattened) ? xavierOptions.catalogNodesInitiallyFlattened : XmlaTreeView.prototype.catalogNodesInitiallyFlattened,
   showCatalogNodesCheckboxDisplayed: iDef(xavierOptions.showCatalogNodesCheckboxDisplayed) ? xavierOptions.showCatalogNodesCheckboxDisplayed : XmlaTreeView.prototype.showCatalogNodesCheckboxDisplayed,
   useCatalogPrefixForCubes: iDef(xavierOptions.useCatalogPrefixForCubes) ? xavierOptions.useCatalogPrefixForCubes : XmlaTreeView.prototype.useCatalogPrefixForCubes,
+  showCurrentCatalog: iDef(xavierOptions.showCurrentCatalog) ? xavierOptions.showCurrentCatalog : XmlaTreeView.prototype.showCurrentCatalog,
+  showCurrentCube: iDef(xavierOptions.showCurrentCube) ? xavierOptions.showCurrentCube : XmlaTreeView.prototype.showCurrentCube,
   dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : XmlaTreeView.prototype.dimensionNodesInitiallyFlattened,
   maxLowCardinalityLevelMembers: iDef(xavierOptions.maxLowCardinalityLevelMembers) ? xavierOptions.maxLowCardinalityLevelMembers : XmlaTreeView.prototype.maxLowCardinalityLevelMembers,
   defaultMemberDiscoveryMethod: iDef(xavierOptions.defaultMemberDiscoveryMethod) ? xavierOptions.defaultMemberDiscoveryMethod : XmlaTreeView.prototype.defaultMemberDiscoveryMethod,
