@@ -1648,7 +1648,9 @@ var XmlaTreeView;
     hierarchyTreeNodeConf.defaultMember = defaultMember;
     return defaultMember;
   },
-  //this is here to get the captions of all default members of all hierarchies
+  //this is here to get the captions of all default members of all hierarchies.
+  //MDSCHEMA_MEMBERS does not really support that - not in 1 query.
+  //But we can do it with MDX by setting up a query that asks for all members we're interested in.
   getDefaultMembersWithMDX: function(conf, hierarchyTreeNodes){
     var i, n = hierarchyTreeNodes.length, hierarchyTreeNode,
         hierarchyMetaData, memberName, members = [],
@@ -1670,6 +1672,11 @@ var XmlaTreeView;
       return;
     }
 
+    //We have members. Get their captions by issuing a bogus MDX query.
+    //We use a calculated measure that we hope is cheaper than any real measure.
+    //We dump all members in the sliceraxis. 
+    //So far we found we can do this safely even if there are multiple hierarchies of same dimension.
+    //This does not always work when we don't use the slicer but a "regular" axis.
     var tuple = "(" + members.join(",") + ")";
     var measure = measuresHierarchyName + ".[One]";
     var cubeName = hierarchyMetaData.CUBE_NAME;
@@ -1714,7 +1721,7 @@ var XmlaTreeView;
   getDefaultMembersWithDuctTapeAndSuperGlue: function(conf, hierarchyTreeNodes){
     var i, n = hierarchyTreeNodes.length,
         hierarchyTreeNode, defaultMember
-    ;
+    ; 
     for (i = 0; i < n; i++) {
       hierarchyTreeNode = hierarchyTreeNodes[i];
       defaultMember = this.emulateDefaultMemberMockup(hierarchyTreeNode);
