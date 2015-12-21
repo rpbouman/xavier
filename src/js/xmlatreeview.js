@@ -1670,10 +1670,13 @@ var XmlaTreeView;
       return;
     }
 
+    var tuple = "(" + members.join(",") + ")";
+    var measure = measuresHierarchyName + ".[One]";
     var cubeName = hierarchyMetaData.CUBE_NAME;
-    var mdx = "WITH MEMBER " + measuresHierarchyName + ".[One] AS 1" +
-              "\nSELECT (" + members.join(",") + ") ON COLUMNS" +
-              "\nFROM " + QueryDesignerAxis.prototype.braceIdentifier(cubeName)
+    var mdx = "WITH MEMBER " + measure + " AS 1" +
+              "\nSELECT {" + measure + "} ON COLUMNS" +
+              "\nFROM " + QueryDesignerAxis.prototype.braceIdentifier(cubeName) +
+              "\nWHERE " + tuple
     ;
 
     var properties = {};
@@ -1688,7 +1691,7 @@ var XmlaTreeView;
       properties: properties,
       statement: mdx,
       success: function(xmla, req, resp){
-        resp.getColumnAxis().eachTuple(function(tuple){
+        resp.getSlicerAxis().eachTuple(function(tuple){
           var members = tuple.members, i, n = members.length,
               member, hierarchyTreeNode, defaultMember
           ;
