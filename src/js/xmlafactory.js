@@ -66,19 +66,55 @@ var XmlaFactory;
   },
   createXmla: function(callback, error, scope){
     var conf = this.conf;
-    var xmla = new Xmla({
+    var xmlaOptions = {
       async: conf.async || true,
       forceResponseXMLEmulation: conf.forceResponseXMLEmulation || true
-    });
+    };
+    if (conf.headers) {
+      xmlaOptions.headers = conf.headers;
+    }
+    var xmla = new Xmla(xmlaOptions);
     var urls = this.getPossibleXmlaUrls();
     this.tryXmlaUrl(xmla, urls, 0);
     return xmla;
+  },
+  xCsrfTokenHeader: "x-csrf-token",
+  checkCsrfTokenRequired: function(xhr){
+  	var xCsrfToken = xhr.getResponseHeader(this.xCsrfTokenHeader);
+	return (xCsrfToken.toLowerCase() === "required");
+  },
+  fetchCsrfToken: function(xmla, urls, index){
+	var me = this, xhr = new XMLHttpRequest();
+	xhr.open("GET", urls[index], true);
+	xhr.setRequestHeader(this.xCsrfTokenHeader, "Fetch");
+	xhr.onreadystatechange = function(){
+	  switch(xhr.readyState) {
+		case 4:
+	      xCsrfToken = xhr.getResponseHeader(this.xCsrfTokenHeader);
+	      if (me.checkCsrfTokenRequired(xhr)) {
+	    	//we didn't get a valid token. try next url
+		    index += 1;
+	      }
+	      else {
+	    	//we got a token! configure our Xmla to use it.
+	    	var header = me.xCsrfTokenHeader;
+	    	var xCsrfToken = xhr.getResponseHeader(header), headers = {};
+	    	headers[header] = xCsrfToken;
+	    	xmla.setOptions({
+	    	  headers: headers
+	    	});
+	      }
+    	  me.tryXmlaUrl(xmla, urls, index);
+	      break;
+	  };
+	}
+	xhr.send(null);
   },
   tryXmlaUrl: function(xmla, urls, index){
     var me = this;
     if (index < urls.length) {
       var url = urls[index];
-      xmla.discoverDataSources({
+      var request = {
         url: url,
         success: function(xmla, request, rowset){
           xmla.setOptions({
@@ -86,11 +122,20 @@ var XmlaFactory;
           });
           me.fireEvent("found", xmla);
         },
-        error: function(xmla, request) {
+        error: function(xmla, request, exception) {
           var exception = request.exception;
           if (exception.code === -10) {
             var data = exception.data;
             switch (data.status) {
+              case 403:	//Forbidden
+            	if (me.checkCsrfTokenRequired(data.xhr)) {
+                  me.fetchCsrfToken(xmla, urls, index);
+            	}
+            	else {
+            	  index++;
+            	  me.tryXmlaUrl(xmla, urls, index);
+            	}
+            	break;
               default:
                 me.tryXmlaUrl(xmla, urls, ++index);
                 break;
@@ -115,7 +160,8 @@ var XmlaFactory;
             }
           }
         }
-      });
+      };
+      xmla.discoverDataSources(request);
     }
     else {
       this.fireEvent("notfound");
