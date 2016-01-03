@@ -158,6 +158,7 @@ var xmlaTreeView = new XmlaTreeView({
   levelCardinalitiesDiscoveryMethod: iDef(xavierOptions.levelCardinalitiesDiscoveryMethod) ? xavierOptions.levelCardinalitiesDiscoveryMethod : XmlaTreeView.prototype.levelCardinalitiesDiscoveryMethod,
   urlRegExp: iRxp(xavierOptions.urlRegExp) ? xavierOptions.urlRegExp : XmlaTreeView.prototype.urlRegExp,
   checkIfDescriptionIsAnUrl: iFun(xavierOptions.checkIfDescriptionIsAnUrl) ? xavierOptions.checkIfDescriptionIsAnUrl : XmlaTreeView.prototype.checkIfDescriptionIsAnUrl,
+  useDescriptionAsCubeCaption: iDef(xavierOptions.useDescriptionAsCubeCaption) ? xavierOptions.useDescriptionAsCubeCaption : XmlaTreeView.prototype.useDescriptionAsCubeCaption,
   listeners: {
     busy: function(){
       busy(true);

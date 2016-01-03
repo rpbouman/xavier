@@ -65,6 +65,9 @@ var XmlaTreeView;
   if (iDef(conf.levelCardinalitiesDiscoveryMethod)) {
     this.levelCardinalitiesDiscoveryMethod = conf.levelCardinalitiesDiscoveryMethod;
   }
+  if (iDef(conf.useDescriptionAsCubeCaption)) {
+    this.useDescriptionAsCubeCaption = conf.useDescriptionAsCubeCaption;
+  }
   if (iRxp(conf.urlRegExp)){
     this.urlRegExp = conf.urlRegExp;
   }
@@ -95,6 +98,8 @@ var XmlaTreeView;
   showCurrentCube: false,
   //whether dimension nodes should initially be hidden
   dimensionNodesInitiallyFlattened: true,
+  //whether to use DESCRIPTION rather than CUBE_CAPTION for cube captions. (SAP/HANA does not have CUBE_CAPTION, but DESCRIPTION often contains the friendly name)
+  useDescriptionAsCubeCaption: false,
   checkIsExcluded: function(request, row){
     var xmlaMetadataFilter = this.xmlaMetadataFilter;
     if (!xmlaMetadataFilter) {
@@ -285,6 +290,16 @@ var XmlaTreeView;
       this.fadeInSchemaTreePane();
     }
   },
+  getCubeCaption: function(cube) {
+    var objectName;
+    if (this.useDescriptionAsCubeCaption){
+      objectName = cube.DESCRIPTION || cube.CUBE_NAME;
+    }
+    else {
+      objectName = cube.CUBE_CAPTION || cube.CUBE_NAME;
+    }
+    return objectName;
+  },
   processCatalogNodeQueue: function(catalogNodeQueue){
     var me = this;
     if (!(++catalogNodeQueue.index < catalogNodeQueue.length)) {
@@ -317,11 +332,12 @@ var XmlaTreeView;
         me.fireEvent("error", error);
       },
       success: function(xmla, options, rowset){
+        var count = 0;
         rowset.eachRow(function(row){
           if (me.checkIsExcluded(options, row)) {
             return;
           }
-          var objectName = row.CUBE_CAPTION || row.CUBE_NAME;
+          var objectName = me.getCubeCaption(row);
           var title = objectName;
           var catalogPrefix;
           if (me.useCatalogPrefixForCubes) {
@@ -347,9 +363,13 @@ var XmlaTreeView;
           if (options.autoSelectCube === true && !me.autoSelectCube) {
             me.autoSelectCube = treeNode;
           }
+          count++;
         });
         if (!me.getShowCatalogNodesCheckbox().checked) {
           catalogNode.setState(TreeNode.states.flattened);
+        }
+        if (count > 1) {
+          catalogNode.getDom().className += " multiple";
         }
         doCubes(cubeRestrictions);
       }
@@ -410,7 +430,7 @@ var XmlaTreeView;
         if (hCls(target, "info-icon")){
           var url = gAtt(target, "data-url");
           this.fireEvent("requestinfo", {
-            title: data.treeNode.conf.objectName,
+            title: d.treeNode.conf.objectName,
             url: url,
           });
           ret = false;
@@ -1555,7 +1575,9 @@ var XmlaTreeView;
           }
           //actually add a treenode for the hierarchy.
           var hierarchyTreeNode = me.renderHierarchyTreeNode(conf, row);
-          if (hasMultipleHierarchies === false && hierarchyTreeNode.getParentTreeNode().getChildNodeCount() > 1) {
+          var dimensionTreeNode = hierarchyTreeNode.getParentTreeNode();
+          if (hasMultipleHierarchies === false && dimensionTreeNode.getChildNodeCount() > 1) {
+            dimensionTreeNode.getDom().className += " multiple";
             hasMultipleHierarchies = true;
           }
           if (row.DEFAULT_MEMBER) {
@@ -2165,9 +2187,10 @@ var XmlaTreeView;
       "class": "current-catalog" + (this.showCurrentCatalog === false ? " hidden" : ""),
       "data-objectName": catalogName
     });
+    cubeCaption = this.getCubeCaption(cube);
     var currentCube = cEl("SPAN", {
       "class": "current-cube" + (this.showCurrentCube === false ? " hidden" : ""),
-      "data-objectName": cubeName
+      "data-objectName": cubeCaption
     });
     var currentCatalogAndCube =  cEl("DIV", {
       "class": "current-catalog-and-cube" + ((

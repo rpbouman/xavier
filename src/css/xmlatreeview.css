@@ -527,7 +527,13 @@ div.node > div.head > span.label > span.label-prefix {
 div.node > div.head > span.label > span.label-prefix:after {
   content: ": "
 }
-div.flattened > div.body > div.node > div.head > span.label > span.label-prefix {
+
+/*
+* Show label prefixes, but only if the parent node is flattened AND the parent node has multiple children
+* The idea is that only in this case, the extra label is required to disambiguate.
+* Currently this applies to catalog nodes (cube children) and dimension nodes (hierarchy children)
+*/
+div.flattened.multiple > div.body > div.node > div.head > span.label > span.label-prefix {
   display: inline;
 }
 
