@@ -224,6 +224,7 @@ span.current-cube {
 }
 
 div.current-catalog-and-cube.hidden,
+div.show-dimension-nodes.hidden,
 span.current-catalog.hidden, 
 span.current-cube.hidden {
   display: none;

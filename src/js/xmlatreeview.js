@@ -38,18 +38,25 @@ var XmlaTreeView;
   if (iDef(conf.showCatalogNodesCheckboxDisplayed)) {
     this.showCatalogNodesCheckboxDisplayed = conf.showCatalogNodesCheckboxDisplayed;
   }
+
   if (iDef(conf.useCatalogPrefixForCubes)) {
     this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
   }
+
   if (iDef(conf.showCurrentCube)) {
     this.showCurrentCube = conf.showCurrentCube;
   }
   if (iDef(conf.showCurrentCatalog)) {
     this.showCurrentCatalog = conf.showCurrentCatalog;
   }
+
   if (iDef(conf.dimensionNodesInitiallyFlattened)) {
     this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
   }
+  if (iDef(conf.showDimensionNodesCheckboxDisplayed)) {
+    this.showDimensionNodesCheckboxDisplayed = conf.showDimensionNodesCheckboxDisplayed;
+  }
+
   if (iDef(conf.xmlaMetadataFilter)) {
     this.xmlaMetadataFilter = conf.xmlaMetadataFilter;
   }
@@ -90,6 +97,8 @@ var XmlaTreeView;
   catalogNodesInitiallyFlattened: true,
   //whether or not display of flattened catalog nodes can be toggled by the user.
   showCatalogNodesCheckboxDisplayed: false,
+  //whether or not display of flattened catalog nodes can be toggled by the user.
+  showDimensionNodesCheckboxDisplayed: false,
   //whether labels of cube nodes are prefixed by catalog name. Prefix only shown if the catalog node is flattened. This option can be used to suppress the prefix alltogether.
   useCatalogPrefixForCubes: true,
   //whether or not to display the current catalog in the cube pane.
@@ -2117,7 +2126,7 @@ var XmlaTreeView;
     listen(showDimensionNodesCheckbox, "click", this.showDimensionNodes, this);
 
     var div = cEl("DIV", {
-      "class": "show-dimension-nodes",
+      "class": "show-dimension-nodes" + (this.showDimensionNodesCheckboxDisplayed === false ? " hidden" : ""),
       id: "show-dimension-nodes"
     }, [
       cEl("DIV", {

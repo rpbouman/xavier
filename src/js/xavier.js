@@ -153,6 +153,7 @@ var xmlaTreeView = new XmlaTreeView({
   showCurrentCatalog: iDef(xavierOptions.showCurrentCatalog) ? xavierOptions.showCurrentCatalog : XmlaTreeView.prototype.showCurrentCatalog,
   showCurrentCube: iDef(xavierOptions.showCurrentCube) ? xavierOptions.showCurrentCube : XmlaTreeView.prototype.showCurrentCube,
   dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : XmlaTreeView.prototype.dimensionNodesInitiallyFlattened,
+  showDimensionNodesCheckboxDisplayed: iDef(xavierOptions.showDimensionNodesCheckboxDisplayed) ? xavierOptions.showDimensionNodesCheckboxDisplayed : XmlaTreeView.prototype.showDimensionNodesCheckboxDisplayed,
   maxLowCardinalityLevelMembers: iDef(xavierOptions.maxLowCardinalityLevelMembers) ? xavierOptions.maxLowCardinalityLevelMembers : XmlaTreeView.prototype.maxLowCardinalityLevelMembers,
   defaultMemberDiscoveryMethod: iDef(xavierOptions.defaultMemberDiscoveryMethod) ? xavierOptions.defaultMemberDiscoveryMethod : XmlaTreeView.prototype.defaultMemberDiscoveryMethod,
   levelCardinalitiesDiscoveryMethod: iDef(xavierOptions.levelCardinalitiesDiscoveryMethod) ? xavierOptions.levelCardinalitiesDiscoveryMethod : XmlaTreeView.prototype.levelCardinalitiesDiscoveryMethod,
