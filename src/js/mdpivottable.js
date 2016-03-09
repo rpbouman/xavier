@@ -307,7 +307,9 @@ var PivotTable;
     if (rowsTable) {
       rowsTable.style.top = (-cells.scrollTop) + "px";
     }
-    colsTable.style.left = (-left) + "px";
+    if (colsTable) {
+      colsTable.style.left = (-left) + "px";
+    }
     if (this.conf.showHorizontalHierarchyHeaders) {
       var rows = colsTable.rows, n = rows.length, i, row, style;
       for (i = 0; i < n; i++) {
@@ -654,6 +656,12 @@ var PivotTable;
   },
   getPropertiesMap: function(queryDesignerAxis){
   },
+  isMemberParentOf: function(parentMember, childMember) {
+    var parentMemberProperty = Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME;
+    var childMemberProperty = "PARENT_UNIQUE_NAME";
+    //var childMemberProperty = "p1";
+    return parentMember[parentMemberProperty] === childMember[childMemberProperty];
+  },
   renderAxis: function(axis, table, direction, queryDesignerAxis) {
     var tbody = table.tBodies[0] || cEl("TBODY", null, null, table),
         rows = tbody.rows, row, cells,
@@ -782,7 +790,7 @@ var PivotTable;
                 }
                 if (lNum === (j+1)) {
                   prevMember = prevMembers[hierarchy.index];
-                  if (prevMember && prevMember[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME] === member.PARENT_UNIQUE_NAME) {
+                  if (prevMember && this.isMemberParentOf(prevMember, member)) {
                     className += " child";
                   }
                   else {
