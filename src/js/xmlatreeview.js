@@ -1372,11 +1372,12 @@ var XmlaTreeView;
       },
       statement: levelCardinalityMdx,
       success: function(xhr, options, dataset) {
-        var cardinalities = dataset.getCellset().fetchRangeAsArray();
+        var cellset = dataset.getCellset(), cell;
         var i, n = levels.length, level, value;
         for (i = 0; i < n; i++) {
           level = levels[i];
-          value = cardinalities[i].Value;
+          cell = cellset.readCell();
+          value = cell.Value;
           if (value !== level.LEVEL_CARDINALITY) {
             console.log(
               "Adjusting cardinality for level " +
@@ -1386,6 +1387,7 @@ var XmlaTreeView;
             );
           }
           level.LEVEL_CARDINALITY = value;
+          cellset.nextCell();
         }
         callback.call(scope);
       },
