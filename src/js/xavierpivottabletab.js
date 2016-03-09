@@ -87,7 +87,8 @@ var XavierPivotTableTab;
           tooltip: gMsg("Items on this axis are used to generate columns for the pivot table"),
           hint: gMsg("Drag any levels, members or measures unto the columns axis to create columns in the pivot table."),
           "class": "columns",
-          isDistinct: true,
+          //isDistinct: true,
+          isDistinct: false,
           mandatory: true,
           intrinsicProperties: intrinsicProperties,
           userSortBreaksHierarchy: false
@@ -98,7 +99,8 @@ var XavierPivotTableTab;
           tooltip: gMsg("Items on this axis are used to generate rows for the pivot table"),
           hint: gMsg("Optionally, drag any levels, members or measures unto the row axis to create rows in the pivot table."),
           "class": "rows",
-          isDistinct: true,
+          //isDistinct: true,
+          isDistinct: false,
           intrinsicProperties: intrinsicProperties,
           userSortBreaksHierarchy: false
         },
