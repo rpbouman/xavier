@@ -1514,7 +1514,7 @@ var XmlaTreeView;
     if (dimensionTitle !== hierarchyTitle) {
       hierarchyTitle = "<span class=\"label label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
     }
-    var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION);
+    var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION || row.HIERARCHY_CAPTION);
     var tooltip = tooltipAndInfoLabel.tooltip || hierarchyTitle;
     var title = hierarchyTitle+ tooltipAndInfoLabel.infoLabel;
 
