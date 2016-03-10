@@ -1928,12 +1928,10 @@ var QueryDesignerAxis;
     switch (requestType) {
       case "measures":
         caption = this.getMemberCaption(metadata);
-        requestType = "measure";
         captionNeedsUpdate = true;
         break;
       case "hierarchy":
         caption = this.getMemberCaption(metadata);
-        requestType = "member";
         captionNeedsUpdate = true;
         break;
       case "level":
@@ -1957,13 +1955,30 @@ var QueryDesignerAxis;
     memberInfo.caption = caption;
     memberInfo.captionNeedsUpdate = captionNeedsUpdate;
 
+    var treeView = this.getQueryDesigner().getXmlaTreeView();
+    var levelMetadata, levelname;
     switch (requestType) {
+      case "hierarchy":
+        levelname = metadata.DEFAULT_MEMBER;
+        levelname = levelname.split("].[");
+        levelname.pop();
+        levelname = levelname.join("].[") + "]";
+        break;
       case "property":
       case "member":
       case "member-drilldown":
-        var treeView = this.getQueryDesigner().getXmlaTreeView();
-        levelMetadata = treeView.getLevelMetadata(metadata.LEVEL_UNIQUE_NAME);
+        levelname = metadata.LEVEL_UNIQUE_NAME;
+        break;
+    }
+    if (levelname) {
+      var levelTreeNode = this.getLevelTreeNode(levelUniqueName);
+      if (levelTreeNode) {
+        levelMetadata = treeView.getLevelMetadata(levelname);
         memberInfo.levelMetadata = levelMetadata;
+      }
+      else {
+        debugger;
+      }
     }
     return memberInfo;
   },
