@@ -468,7 +468,8 @@ function endDrag(event, dndHandler) {
       if (dragInfo.queryDesignerAxis === queryDesignerAxis) {
         dragWithinAxis(dragInfo, queryDesignerAxis, target);
       }
-      else {
+      else
+      if (queryDesignerAxis.canDropItem(target, dragInfo)) {
         dragFromAxisToOtherAxis(dragInfo, queryDesigner, queryDesignerAxis, target);
       }
     }
