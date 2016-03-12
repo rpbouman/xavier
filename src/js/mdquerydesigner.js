@@ -224,7 +224,7 @@ var QueryDesigner;
       case "query-designer-axis-header":
         metadata = className;
         var table = target.parentNode.parentNode.parentNode;
-        className = /query-designer-axis[012]/g.exec(table.className);
+        className = /query-designer-axis(\d+|SlicerAxis)/g.exec(table.className);
         classes = confCls(table.className);
         label = ({
           "query-designer-axis0": "Columns",
@@ -861,6 +861,20 @@ var QueryDesignerAxis;
   },
   getId: function(){
     return this.conf.queryDesigner.getId() + "-axis" + this.conf.id;
+  },
+  getLabel: function(){
+    var conf = this.conf;
+    if (!conf) {
+      return;
+    }
+    var label;
+    label = conf.label;
+    if (!label) {
+      switch (conf.id) {
+        
+      }
+    }
+    return label;
   },
   isSlicerAxis: function(){
     return this.conf.id === Xmla.Dataset.AXIS_SLICER;
