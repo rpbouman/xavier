@@ -1985,9 +1985,8 @@ var QueryDesignerAxis;
         break;
     }
     if (levelname) {
-      var levelTreeNode = this.getLevelTreeNode(levelname);
-      if (levelTreeNode) {
-        levelMetadata = treeView.getLevelMetadata(levelname);
+      var levelMetadata = treeView.getLevelMetadata(levelname);
+      if (levelMetadata) {
         memberInfo.levelMetadata = levelMetadata;
       }
       else {
