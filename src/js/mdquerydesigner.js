@@ -1985,7 +1985,7 @@ var QueryDesignerAxis;
         break;
     }
     if (levelname) {
-      var levelTreeNode = this.getLevelTreeNode(levelUniqueName);
+      var levelTreeNode = this.getLevelTreeNode(levelname);
       if (levelTreeNode) {
         levelMetadata = treeView.getLevelMetadata(levelname);
         memberInfo.levelMetadata = levelMetadata;
