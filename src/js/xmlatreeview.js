@@ -1246,6 +1246,9 @@ var XmlaTreeView;
   },
   renderLevelTreeNode: function(conf, row){
     var hierarchyTreeNode = conf.hierarchyTreeNode;
+    if (!hierarchyTreeNode) {
+      hierarchyTreeNode = this.getHierarchyTreeNode(row.HIERARCHY_UNIQUE_NAME);
+    }
     var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME);
     var levelCaption = row.LEVEL_CAPTION;
     var url = conf.url;
@@ -1278,20 +1281,20 @@ var XmlaTreeView;
       state: state
     });
   },
-  renderLevelTreeNodes: function(conf){
+  renderHierarchyLevelTreeNodes: function(conf){
     var me = this;
     me.fireEvent("busy");
-    var hierarchyTreeNode = conf.hierarchyTreeNode;
-    var hierarchyMetadata = hierarchyTreeNode.conf.metadata;
-    var url = conf.url;
+    var catalog = conf.catalog;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
-      Catalog: hierarchyMetadata.CATALOG_NAME
+      Catalog: catalog
     };
-    var cubeName = hierarchyMetadata.CUBE_NAME;
+    var cube = conf.cube;
+    var hierarchyTreeNode = conf.hierarchyTreeNode;
+    var hierarchyMetadata = hierarchyTreeNode.conf.metadata;
     var restrictions = {
-      CATALOG_NAME: hierarchyMetadata.CATALOG_NAME,
-      CUBE_NAME: cubeName,
+      CATALOG_NAME: catalog,
+      CUBE_NAME: cube,
       HIERARCHY_UNIQUE_NAME: hierarchyMetadata.HIERARCHY_UNIQUE_NAME
     };
     var url = conf.url;
@@ -1311,7 +1314,7 @@ var XmlaTreeView;
           levels.push(row);
           //https://technet.microsoft.com/en-us/library/ms126038(v=sql.110).aspx reads:
           //A Boolean that indicates whether the level is visible. Always returns True. If the level is not visible, it will not be included in the schema rowset.
-          //So, we might as well not check it at all. Besides, SAP doesn't support it.
+          //So, we might as well not check it at all. Besides, SAP/HANA doesn't support it.
           //if (!row.LEVEL_IS_VISIBLE) {
           //  return;
           //}
@@ -1329,10 +1332,76 @@ var XmlaTreeView;
             default:
               me.renderMemberNodes(conf, levels, "estimate");
           }
-        });
+        });        
       },
       error: function(xmla, options, error){
         conf.callback();
+        me.fireEvent("error", error);
+      },
+    });
+  },
+  renderLevelTreeNodes: function(conf, success, error, scope){
+    var me = this;
+    me.fireEvent("busy");
+    var catalog = conf.catalog;
+    var properties = {
+      DataSourceInfo: conf.dataSourceInfo,
+      Catalog: catalog
+    };
+    var cube = conf.cube;
+    var restrictions = {
+      CATALOG_NAME: catalog,
+      CUBE_NAME: cube
+    };
+    var url = conf.url;
+    me.xmla.discoverMDLevels({
+      url: url,
+      properties: properties,
+      restrictions: restrictions,
+      success: function(xmla, options, rowset){
+        var levels = [], i = 0, hierarchyMetadata;
+        //create a treenode for each level
+        rowset.eachRow(function(row){
+          if (me.checkIsExcluded(options, row)) {
+            return;
+          }
+          if (!hierarchyMetadata || hierarchyMetadata.HIERARCHY_UNIQUE_NAME !== row.HIERARCHY_UNIQUE_NAME) {
+            hierarchyMetadata = me.getHierarchyMetadata(row.HIERARCHY_UNIQUE_NAME);
+          }
+          row.DIMENSION_TYPE = hierarchyMetadata.DIMENSION_TYPE;
+          row.HIERARCHY_CAPTION = hierarchyMetadata.HIERARCHY_CAPTION;
+          levels.push(row);
+          //https://technet.microsoft.com/en-us/library/ms126038(v=sql.110).aspx reads:
+          //A Boolean that indicates whether the level is visible. Always returns True. If the level is not visible, it will not be included in the schema rowset.
+          //So, we might as well not check it at all. Besides, SAP/HANA doesn't support it.
+          //if (!row.LEVEL_IS_VISIBLE) {
+          //  return;
+          //}
+          me.renderLevelTreeNode(conf, row);
+        });
+/*
+        me.renderLevelPropertyNodes(conf, function(){
+          switch (me.levelCardinalitiesDiscoveryMethod) {
+            case Xmla.METHOD_EXECUTE:
+              me.queryLevelCardinalities(levels, url, properties.DataSourceInfo, function(){
+                me.renderMemberNodes(conf, levels, "exact");
+              }, me);
+              break;
+            case Xmla.METHOD_DISCOVER:
+            default:
+              me.renderMemberNodes(conf, levels, "estimate");
+          }
+        });
+*/        
+        if (success) {
+          success.call(scope || null);
+        }
+      },
+      error: function(xmla, options, error){
+        conf.callback();
+        if (error) {
+          error.call(scope || null);
+        }
         me.fireEvent("error", error);
       },
     });
@@ -1500,6 +1569,9 @@ var XmlaTreeView;
   },
   getLevelMetadata: function(levelUniqueName){
     var levelTreeNode = this.getLevelTreeNode(levelUniqueName);
+    if (!levelTreeNode) {
+      return null;
+    }
     return levelTreeNode.conf.metadata;
   },
   renderHierarchyTreeNode: function(conf, row){
@@ -1531,7 +1603,7 @@ var XmlaTreeView;
         //get the level of the hierarchy.
         conf.hierarchyTreeNode = this;
         conf.callback = callback;
-        me.renderLevelTreeNodes(conf);
+        me.renderHierarchyLevelTreeNodes(conf);
       }
     });
     return hierarchyTreeNode;
