@@ -1990,7 +1990,7 @@ var QueryDesignerAxis;
         memberInfo.levelMetadata = levelMetadata;
       }
       else {
-        debugger;
+        //debugger;
       }
     }
     return memberInfo;
