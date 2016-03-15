@@ -309,17 +309,17 @@ var PivotTable;
     }
     if (colsTable) {
       colsTable.style.left = (-left) + "px";
-    }
-    if (this.conf.showHorizontalHierarchyHeaders) {
-      var rows = colsTable.rows, n = rows.length, i, row, style;
-      for (i = 0; i < n; i++) {
-        row = rows[i];
-        if (row.className !== "hierarchy-header" && row.className != "measures-header") {
-          continue;
+      if (this.conf.showHorizontalHierarchyHeaders) {
+        var rows = colsTable.rows, n = rows.length, i, row, style;
+        for (i = 0; i < n; i++) {
+          row = rows[i];
+          if (row.className !== "hierarchy-header" && row.className != "measures-header") {
+            continue;
+          }
+          style = row.cells[0].style;
+          style.backgroundPosition = (2 + left) + "px 2px";
+          style.paddingLeft = (20 + left) + "px";
         }
-        style = row.cells[0].style;
-        style.backgroundPosition = (2 + left) + "px 2px";
-        style.paddingLeft = (20 + left) + "px";
       }
     }
   },
