@@ -31,10 +31,10 @@ else {
     delayHide: 125,
     useTransitions: typeof(useTransitions)==="undefined" ? true : Boolean(useTransitions)
   });
-  win.top.showLoadingIndicator = function(){
+  showLoadingIndicator = function(){
     spinner.show();
   };
-  win.top.hideLoadingIndicator = function(){
+  hideLoadingIndicator = function(){
     spinner.hide();
   };
 }
