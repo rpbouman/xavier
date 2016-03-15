@@ -24,7 +24,10 @@ var QueryDesigner;
 
 (QueryDesigner = function(conf) {
     this.id = QueryDesigner.id++;
-    this.conf = conf;
+    this.conf = conf || {};
+    if (iUnd(conf.generateTupleForSlicer)) {
+    	conf.generateTupleForSlicer = this.generateTupleForSlicer;
+    }
     this.axes = {};
     this.createAxes();
     if (iFun(conf.getMdx)) {
@@ -32,6 +35,7 @@ var QueryDesigner;
     }
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
+  generateTupleForSlicer: true,
   measuresHierarchyName: "[Measures]",
   setMandatoryDimensions: function(mandatoryDimensions) {
     this.mandatoryDimensions = mandatoryDimensions;
@@ -2241,8 +2245,37 @@ var QueryDesignerAxis;
     var conf = this.conf;
     return " ON Axis(" + this.conf.id + ")";
   },
-  getCalculatedMembersMdx: function(){
+  getSlicerAxisAsTupleMdx: function(){
     var mdx = "";
+    this.eachHierarchy(function(hierarchy, hierarchyIndex){
+      if (mdx) {
+        mdx += ", ";
+      }
+      mdx +=  hierarchy.HIERARCHY_UNIQUE_NAME + ".[Slicer]";
+    }, this);
+    if (mdx) {
+      mdx = "(" + mdx + ")";
+    }
+    return mdx;
+  },
+  getSlicerAxisAsTupleCalculatedMembersMdx: function(){
+    var mdx = "";
+    this.eachHierarchy(function(hierarchy, hierarchyIndex){
+      var members = "";
+      this.eachSetDef(function(setDef, setDefIndex){
+        var type = setDef.type;
+        if (members.length) {
+          members += ", ";
+        }
+        members += setDef.expression;
+      }, this, hierarchy);
+      mdx +=  "\nMEMBER " + hierarchy.HIERARCHY_UNIQUE_NAME + ".[Slicer]" + 
+              "\nAS Aggregate({" + members + "})"
+      ;
+    }, this);
+    return mdx;
+  },
+  getNonSlicerAxisCalculatedMembersMdx: function(){
     this.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
       var metadata = setDef.metadata;
       switch (setDef.type) {
@@ -2255,7 +2288,15 @@ var QueryDesignerAxis;
           break;
         default:
       }
-    }, this);
+    }, this);    
+  },
+  getCalculatedMembersMdx: function(){
+    if (this.generateSlicerAsTuple()) {
+      mdx = this.getSlicerAxisAsTupleCalculatedMembersMdx();
+    }
+    else {
+      mdx = this.getNonSlicerAxisCalculatedMembersMdx();
+    }    
     return mdx;
   },
   getOrderMdx: function(mdx){
@@ -2299,7 +2340,7 @@ var QueryDesignerAxis;
     mdx = this.getOrderMdx(mdx);
     return mdx;
   },
-  getMdx: function(defaultSet) {
+  getNonSlicerAxisMdx: function(defaultSet){
     var mdx = this.getMemberSetMdx();
     if (!mdx.length && defaultSet) {
       mdx = defaultSet;
@@ -2310,6 +2351,21 @@ var QueryDesignerAxis;
       mdx += this.getOnAxisClauseMdx();
     }
     return mdx;
+  },
+  getMdx: function(defaultSet) {
+    var mdx;
+    if (this.generateSlicerAsTuple()) {
+      mdx = this.getSlicerAxisAsTupleMdx();
+    }
+    else {
+      mdx = this.getNonSlicerAxisMdx(defaultSet);
+    }
+    return mdx;
+  },
+  generateSlicerAsTuple: function(){
+    var conf = this.getQueryDesigner().conf || {};
+    var generateSlicerAsTuple = this.isSlicerAxis() && (conf.generateTupleForSlicer === true);
+    return generateSlicerAsTuple;
   },
   highlight: function(classToAdd, classToRemove) {
     var dom = this.getDom();
