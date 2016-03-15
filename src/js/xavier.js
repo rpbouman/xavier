@@ -26,7 +26,7 @@ if (!metadataFilter) {
   metadataFilter = {};
 }
 var xmlaMetadataFilter = new XmlaMetadataFilter(metadataFilter);
-
+this.xmlaMetadataFilter = xmlaMetadataFilter;
 
 doc.title = gMsg("XML/A Visualizer");
 
@@ -39,9 +39,6 @@ else {
   return;
 }
 
-
-linkCss(cssDir + "xavier.css");
-
 var dnd = new DDHandler({
   node: body
 });
@@ -50,95 +47,143 @@ SplitPane.listenToDnd(dnd);
 /**
 *   Toolbar
 */
-var mainToolbar = new Toolbar({
-  container: body
-});
-mainToolbar.addButton([
-  {"class": "refresh", tooltip: gMsg("Refresh metadata")},
-  {"class": "separator"},
-]);
+var mainToolbar = null;
 
-function newVisualizationTab(){
-  var buttonConf = this.conf;
+if (xavierOptions.createToolbar !== false) {
+  mainToolbar = new Toolbar({
+    container: body
+  });
+  mainToolbar.addButton([
+    {"class": "refresh", tooltip: gMsg("Refresh metadata")},
+    {"class": "separator"},
+  ]);
+}
+this.toolbar = mainToolbar;
+
+
+/**
+*   Init and manage visualizations
+*/
+var getVisualizationById = function(id){
   var visualizations = xavierOptions.visualizations;
   var n = visualizations.length, i, visualization;
   for (i = 0; i < n; i++) {
     visualization = visualizations[i];
-    if (buttonConf["class"] === "new-" + visualization.id) {
-      var componentConstructor = visualization.componentConstructor;
-      var vizualizationInstance = componentConstructor.newInstance({
-        tabPane: workArea
-      });
-      workArea.newTab(vizualizationInstance);
+    if (visualization.id !== id) {
+      continue;
     }
+    return visualization;
   }
+  return null;
+}
+this.getVisualizationById = getVisualizationById;
+
+function createTabForVisualizationWithId(id){
+  var visualization = getVisualizationById(id);
+  if (!visualization) {
+    console.log("Error: can't find visualization for button " + className);
+    return;
+  }
+  var componentConstructor = visualization.componentConstructor;
+  var vizualizationInstance = componentConstructor.newInstance({
+    tabPane: workArea
+  });
+  return workArea.newTab(vizualizationInstance);    
+}
+this.createTabForVisualizationWithId = createTabForVisualizationWithId;
+
+function newVisualizationTab(){
+  var buttonConf = this.conf;
+  var className = buttonConf["class"];
+  var id = className.substr("new-".length);
+  createTabForVisualizationWithId(id);
 }
 
-var visualizations = xavierOptions.visualizations, n = visualizations.length, i, visualization, componentConstructor, buttonConf;
-for (i = 0; i < n; i++){
-  visualization = visualizations[i];
-  componentConstructor = visualization.componentConstructor;
-  buttonConf = {
-    "class": "new-" + visualization.id,
-    tooltip: gMsg(visualization.tooltip),
-    group: "vis",
-    buttonHandler: newVisualizationTab
-  };
-  mainToolbar.addButton(buttonConf);
-}
+var autoRunEnabled = iDef(xavierOptions.autoRunEnabled) ? xavierOptions.autoRunEnabled : true;
+/**
+*   Create toolbar buttons for visualizations
+*/
+if (mainToolbar) {
+  var visualizations = xavierOptions.visualizations, n = visualizations.length, i, visualization, componentConstructor, buttonConf;
+  for (i = 0; i < n; i++){
+    visualization = visualizations[i];
+    if (visualization.createToolbarButton === false) {
+      continue;
+    }
+    buttonConf = {
+      "class": "new-" + visualization.id,
+      tooltip: gMsg(visualization.tooltip),
+      group: "vis",
+      buttonHandler: newVisualizationTab
+    };
+    mainToolbar.addButton(buttonConf);
+  }
 
-mainToolbar.addButton([
-  {"class": "separator"},
-  {"class": "auto-run", group: "visaction", tooltip: gMsg("Toggle Autorun Query"), toggleGroup: "auto-run", depressed: true},
-  {"class": "run", group: "visaction", tooltip: gMsg("Run Query")},
-  {"class": "separator"},
-  {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel")},
-  {"class": "separator"},
-  {"class": "clear", group: "visaction", tooltip: gMsg("Discard this query and start over")}
-]);
+  /**
+  *   Misc generic toolbarbuttons
+  */
+  mainToolbar.addButton([
+    {"class": "separator"},
+    {
+      "class": "auto-run", 
+      group: "visaction", 
+      tooltip: gMsg("Toggle Autorun Query"), 
+      toggleGroup: "auto-run", 
+      depressed: autoRunEnabled
+    },
+    {"class": "run", group: "visaction", tooltip: gMsg("Run Query")},
+    {"class": "separator"},
+    {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel")},
+    {"class": "separator"},
+    {"class": "clear", group: "visaction", tooltip: gMsg("Discard this query and start over")}
+  ]);
+
+  mainToolbar.listen({
+    buttonPressed: function(toolbar, event, button){
+      var conf = button.conf;
+      if (iFun(conf.buttonHandler)) {
+        conf.buttonHandler.call(button);
+      }
+      else {
+        var className = conf["class"];
+        switch (className) {
+          case "run":
+            workArea.executeQuery();
+            break;
+          case "clear":
+            workArea.clear();
+            break
+          case "excel":
+            workArea.exportToExcel();
+            break
+          default:
+            throw "Not implemented";
+        }
+      }
+    },
+    afterToggleGroupStateChanged: function(toolbar, event, data){
+      var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
+      switch (data.group) {
+        case "auto-run":
+          toggleAutoRunEnabled();
+          break;
+      }
+    }
+  });
+}
 
 function getAutoRunEnabled(){
-  return mainToolbar.getDepressedButtonInToggleGroup("auto-run");
+  return autoRunEnabled;
 }
 
 function toggleAutoRunEnabled() {
-  var autoRunEnabled = getAutoRunEnabled();
-  mainToolbar.displayButton("run", !autoRunEnabled);
+  var setting = getAutoRunEnabled();
+  autoRunEnabled = !setting;
+  if (mainToolbar) {
+    mainToolbar.displayButton("run", !autoRunEnabled);
+  }
   workArea.setAutoRunEnabled(autoRunEnabled);
 }
-
-mainToolbar.listen({
-  buttonPressed: function(toolbar, event, button){
-    var conf = button.conf;
-    if (iFun(conf.buttonHandler)) {
-      conf.buttonHandler.call(button);
-    }
-    else {
-      var className = conf["class"];
-      switch (className) {
-        case "run":
-          workArea.executeQuery();
-          break;
-        case "clear":
-          workArea.clear();
-          break
-        case "excel":
-          workArea.exportToExcel();
-          break
-        default:
-          throw "Not implemented";
-      }
-    }
-  },
-  afterToggleGroupStateChanged: function(toolbar, event, data){
-    var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
-    switch (data.group) {
-      case "auto-run":
-        toggleAutoRunEnabled();
-        break;
-    }
-  }
-});
 
 /**
 *   TreeView
@@ -175,10 +220,14 @@ var xmlaTreeView = new XmlaTreeView({
       }
     },
     loadCube: function(xmlaTreeView, event, cubeTreeNode){
-      mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
+      if (mainToolbar) {
+        mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
+      }
     },
     cubeLoaded: function(xmlaTreeView, event){
-      mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
+      if (mainToolbar) {
+        mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
+      }
 
       var currentCube = xmlaTreeView.getCurrentCube();
       workArea.setCube(currentCube);
@@ -226,6 +275,7 @@ var xmlaTreeView = new XmlaTreeView({
     }
   }
 });
+this.xmlaTreeView = xmlaTreeView;
 
 /**
 *   Tabs (Workarea)
@@ -241,14 +291,18 @@ var workArea = new XavierTabPane({
       if (tabPane.getSelectedTab() !== null) {
         return;
       }
-      mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
+      if (mainToolbar) {
+        mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
+      }
     },
     tabSelected: function(tabPane, event, data){
       var tab = tabPane.getTab(data.newTab);
 
       var display = tab ? Boolean(tab.getVisualizer()) : false;
-      mainToolbar.displayGroup(mainToolbar.groups.visaction.name, display);
-      toggleAutoRunEnabled();
+      if (mainToolbar) {
+        mainToolbar.displayGroup(mainToolbar.groups.visaction.name, display);
+      }
+      //toggleAutoRunEnabled();
       tab.doLayout();
 
       //check if we have to select another cube in the treeview.
@@ -262,6 +316,7 @@ var workArea = new XavierTabPane({
     }
   }
 });
+this.workArea = workArea;
 
 /**
 *   Main layout
@@ -271,8 +326,12 @@ var mainSplitPane = new SplitPane({
   classes: ["mainsplitpane"],
   firstComponent: xmlaTreeView,
   secondComponent: workArea,
-  orientation: SplitPane.orientations.vertical
+  orientation: SplitPane.orientations.vertical,
+  style: {
+    top: (mainToolbar ? 32 : 0) + "px"
+  }
 });
+this.mainSplitPane = mainSplitPane;
 
 mainSplitPane.listen("splitterPositionChanged", function(mainSplitPane, event, data){
   //tell the workArea to redo layout since its size has just changed.
@@ -593,9 +652,31 @@ listen(window, "resize", function(){
  * Init:
  */
 xmlaTreeView.init();
-mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
-mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
-toggleAutoRunEnabled();
+if (mainToolbar) {
+  mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
+  mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
+}
+//toggleAutoRunEnabled();
+
+linkCss(cssDir + "xavier.css");
+var stylesheets = xavierOptions.stylesheets;
+if (stylesheets){
+  if (iStr(stylesheets)){
+    stylesheets = [stylesheets];
+  }
+  var i = 0, n = stylesheets.length, stylesheet;
+  for (i = 0; i < n; i++) {
+    stylesheet = stylesheets[i];
+    try {
+      linkCss(stylesheet);
+    }
+    catch (e) {
+      console.error("Error loading stylesheet " + stylesheet + ". " + e);
+    }
+  }
+}
 
 return this;
 }
+adopt(XavierApplication, Observable);
+
