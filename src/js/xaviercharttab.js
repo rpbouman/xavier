@@ -157,6 +157,18 @@ var XavierVisualizer;
       label: label
     };
   },
+  getCategoriesAndLabelsForTuple: function(tuple){
+    var members = tuple.members, i, n = members.length, member, labels = [], categories = [];
+    for (i = 0; i < n; i++){
+      member = members[i];
+      categories.push(member[Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME]);
+      labels.push(member[Xmla.Dataset.Axis.MEMBER_CAPTION]);
+    }
+    return {
+      categories: categories,
+      labels: labels
+    };
+  },
   getLegend: function(dimpleSeries) {
     var items = [];
     var list = cEl("OL", {
@@ -412,9 +424,12 @@ var XavierPieChart;
     categories: Xmla.Dataset.AXIS_COLUMNS
   },
   generateTitleText: function(dataset, queryDesigner){
+        var slicerAxis = queryDesigner.getSlicerAxis();
     var categoriesAxisLabel = "";
+    var slicerElements= "";
     var categoriesAxis = queryDesigner.getColumnAxis();
     var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+
     categoriesAxis.eachHierarchy(function(hierarchy, i){
       if (categoriesAxisLabel) {
         categoriesAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
@@ -422,6 +437,19 @@ var XavierPieChart;
       categoriesAxisLabel += hierarchy.HIERARCHY_CAPTION;
     }, this);
     this.categoriesAxisLabel = categoriesAxisLabel;
+
+    if (slicerAxis.getHierarchyCount() === 0) {
+        slicerElements= "";
+    }
+    else {
+      slicerElements =  " " + gMsg("for") + " ";
+      var added = "";
+      slicerAxis.eachSetDef(function(setDef, setDefIndex){
+        slicerElements += added + setDef.metadata.MEMBER_CAPTION;
+        added =  " " + gMsg("and") + " ";
+      }, this);
+    }
+    
 
     var measuresAxisLabel = "";
     var measuresAxis = dataset.getRowAxis();
@@ -434,7 +462,9 @@ var XavierPieChart;
     }, this);
     this.measuresAxisLabel = measuresAxisLabel;
 
-    return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+   // HKL was return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+    return ( measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel + slicerElements);
+
   },
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
     var categoriesAxis = dataset.getAxis(axisDesignations.categories);
@@ -471,7 +501,35 @@ var XavierPieChart;
       var measureAxis = chart.addMeasureAxis("p", measure);
       var series = chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
       series.innerRadius = "50%";
+
+      chart.draw();
+
+
+    var keys = [];
+
+    for (var i = 0; i < data.length; i++) {
+       keys.push(series._positionData[i].key);   
+    }
+
+    // Add each key to each datum
+    for (var i = 0; i < data.length; i++) {
+         data[i].key = keys[i];   
+    }
+
+      
       series.getTooltipText = function(d){
+         var key = d.key;
+
+         // Find the datum with the corresponding key:
+         for (var i = 0; i < data.length; i++) {
+             if (data[i].key === key){
+                 // Define the tooltip content.
+                 var datum = data[i];
+                 return [
+                     gMsg("Value") + ": " + datum.fmtValue + " " + gMsg("for") + " " + datum.label 
+                 ];
+             }
+         }
         var tooltip = [];
         var datum = data[d.aggField[0]];
         tooltip.push(datum.label + ": " + datum.fmtValue);
@@ -591,6 +649,8 @@ var XavierGroupedBarChart;
   generateTitleText: function(dataset, queryDesigner){
     var categoriesAxisLabel = "";
     var categoriesAxis = queryDesigner.getRowAxis();
+
+    var slicerElements= "";
     var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
     categoriesAxis.eachHierarchy(function(hierarchy, i){
       if (categoriesAxisLabel) {
@@ -603,6 +663,7 @@ var XavierGroupedBarChart;
     var measuresAxisLabel = "";
     var measuresAxis = dataset.getColumnAxis();
     var lastTuple = measuresAxis.tupleCount() - 1;
+    var slicerAxis = queryDesigner.getSlicerAxis();
     measuresAxis.eachTuple(function(measure){
       if (measuresAxisLabel) {
         measuresAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
@@ -611,7 +672,22 @@ var XavierGroupedBarChart;
     }, this);
     this.measuresAxisLabel = measuresAxisLabel;
 
-    return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+
+    if (slicerAxis.getHierarchyCount() === 0) {
+        slicerElements= "";
+    }
+    else {
+      slicerElements =  " " + gMsg("for") + " ";
+      var added = "";
+      slicerAxis.eachSetDef(function(setDef, setDefIndex){
+        slicerElements += added + setDef.metadata.MEMBER_CAPTION;
+        added =  " " + gMsg("and") + " ";
+      }, this);
+    }
+
+    // HKL was return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+    
+   return ( measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel + slicerElements);
   },
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
     var categoriesAxis = dataset.getAxis(axisDesignations.categories);
@@ -671,15 +747,42 @@ var XavierGroupedBarChart;
     var measureSeries = chart.addSeries("measure", dimple.plot.bar);
     measureSeries.addOrderRule(measureOrder);
 
+    chart.draw();
+
+
+    var keys = [];
+
+    for (var i = 0; i < data.length; i++) {
+       keys.push(measureSeries._positionData[i].key);   
+    }
+
+    // Add each key to each datum
+    for (var i = 0; i < data.length; i++) {
+         data[i].key = keys[i];   
+    }
+
+
     //set the tooltip text
     measureSeries.getTooltipText = function(d){
+         var key = d.key;
+
+         // Find the datum with the corresponding key:
+         for (var i = 0; i < data.length; i++) {
+             if (data[i].key === key){
+                 // Define the tooltip content.
+                 var datum = data[i];
+                 return [
+                     gMsg("Value") + ": " + datum.fmtValue + " " + gMsg("for") + " " + datum.label 
+                 ];
+             }
+         }
       var categoryNumber = d.xField[0];
       var measure = d.xField[1];
       var measureNumber = measureOrder.indexOf(measure);
       var datum = data[measureNumber * categoryOrder.length + categoryNumber];
       return [
         measure + ": " + datum.fmtValue,
-        categoriesAxisLabel + ": " + datum.label
+        categoriesAxisLabel + ": " + categoryLabels[categoryNumber]
       ];
     };
 
@@ -831,10 +934,25 @@ var XavierTimeSeriesChart;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   generateTitleText: function(dataset, queryDesigner){
+        var slicerAxis = queryDesigner.getSlicerAxis();
+        var categoryAxesLabels = [];
     var categoriesAxisLabel = "";
     var categoriesAxis = queryDesigner.getRowAxis();
     var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+        var slicerElements= "";
+
+        if (!(slicerAxis.getHierarchyCount() === 0)) {
+          slicerElements =  " " + gMsg("for") + " ";
+          var added = "";
+          slicerAxis.eachSetDef(function(setDef, setDefIndex){
+            slicerElements += added + setDef.metadata.MEMBER_CAPTION;
+            added =  " " + gMsg("and") + " ";
+          }, this);
+        }
+
+
     categoriesAxis.eachHierarchy(function(hierarchy, i){
+        categoryAxesLabels.push(hierarchy.HIERARCHY_CAPTION);
       if (categoriesAxisLabel) {
         categoriesAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
       }
@@ -853,7 +971,9 @@ var XavierTimeSeriesChart;
     }, this);
     this.measuresAxisLabel = measuresAxisLabel;
 
-    return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+        // HKL was return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+        return ( measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel + slicerElements);
+
   },
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
     var categoriesAxis = dataset.getAxis(axisDesignations.categories);
@@ -913,15 +1033,46 @@ var XavierTimeSeriesChart;
     var measureSeries = chart.addSeries("measure", dimple.plot.line);
     measureSeries.addOrderRule(measureOrder);
 
+    chart.draw();
+
+
+
+    var keys = [];
+
+    for (var i = 0; i < data.length; i++) {
+       keys.push(measureSeries._positionData[i].key);   
+    }
+
+    // Add each key to each datum
+    for (var i = 0; i < data.length; i++) {
+         data[i].key = keys[i];   
+    }
+
+
     //set the tooltip text
     measureSeries.getTooltipText = function(d){
+
+         var key = d.key;
+
+         // Find the datum with the corresponding key:
+         for (var i = 0; i < data.length; i++) {
+             if (data[i].key === key){
+                 // Define the tooltip content.
+                 var datum = data[i];
+                 return [
+                     gMsg("Value") + ": " + datum.fmtValue + " " + gMsg("for") + " " + datum.label
+                 ];
+             }
+         }
+
       var categoryNumber = d.xField[0];
       var measure = d.xField[1];
       var measureNumber = measureOrder.indexOf(measure);
       var datum = data[measureNumber * categoryOrder.length + categoryNumber];
       return [
         measure + ": " + datum.fmtValue,
-        categoriesAxisLabel + ": " + datum.label
+//        categoriesAxisLabel + ": " + datum.label
+            categoriesAxisLabel + ": " + categoryLabels[categoryNumber]
       ];
     };
 
@@ -994,7 +1145,7 @@ var XavierTimeSeriesChartTab;
           id: Xmla.Dataset.AXIS_COLUMNS,
           label: gMsg("Measures"),
           tooltip: gMsg("Each measure creates a line, and the value of the measures controls the y coordinate. Use the chart options to control whether to draw lines or areas."),
-          hint: gMsg("Drag measures to the measures axis. The measure value determines the y coordinate of the line."),
+          hint: gMsg("Drag one measure to the measures axis. Its value(s) determines the y coordinate(s) of the line."),
           mandatory: true,
           canBeEmpty: false,
           isDistinct: true,
@@ -1012,6 +1163,7 @@ var XavierTimeSeriesChartTab;
           mandatory: true,
           canBeEmpty: false,
           isDistinct: true,
+          isTimeInterval: true,
           "class": "dimensiontype1",
           userSortable: false,
           drop: {
@@ -1059,6 +1211,13 @@ var XavierTimeSeriesChartTab;
               }
             }, this);
             
+
+            //if we have a from member and a to member, then reject.
+            if (
+              memberFrom && memberTo 
+            ) {
+              return false;
+            }
             //if we have a from member, and the new item is a member but of the wrong level, then reject.
             if (
               memberFrom && !memberTo && 
@@ -1130,17 +1289,342 @@ var XavierCombiChart;
   arguments.callee._super.call(this ,conf);
 }).prototype = {
   generateTitleText: function(dataset, queryDesigner){
-    return "Bla";
+    // HKL war so return "Bla";
+    var slicerElements= "";
+    var categoriesAxis = queryDesigner.getColumnAxis();
+    var categoriesAxisLabel = "";
+    var categoriesAxesLabels = [];
+    var slicerAxis = queryDesigner.getSlicerAxis();
+
+    if (slicerAxis.getHierarchyCount() === 0) {
+        slicerElements= "";
+    }
+    else {
+      slicerElements =  " " + gMsg("for") + " ";
+      var added = "";
+      slicerAxis.eachSetDef(function(setDef, setDefIndex){
+        slicerElements += added + setDef.metadata.MEMBER_CAPTION;
+        added =  " " + gMsg("and") + " ";
+      }, this);
+    }
+
+    var categoriesAxis = queryDesigner.getColumnAxis();
+    var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
+
+    // NOT TODAY debugger;
+
+    categoriesAxis.eachHierarchy(function(hierarchy, i){
+        categoriesAxesLabels.push(hierarchy.HIERARCHY_CAPTION);
+      if (categoriesAxisLabel) {
+        categoriesAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
+      }
+      categoriesAxisLabel += hierarchy.HIERARCHY_CAPTION;
+      categoriesAxisLabel = hierarchy.HIERARCHY_CAPTION; // HKL neu
+    }, this);
+    this.categoriesAxisLabel = categoriesAxisLabel;
+    this.categoriesAxesLabels = categoriesAxesLabels;
+    var measuresAxisLabel = "";
+    var measuresAxis = dataset.getRowAxis();
+    var lastTuple = measuresAxis.tupleCount() - 1;
+    measuresAxis.eachTuple(function(measure){
+      if (measuresAxisLabel) {
+        measuresAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
+      }
+      measuresAxisLabel += this.getLabelForTuple(measure);
+    }, this);
+    this.measuresAxisLabel = measuresAxisLabel;
+
+    // So was it measuresAxisLabel + slicerElements;
+    
+    return ( measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxesLabels[categoriesAxesLabels.length-1] + slicerElements);
   },
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
 
+    var oneTCL;
+    var categoryAxesLabels = [];
+    var categoriesAxisLabel;
+    var categoriesAxesLabels=this.categoriesAxesLabels;
+    var categoriesAndLabels;
+    var categories=[];
+    var labels=[];
+    var data = [], HKLdata = [],
+        categoryOrder = [], categoryLabels = [],
+        measureOrder = [], measureOrderIndices = {}
+    ;
+   
+var arrOfLabelArrays=[[]];
+    var measuresAxis = dataset.getAxis(axisDesignations.categories);
+    var categoriesAxis = dataset.getAxis(axisDesignations.series);
+// HKL byttet
+    var cellset = dataset.getCellset();
+
+    var cellCount = cellset.cellCount();
+
+    var indx_category_for_x_axis= categoriesAxesLabels.length;
+
+    var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
+
+    //prepare the data set. data will be an array of {category, measure, value} objects
+    categoryAxesLabels = [];
+    categoriesAxisLabel = this.categoriesAxisLabel;
+    categoriesAxesLabels = this.categoriesAxesLabels;
+    categoriesAndLabels =[{
+          category: [],
+          label: []
+        }];
+      var exa = [];
+    for ( i=0; i < indx_category_for_x_axis;i++)
+    {
+        arrOfLabelArrays[i] = [];
+}
+    categoriesAxis.eachTuple(function(categoryTuple){
+    oneTCL = this.getCategoriesAndLabelsForTuple(categoryTuple);
+  // HKL her kanskje sammenligne om det er rette hierarki? 
+        /*
+        arrOfLabelArrays[0][0] = 1;
+        arrOfLabelArrays[1][1] = 1;
+    for ( i=0; i < indx_category_for_x_axis;i++)
+    {
+      exa = arrOfLabelArrays[i];
+}
+    
+*/
+  i = -1;
+
+    oneTCL.labels.forEach(function(one){
+        i++;
+    exa = arrOfLabelArrays[i];
+    if ( !exa.some(function(oneL){ return one === oneL;},this)){
+     arrOfLabelArrays[i].push(one);
+    };
+    }, this);
+//    oneTCL.categories.forEach(function(one){
+//    if ( !categories.some(function(oneC){ return one === oneC;},this))
+//     categories.push(one);
+    //HK
+//    }, this);
+    }, this);
+
+    categoriesAxis.eachHierarchy(function(hierarchy, i){
+    categoryAxesLabels.push(hierarchy.HIERARCHY_CAPTION);
+    }, this);
+
+    var indexCity = 0;
+    var indexMonth = 0;
+    var labelCity = "";
+    var labelMonth;
+    var countMonths = 0;
+    var countCities = 0;
+    var countArrays = arrOfLabelArrays.length;
+    var countMonths = arrOfLabelArrays[0].length;
+    if ( arrOfLabelArrays.length === 2 ){
+          countCities = arrOfLabelArrays[1].length;
+    };
+
+
+ categoriesAxis.eachTuple(function(categoryTuple){
+      var categoryAndLabel = this.getCategoryAndLabelForTuple(categoryTuple);
+      var category = categoryAndLabel.category;
+      var label = categoryAndLabel.label;
+      var ordin = 0;
+
+    labelMonth = arrOfLabelArrays[0][indexMonth];
+
+        if ( 2 > countArrays) {
+            indexMonth ++;
+            if ( indexMonth === countMonths)
+                indexMonth = 0;
+        }
+        else {
+            labelCity = arrOfLabelArrays[1][indexCity];
+    
+            indexCity ++;
+                
+            if ( indexCity === countCities){
+                indexCity = 0;
+                indexMonth ++;
+            }
+            if ( indexMonth === countMonths){
+                indexMonth = 0;
+                
+            }
+        }
+
+        categoryOrder.push(category);
+        categoryLabels.push(label);
+        measuresAxis.eachTuple(function(measureTuple){
+            var measure = this.getLabelForTuple(measureTuple);
+            if (categoryTuple.index === 0) {
+                measureOrderIndices[measure] = measureOrder.length;
+                  measureOrder.push(measure);
+            }
+            var datum = {
+                category: category,
+                labelCity: labelCity,
+                labelMonth: labelMonth,
+                label: label,
+                measure: measure,
+                value: 0,
+                fmtValue: 0
+            };
+	    var xxx = cellset.cellOrdinal();
+	    if ( HKLdata.length  == cellset.cellOrdinal())
+	{
+                datum.value = cellset.cellValue();
+                datum.fmtValue = cellset.cellFmtValue();
+		cellset.nextCell();
+	}
+        if (null === datum.value) {
+          datum.value = 0;
+          datum.fmtValue = 0;
+        }
+            HKLdata.push(datum);
+            datum[categoriesAxisLabel] = categoryTuple.index;
+            data.push(datum);
+        }, this);
+    }, this);
+
+    // HKL HEUTE var chart = new dimple.chart(svg, data);
+    var measureSeries;
+    var chart = new dimple.chart(svg, HKLdata);
+    var categoryAxis =  chart.addCategoryAxis("x", "labelMonth");
+    categoryAxis.addOrderRule(arrOfLabelArrays[0]);
+    categoryAxis.title = "My Awesome New Title";
+    categoryAxis.title = categoriesAxesLabels[0];
+    var measureAxis= chart.addMeasureAxis("y", "value");
+    measureAxis.title = this.measuresAxisLabel;
+    if ( countArrays > 1){
+        measureSeries = chart.addSeries("labelCity", dimple.plot.line);
+    }
+    else {
+        measureSeries = chart.addSeries(null, dimple.plot.line);
+    }
+
+    chart.addLegend(60, 10, 1000, 20, "left");
+    chart.draw();
+    // no effect measureAxis.titleShape.remove();
+    // no effect categoryAxis.titleShape.remove();
+
+    var keys = [];
+
+    for (var i = 0; i < HKLdata.length; i++) {
+       keys.push(measureSeries._positionData[i].key);   
+    }
+
+    // Add each key to each datum
+    for (var i = 0; i < HKLdata.length; i++) {
+         HKLdata[i].key = keys[i];   
+    }
+
+/*
+
+    //this will create a grouped bar chart: category groups with a bar for each measure
+    // HEUTE HKLvar categoryAxis = chart.addCategoryAxis("x", [categoriesAxisLabel, "measure"]);
+    var categoryAxis = chart.addCategoryAxis("x", [arrOfLabelArrays[1], "measure"]);
+    //this will create a stacked bar chart: one stack of measures per category.
+    //var categoryAxis = chart.addCategoryAxis("x", "category");
+
+    categoryAxis.title = this.categoriesAxisLabel;
+
+    // HEUTE HKL categoryAxis.addOrderRule(categoryLabels);
+    categoryAxis.addOrderRule(arrOfLabelArrays[0]);
+    categoryAxis.addGroupOrderRule(measureOrder);
+
+    var measureAxis = chart.addMeasureAxis("y", "value");
+    measureAxis.title = this.measuresAxisLabel;
+
+    measureAxis.addOrderRule(measureOrder);
+    // HKL TEST var measureSeries = chart.addSeries("measure", dimple.plot.line);
+    // HKL null for only one timeseries, "Label" for more than one                      
+    //var measureSeries = chart.addSeries(null, dimple.plot.line);
+    var measureSeries = chart.addSeries("labelCity", dimple.plot.line);
+  
+    measureSeries.addOrderRule(measureOrder);
+*/
+    //set the tooltip text
+    measureSeries.getTooltipText = function(d){
+         var key = d.key;
+
+         // Find the datum with the corresponding key:
+         for (var i = 0; i < HKLdata.length; i++) {
+             if (HKLdata[i].key === key){
+                 // Define the tooltip content.
+                 var datum = HKLdata[i];
+                 if ( 2 > countArrays) {
+                 return [
+                     gMsg("Value") + ": " + datum.fmtValue + " " + gMsg("for") + " " + datum.labelMonth +
+                     datum.labelCity
+                 ];
+             }
+                 else{
+                      return [
+                     gMsg("Value") + ": " + datum.fmtValue + " " + gMsg("for") + " " + datum.labelMonth +
+                     datum.labelCity
+                 ];
+                 }
+                 
+             }
+         }
+    };
+
+    // NESTE TEST chart.draw();
+
+    //update the category axis labels.
+    //have to do this after drawing the chart.
+    var chartWidth = chart._widthPixels();
+    var maxAvailableLabelWidth = chartWidth / categoryLabels.length;
+    var maxLabelWidth = 0;
+
+    /* TODO
+    //http://stackoverflow.com/questions/17791926/how-to-rotate-x-axis-text-in-dimple-js
+    //first pass: set the label for the categories
+    //also, keep track of the maximum labelwidth
+    categoryAxis.shapes.selectAll("text").each(function(d){
+      this.textContent = categoryLabels[d];
+      var bbox = this.getBBox();
+      var width = bbox.width;
+      if (width > maxLabelWidth) {
+        maxLabelWidth = width;
+      }
+    });
+    //if there are labels that are too wide, we rotate all labels so they won't overlap
+    if (maxLabelWidth > maxAvailableLabelWidth) {
+      categoryAxis.shapes.selectAll("text").each(function(d){
+        var x = this.getAttribute("x");
+        this.setAttribute("x", 0);
+        this.setAttribute("transform", "translate(" + x + " -5) rotate(10)");
+        this.style.textAnchor = "";
+      });
+    }
+
+    //make the axis titles bold.
+    categoryAxis.titleShape[0][0].style.fontWeight = "bold";
+    measureAxis.titleShape[0][0].style.fontWeight = "bold";
+
+    //position the category axis title left of the axis
+    var titleShape = categoryAxis.titleShape[0][0];
+    var titleShapeBBox = titleShape.getBBox();
+    var categoryAxisShape = categoryAxis.shapes[0][0];
+    var y = categoryAxisShape.transform.baseVal[0].matrix.f;
+    var x = categoryAxisShape.children[0].transform.baseVal[0].matrix.e;
+    x = x - titleShapeBBox.width;
+    y = y + 2*titleShapeBBox.height;
+    if (x < 70) {
+      x = 70;
+    }
+    titleShape.setAttribute("x", x);
+    titleShape.setAttribute("y", y);
+    // HKL
+*/    
   }
 };
+XavierCombiChart.prefix = "xavier-combi-chart";
 adopt(XavierCombiChart, XavierVisualizer);
 
 var XavierCombiChartDesigner;
 (XavierCombiChartDesigner = function(conf){
-  this.conf = conf = conf || {};
+  conf = conf || {};
+  this.conf = conf;
   arguments.callee._super.call(this, conf);
 }).prototype = {
   createDom: function(){
@@ -1211,7 +1695,8 @@ var XavierCombiChartDesigner;
 
     var slicerRow = tab.insertRow(rows.length);
     var slicerCell = slicerRow.insertCell(slicerRow.cells.length);
-    slicerCell.className = "graph-axis";
+    // HKL guessing wild slicerCell.className = "graph-axis";
+    slicerCell.className = "query-designer-axis query-designer-axisSlicerAxis slicer";
 
     var slicerAxis = this.getAxis(Xmla.Dataset.AXIS_SLICER);
     slicerCell.appendChild(slicerAxis.getDom());
@@ -1242,29 +1727,7 @@ var XavierCombiChartDesigner;
     //suppress events and dom updates
     this.fireEvents(false);
     this.updateDom(false);
-
-    //remove the old axes.
-    var i, n = axes.length;
-    for (i = 0; i < n; i++){
-      this.removeAxis(axes[i]);
-    }
-
-    //convert into a flat table, putting all measures on the columns axis and all dimensions on the rows axis.
-    var columnsAxis = this.createAxis(this.defaultAxesConf[Xmla.Dataset.AXIS_COLUMNS]);
-
-    var rowssAxis = this.createAxis(this.defaultAxesConf[Xmla.Dataset.AXIS_ROWS]);
-
-    //get the mdx
     var mdx = XavierCombiChartDesigner._super.prototype.getMdx.apply(this, arguments);
-
-    //remove the new axes
-    columnsAxis.destroy();
-    rowsAxis.destroy();
-
-    //restore the old axes
-    for (i = 0; i < n; i++){
-      this.addAxis(axes[i]);
-    }
 
     //unsuppress events and dom updates
     this.fireEvents(true);
@@ -1296,11 +1759,13 @@ var XavierCombiChartTab;
           label: gMsg("x-axis"),
           classes: ["columns"],
           tooltip: gMsg("Primary x-axis"),
-          hint: gMsg("Drag any levels, members, measures, or properties unto the columns axis to create the primary x axis."),
+          hint: gMsg("Drag any levels or members unto the x-axis."),
           mandatory: true,
+          isDistinct: true,
           hasEmptyCheckBox: false,
+          userSortable: false,
           drop: {
-            include: ["level", "property", "member", "measure", "derived-measure"]
+            include: ["level", "property", "member"]
           }
         },
         {
@@ -1308,11 +1773,13 @@ var XavierCombiChartTab;
           label: gMsg("y-axis"),
           classes: ["columns"],
           tooltip: gMsg("Primary y-axis"),
-          hint: gMsg("Drag any levels, members, measures, or properties unto the columns axis to create the primary y axis."),
+          hint: gMsg("Drag one measure unto y-axis."),
+          isDistinct: true,
           mandatory: true,
           hasEmptyCheckBox: false,
+          userSortable: false,
           drop: {
-            include: ["level", "property", "member", "measure", "derived-measure"]
+            include: ["measure", "derived-measure"]
           }
         },
         {

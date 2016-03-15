@@ -281,8 +281,8 @@ limitations under the License.
                         {
                           classes: ["derived-measure-rank"],
                           name: "${1} rank",
-                          captionMessageKey: "Rank of ${1}",
-                          tooltipMessageKey: "${1} as the rank over categories that appear on all axes in only this query",
+                          captionMessageKey: gMsg("Rank of ${1}"),
+                          tooltipMessageKey: gMsg("${1} as the rank over categories that appear on all axes in only this query"),
                           formula: "Rank(<TUPLE-OF-CURRENT>, <SET-OF-SIBLINGS>, <MEASURE>)",
                           formatString: "#",
                           folder: gMsg("Statistics")
@@ -356,8 +356,8 @@ limitations under the License.
                         {
                           classes: ["derived-measure-percentage"],
                           name: "${1} percentage of all",
-                          captionMessageKey: "${1} percentage of all",
-                          tooltipMessageKey: "${1} as a percentage of all categories along all hierarchies on all axes.",
+                          captionMessageKey: gMsg("${1} percentage of all"),
+                          tooltipMessageKey: gMsg("${1} as a percentage of all categories along all hierarchies on all axes."),
                           formatString: "0.00%",
                           formula: "<MEASURE> / Sum(<SET-OF-EVERYTHING>, <MEASURE>)",
                           folder: gMsg("Percentages")
@@ -365,8 +365,8 @@ limitations under the License.
                         {
                           classes: ["derived-measure-percentage"],
                           name: "${1} percentage of parent",
-                          captionMessageKey: "${1} percentage of parent",
-                          tooltipMessageKey: "${1} as a percentage of the parent level of all hierarchies along all axes.",
+                          captionMessageKey: gMsg("${1} percentage of parent"),
+                          tooltipMessageKey: gMsg("${1} as a percentage of the parent level of all hierarchies along all axes."),
                           formatString: "0.00%",
                           formula: "<MEASURE> / Sum(<SET-OF-PARENTS>, <MEASURE>)",
                           folder: gMsg("Percentages")
@@ -374,8 +374,8 @@ limitations under the License.
                         {
                           classes: ["derived-measure-percentage"],
                           name: "${1} percentage",
-                          captionMessageKey: "${1} percentage",
-                          tooltipMessageKey: "${1} as a percentage all categories that appear on all axes in only this query",
+                          captionMessageKey: gMsg("${1} percentage"),
+                          tooltipMessageKey: gMsg("${1} as a percentage all categories that appear on all axes in only this query"),
                           formatString: "0.00%",
                           formula: "<MEASURE> / Sum(<SET-OF-SIBLINGS>, <MEASURE>)",
                           folder: gMsg("Percentages")
@@ -383,8 +383,8 @@ limitations under the License.
                         {
                           classes: ["derived-measure-percentage"],
                           name: "${1} rows percentage",
-                          captionMessageKey: "${1} rows percentage",
-                          tooltipMessageKey: "${1} as a percentage all categories that appear on the rows axis in only this query",
+                          captionMessageKey: gMsg("${1} rows percentage"),
+                          tooltipMessageKey: gMsg("${1} as a percentage all categories that appear on the rows axis in only this query"),
                           formatString: "0.00%",
                           formula: "<MEASURE> / Sum(<SET-OF-SIBLINGS-ON-ROWS-AXIS>, <MEASURE>)",
                           folder: gMsg("Percentages")
@@ -392,8 +392,8 @@ limitations under the License.
                         {
                           classes: ["derived-measure-percentage"],
                           name: "${1} columns percentage",
-                          captionMessageKey: "${1} columns percentage",
-                          tooltipMessageKey: "${1} as a percentage all categories that appear on the columns axis in only this query",
+                          captionMessageKey: gMsg("${1} columns percentage"),
+                          tooltipMessageKey: gMsg("${1} as a percentage all categories that appear on the columns axis in only this query"),
                           formatString: "0.00%",
                           formula: "<MEASURE> / Sum(<SET-OF-SIBLINGS-ON-COLUMNS-AXIS>, <MEASURE>)",
                           folder: gMsg("Percentages")

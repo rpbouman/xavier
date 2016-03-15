@@ -89,3 +89,22 @@ dfn.excel {
 dfn.info {
   background-image: url('../images/info.png');
 }
+
+dfn.dimension {
+  background-image: url('../images/dimension.png');
+}
+dfn.average_m {
+  background-image: url('../images/average.png');
+}
+
+dfn.minimum_m {
+  background-image: url('../images/minimum.png');
+}
+
+dfn.maximum_m {
+  background-image: url('../images/maximum.png');
+}
+
+dfn.summed_m {
+  background-image: url('../images/sum.png');
+}

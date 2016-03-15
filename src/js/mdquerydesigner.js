@@ -93,7 +93,7 @@ var QueryDesigner;
       id: Xmla.Dataset.AXIS_SLICER,
       label: gMsg("Slicer"),
       tooltip: gMsg("The members on this axis form a selection of the total data set (a slice) or which data are shown."),
-      hint: gMsg("Optionally, drag any members unto the slicer axis to control which selection of data will be visualized."),
+      hint: gMsg("Optionally, drag any members unto the 'Slicer' to select data to be visualized."),
       "class": "slicer",
       drop: {
         include: "member"
@@ -231,6 +231,10 @@ var QueryDesigner;
           "query-designer-axis1": "Rows",
           "query-designer-axisSlicerAxis": "Slicer"
         })[className];
+	if ( null === className){
+		return ( false );
+	}
+
         className = className[0];
         break;
       case "hierarchy":
@@ -2252,8 +2256,15 @@ var QueryDesignerAxis;
         if (type === "property") {
           return;
         }
+    if ( conf.isTimeInterval ){
+            if (members.length) {
+                  members += ":";
+        }
+    }
+    else {
         if (members.length) {
           members += ", ";
+        }
         }
         members += setDef.expression;
       }, this, hierarchy);
