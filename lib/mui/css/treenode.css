@@ -26,6 +26,7 @@ limitations under the License.
 
 .node > .head {
   cursor: default;
+  white-space: nowrap;
 }
 
 .node > .head > .toggle:before {
