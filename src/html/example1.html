@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<!--
+
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-->
+  <head>
+    <meta http-equiv="Content-Type" content="type=text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <title></title>
+    <link rel="icon" type="image/png" href="../images/cube.png" />
+    <script type="text/javascript">
+      var mantle_win;
+      if (parent) {
+        mantle_win = parent;
+      }
+      if (window.opener) {
+        if (window.opener.parent) mantle_win = window.opener.parent;
+        else mantle_win = window.opener;
+      }
+
+      if (mantle_win) {
+        var active_theme = mantle_win.active_theme;
+        var core_theme_tree = mantle_win.core_theme_tree;
+        var module_theme_tree = mantle_win.module_theme_tree;
+        var CONTEXT_PATH = mantle_win.CONTEXT_PATH;
+      }
+
+      var muiCssDir = "../../lib/mui/css/";
+      var muiImgDir = "../../lib/mui/images/";
+      var cssDir = "../css/";
+      //var docDir = "../doc/";
+    </script>
+    <link rel="stylesheet" type="text/css" href="../../lib/mui/css/tooltip.css"/>
+
+  </head>
+  <body class="pentaho-page-background" >
+    <!--[if lte IE 9]><script src="../../lib/aight-2.1.1/aight.min.js"></script><![endif]-->
+
+    <script type="text/javascript" src="../../lib/d3-3.5.5/d3.js" charset="utf-8"></script>
+    <!--
+    <script type="text/javascript" src="../../lib/d3-3.5.5/d3.min.js" charset="utf-8"></script>
+    -->
+
+    <script type="text/javascript" src="../../lib/dimple-2.1.2/dimple.v2.1.2.js"></script>
+    <!--
+    <script type="text/javascript" src="../../lib/dimple-2.1.2/dimple.v2.1.2.min.js"></script>
+    -->
+
+    <!-- zip lib required to do excel export -->
+    <script type="text/javascript" src="../../lib/jszip/jszip.min.js"></script>
+    <!-- blob lib required to do downloads of excel export -->
+    <script type="text/javascript" src="../../lib/blob/Blob.js"></script>
+    <!-- filesaver lib required to do downloads of excel export -->
+    <script type="text/javascript" src="../../lib/filesaver/FileSaver.min.js"></script>
+
+    <!-- xmla4js required to talk to XML/A servers -->
+    <!-- <script type="text/javascript" src="../../lib/xmla4js/Xmla-compiled.js"></script> -->
+    <script type="text/javascript" src="../../lib/xmla4js/Xmla.js"></script>
+
+    <!-- mui required for building GUI -->
+    <script type="text/javascript" src="../../lib/mui/js/utilities.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/dateutils.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/dom.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/event.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/dnd.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/observable.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/displayed.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/disabled.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/timer.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/spinner.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/dialog.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/toolbar.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/treenode.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/treelistener.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/treeselection.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/highlighter.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/contentarea.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/contentpane.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/splitpane.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/tabpane.js"></script>
+    <script type="text/javascript" src="../../lib/mui/js/datagrid.js"></script>
+    <!--
+    <script type="text/javascript" src="../../lib/mui/mui-compiled.js"></script>
+    -->
+
+    <!--[if IE 9]>
+    <script type="text/javascript">
+      var useTransitions = false;
+    </script>
+    <![endif]-->
+    <script type="text/javascript" src="../js/loadingindicator.js"></script>
+    <style type="text/css">
+      .spinner {
+        top: 33%;
+        left: 50%;
+        z-index: 1000;
+        width: 128px;
+        height: 128px;
+        background-image: url('../images/cube_spinner.gif');
+        position:absolute;
+      }
+    </style>
+    <script type="text/javascript">
+      busy(true);
+    </script>
+
+    <!-- xavier specific stuff -->
+    <script type="text/javascript" src="../messages/messages.js"></script>
+    <!--
+    <script type="text/javascript" src="../messages/messages-de.js"></script>
+    <script type="text/javascript" src="../messages/messages-nl.js"></script>
+    -->
+
+    <script type="text/javascript" src="../js/xlsxexport.js"></script>
+    <script type="text/javascript" src="../js/msgbox.js"></script>
+    <script type="text/javascript" src="../js/xmlatreeview.js"></script>
+    <script type="text/javascript" src="../js/mdquerydesigner.js"></script>
+    <script type="text/javascript" src="../js/mdpivottable.js"></script>
+
+    <script type="text/javascript" src="../js/xaviertab.js"></script>
+    <script type="text/javascript" src="../js/xavierdoctab.js"></script>
+    <script type="text/javascript" src="../js/xavierpivottabletab.js"></script>
+    <script type="text/javascript" src="../js/xaviertabpane.js"></script>
+
+    <script type="text/javascript" src="../js/xmlafactory.js"></script>
+    <script type="text/javascript" src="../js/xmlametadatafilter.js"></script>
+
+    <script type="text/javascript" src="../js/xavierderivedmeasurefactory.js"></script>
+
+    <script type="text/javascript" src="../js/xavier.js"></script>
+
+    <script type="text/javascript">
+      var xavierOptions = {
+        //levelCardinalitiesDiscoveryMethod determines how cardinalities of levels are discovered.
+        //levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER, //get level cardinality estimates from level discovery requests
+        levelCardinalitiesDiscoveryMethod: Xmla.METHOD_EXECUTE,  //get exact level cardinalities by running mdx query.
+        //defaultMemberDiscoveryMethod determines how captions of default members are discovered.
+        //defaultMemberDiscoveryMethod: false,                //don't get default member captions
+        defaultMemberDiscoveryMethod: Xmla.METHOD_EXECUTE,  //get default member captions with a MDX query
+        //defaultMemberDiscoveryMethod: Xmla.METHOD_DISCOVER, //get default member captions with disover requests
+        //if you want to connect to a specific XML/A provider, put its url here
+        xmlaUrl: "http://localhost/xmondrian/xmla",
+        //configure whether catalog nodes are flattened (hidden) or not
+        catalogNodesInitiallyFlattened: true,
+        //configure whether the tree has a checkbox to toggle display of catalog nodes.
+        showCatalogNodesCheckboxDisplayed: false,
+        //whether to prefix cube names with the catalog name. The prefix is shown only if the catalog nodes are flattened, but this option can be used to suppress prefixes alltogether.
+        useCatalogPrefixForCubes: false,
+        //whether to show the current catalog in the cube pane
+        showCurrentCatalog: false,
+        //whether to show the current cube in the cube pane
+        showCurrentCube: false,
+        //configure whether dimension nodes with multiple hierarchies are flattened (hidden) or not
+        dimensionNodesInitiallyFlattened: false,
+        //configure whether to use the CUBE_CAPTION or the CUBE_DESCRIPTION as caption for cube nodes in the tree.
+        //Most XML/A providers have a CUBE_CAPTION but SAP/HANA does not; the DESCRIPTION usually contains the human friendly name in that case.
+        useDescriptionAsCubeCaption: false,
+        //configure what is considered "low cardinality" for a level.
+        //If the level has this or less members, they are automatically expanded in the treeview.
+        maxLowCardinalityLevelMembers: 5,
+        //metadataRestrictions is a means to lock down the datasources, catalogs and cubes
+        //that xavier will serve to the user up front.
+        //You can also use this to set which cube is "autoSelected" - this one will be automatically selected and loaded.
+        metadataRestrictions: {
+          datasources: [                //datasources to discover
+            {
+              restriction: {
+                //DataSourceName: "icCube",
+                //URL: "",
+                //ProviderName: ""
+              },
+              catalogs: [               //catalogs to discover for this datasource
+                {
+                  restriction: {
+                    CATALOG_NAME: "FoodMart"
+                  },
+                  cubes: [              //cubes to discover for this catalog
+                    {
+                      restriction: {
+                        CUBE_NAME: "Sales"
+                      },
+                      autoSelect: true, //whether this cube should be automatically selectd.
+                      metadata: {       //use this chached metadata rather than discovering it dynamically
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        //auto-create a pivot tab after loading the cube.
+        autoCreateVisualization: {
+          id: "pivot-table"
+        },
+        //only load the pivot table visualization. 
+        visualizations: [
+          {id: "pivot-table", tooltip: "New Pivot table", componentConstructor: XavierPivotTableTab, createToolbarButton: false}
+        ]
+      };
+
+      var xmlaFactory = new XmlaFactory({
+        xmlaUrl: xavierOptions.xmlaUrl,
+        listeners: {
+          error: function(xmlaFactory, event, error) {
+            busy(false);
+            var exception = error.exception;
+            var message = exception.toString() || exception.message;
+            if (error.code && error.desc) {
+              message += "\n" + error.code + ": " + error.desc;
+            }
+            showAlert("Unexpected Error", message);
+          },
+          found: function(xmlaFactory, event, xmla){
+            busy(false);
+            xavierOptions.xmla = xmla;
+            var xavierApplication = new XavierApplication(xavierOptions);
+          },
+          notfound: function(xmlaFactory, event) {
+            busy(false);
+            showAlert("Not Found",
+              "Unfortunately, we did not find a suitable XML/A provider.\n" +
+              "Please supply one in the URL using the XmlaUrl querystring parameter."
+            );
+          }
+        }
+      });
+      xmlaFactory.createXmla();
+    </script>
+  </body>
+</html>
+

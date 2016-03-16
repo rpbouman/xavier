@@ -17,6 +17,9 @@ limitations under the License.
 */
 function XavierApplication(xavierOptions){
 
+var app = this;
+Observable.apply(app, xavierOptions);
+
 if (!xavierOptions) {
   xavierOptions = {};
 }
@@ -26,7 +29,7 @@ if (!metadataFilter) {
   metadataFilter = {};
 }
 var xmlaMetadataFilter = new XmlaMetadataFilter(metadataFilter);
-this.xmlaMetadataFilter = xmlaMetadataFilter;
+app.xmlaMetadataFilter = xmlaMetadataFilter;
 
 doc.title = gMsg("XML/A Visualizer");
 
@@ -58,7 +61,7 @@ if (xavierOptions.createToolbar !== false) {
     {"class": "separator"},
   ]);
 }
-this.toolbar = mainToolbar;
+app.toolbar = mainToolbar;
 
 
 /**
@@ -76,9 +79,10 @@ var getVisualizationById = function(id){
   }
   return null;
 }
-this.getVisualizationById = getVisualizationById;
+app.getVisualizationById = getVisualizationById;
 
-function createTabForVisualizationWithId(id){
+function createVisualizationTab(conf){
+  var id = conf.id;
   var visualization = getVisualizationById(id);
   if (!visualization) {
     console.log("Error: can't find visualization for button " + className);
@@ -88,22 +92,24 @@ function createTabForVisualizationWithId(id){
   var vizualizationInstance = componentConstructor.newInstance({
     tabPane: workArea
   });
-  return workArea.newTab(vizualizationInstance);    
+  var tab = workArea.newTab(vizualizationInstance);
+  return tab;
 }
-this.createTabForVisualizationWithId = createTabForVisualizationWithId;
-
-function newVisualizationTab(){
-  var buttonConf = this.conf;
-  var className = buttonConf["class"];
-  var id = className.substr("new-".length);
-  createTabForVisualizationWithId(id);
-}
+app.createVisualizationTab = createVisualizationTab;
 
 var autoRunEnabled = iDef(xavierOptions.autoRunEnabled) ? xavierOptions.autoRunEnabled : true;
 /**
 *   Create toolbar buttons for visualizations
 */
 if (mainToolbar) {
+  var visualizationButtonClicked = function(){
+    var buttonConf = this.conf;
+    var className = buttonConf["class"];
+    var id = className.substr("new-".length);
+    createVisualizationTab({
+      id: id
+    });
+  };
   var visualizations = xavierOptions.visualizations, n = visualizations.length, i, visualization, componentConstructor, buttonConf;
   for (i = 0; i < n; i++){
     visualization = visualizations[i];
@@ -114,7 +120,7 @@ if (mainToolbar) {
       "class": "new-" + visualization.id,
       tooltip: gMsg(visualization.tooltip),
       group: "vis",
-      buttonHandler: newVisualizationTab
+      buttonHandler: visualizationButtonClicked
     };
     mainToolbar.addButton(buttonConf);
   }
@@ -220,14 +226,10 @@ var xmlaTreeView = new XmlaTreeView({
       }
     },
     loadCube: function(xmlaTreeView, event, cubeTreeNode){
-      if (mainToolbar) {
-        mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
-      }
+      displayVisualizationsGroup(false);
     },
     cubeLoaded: function(xmlaTreeView, event){
-      if (mainToolbar) {
-        mainToolbar.displayGroup(mainToolbar.groups.vis.name, true);
-      }
+      displayVisualizationsGroup(true);
 
       var currentCube = xmlaTreeView.getCurrentCube();
       workArea.setCube(currentCube);
@@ -242,10 +244,18 @@ var xmlaTreeView = new XmlaTreeView({
         if (tabs.length) {  //we have at least one tab for this cube, so select it.
           selectedTab = tabs[0];
         }
-        else {  //we don't have any tabs for this cube, default to the welcome tab.
-          selectedTab = workArea.getWelcomeTab();
+        else {  //we don't have any tabs for this cube, then
+          if (xavierOptions.autoCreateVisualization) {
+            selectedTab = createVisualizationTab(xavierOptions.autoCreateVisualization);
+          }
+          else {
+            selectedTab = workArea.getWelcomeTab();
+          }
         }
-        workArea.setSelectedTab(selectedTab);
+        
+        if (selectedTab) {
+          workArea.setSelectedTab(selectedTab);
+        }
       }
     },
     //called when an information icon is clicked.
@@ -275,7 +285,7 @@ var xmlaTreeView = new XmlaTreeView({
     }
   }
 });
-this.xmlaTreeView = xmlaTreeView;
+app.xmlaTreeView = xmlaTreeView;
 
 /**
 *   Tabs (Workarea)
@@ -291,18 +301,14 @@ var workArea = new XavierTabPane({
       if (tabPane.getSelectedTab() !== null) {
         return;
       }
-      if (mainToolbar) {
-        mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
-      }
+      displayVisualizationActionsGroup(false);
     },
     tabSelected: function(tabPane, event, data){
       var tab = tabPane.getTab(data.newTab);
 
       var display = tab ? Boolean(tab.getVisualizer()) : false;
-      if (mainToolbar) {
-        mainToolbar.displayGroup(mainToolbar.groups.visaction.name, display);
-      }
-      //toggleAutoRunEnabled();
+      displayVisualizationActionsGroup(display);
+
       tab.doLayout();
 
       //check if we have to select another cube in the treeview.
@@ -316,7 +322,7 @@ var workArea = new XavierTabPane({
     }
   }
 });
-this.workArea = workArea;
+app.workArea = workArea;
 
 /**
 *   Main layout
@@ -331,7 +337,7 @@ var mainSplitPane = new SplitPane({
     top: (mainToolbar ? 32 : 0) + "px"
   }
 });
-this.mainSplitPane = mainSplitPane;
+app.mainSplitPane = mainSplitPane;
 
 mainSplitPane.listen("splitterPositionChanged", function(mainSplitPane, event, data){
   //tell the workArea to redo layout since its size has just changed.
@@ -648,14 +654,33 @@ listen(window, "resize", function(){
   resizeTimer.start();
 });
 
+
+function displayToolbarGroup(group, display){
+  if (!mainToolbar) {
+    return;
+  }
+  var groups = mainToolbar.groups, group = groups[group];
+  if (!group) {
+    return;
+  }
+  mainToolbar.displayGroup(group.name, false);  
+}
+
+function displayVisualizationsGroup(display){
+  displayToolbarGroup("vis", display);
+}
+
+function displayVisualizationActionsGroup(display){
+  displayToolbarGroup("visaction", display);
+}
 /**
  * Init:
  */
 xmlaTreeView.init();
-if (mainToolbar) {
-  mainToolbar.displayGroup(mainToolbar.groups.vis.name, false);
-  mainToolbar.displayGroup(mainToolbar.groups.visaction.name, false);
-}
+
+displayVisualizationsGroup(false);
+displayVisualizationActionsGroup(false);
+
 //toggleAutoRunEnabled();
 
 linkCss(cssDir + "xavier.css");
