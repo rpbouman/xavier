@@ -89,9 +89,10 @@ function createVisualizationTab(conf){
     return;
   }
   var componentConstructor = visualization.componentConstructor;
-  var vizualizationInstance = componentConstructor.newInstance({
+  var tabConf = merge({
     tabPane: workArea
-  });
+  }, conf);
+  var vizualizationInstance = componentConstructor.newInstance(tabConf);
   var tab = workArea.newTab(vizualizationInstance);
   return tab;
 }
@@ -663,7 +664,7 @@ function displayToolbarGroup(group, display){
   if (!group) {
     return;
   }
-  mainToolbar.displayGroup(group.name, false);  
+  mainToolbar.displayGroup(group.name, display);  
 }
 
 function displayVisualizationsGroup(display){

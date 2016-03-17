@@ -402,6 +402,8 @@ var QueryDesigner;
     return axis;
   },
   createAxes: function() {
+    var oldFireEvents = this.fireEvents();
+    this.fireEvents(false);
     var conf = this.conf, axisConf;
     var axesConf = conf.axes || this.defaultAxesConf;
     var i;
@@ -409,6 +411,12 @@ var QueryDesigner;
       axisConf = axesConf[i];
       this.createAxis(axisConf);
     }
+    this.eachAxis(function(id, axis){
+      if (axis.conf.members) {
+        axis.addMembers(axis.conf.members);
+      }
+    }, this);
+    this.fireEvents(oldFireEvents);
   },
   getAxis: function(id) {
     if (iInt(id)) {
@@ -1543,6 +1551,10 @@ var QueryDesignerAxis;
   },
   getMemberUniqueName: function(metadata) {
     var expression;
+    if (iStr(metadata)) {
+      expression = metadata;
+    }
+    else
     if (metadata.PROPERTY_NAME) {
       expression = metadata.LEVEL_UNIQUE_NAME + ".[" + metadata.PROPERTY_NAME + "]";
     }
@@ -2025,12 +2037,34 @@ var QueryDesignerAxis;
       this._addHierarchy(this.getHierarchyCount(), metadata);
     }
     var memberInfo = this.getMemberInfo(requestType, metadata);
-    this.getSetDefs(hierarchyName).splice(memberIndex + 1, 0, memberInfo);
+    var setDefs = this.getSetDefs(hierarchyName);
+    if (memberIndex === -1) {
+      memberIndex = setDefs.length - 1;
+    }
+    setDefs.splice(memberIndex + 1, 0, memberInfo);
     this.updateDom();
   },
   addMember: function(memberIndex, requestType, metadata) {
     this._addMember(memberIndex, requestType, metadata);
     this.fireEvent("changed");
+  },
+  addMembers: function(members){
+    var i, n = members.length, member, requestType, metadata;
+    for (i = 0; i < n; i++) {
+      member = members[i];
+      if (member.requestType) {
+        requestType = member.requestType;
+      }
+      if (member.metadata) {
+        metadata = member.metadata;
+      }
+      if (metadata && requestType) {
+        this.addMember(-1, requestType, member);
+      }
+      else {
+        console.log("Warning: could not add member " + i + "( " + String(member) + " )");
+      }
+    }
   },
   _addHierarchy: function(hierarchyIndex, metadata) {
     var hierarchyName = this.getHierarchyName(metadata), layout = this.getLayout(), hierarchy;
@@ -2163,11 +2197,13 @@ var QueryDesignerAxis;
       debugger;
       return;
     }
-    if (hierarchyIndex === -1) {
-      //if the hierarchy was not already in this axis, add it.
-      this.addHierarchy(dropIndexes.dropHierarchyIndex+1, requestType, metadata);
-    }
-    else {
+    //TODO: do we really need to check for the hierarchy and call addHierarchy?
+    //the else branch calls addMember and that already does all that work.
+//    if (hierarchyIndex === -1) {
+//      //if the hierarchy was not already in this axis, add it.
+//      this.addHierarchy(dropIndexes.dropHierarchyIndex+1, requestType, metadata);
+//    }
+//    else {
       //if the hierarchy is already present, add the member expression to the member list.
       var member = this.getMember(metadata);
       if (!member) {
@@ -2176,7 +2212,7 @@ var QueryDesignerAxis;
       else {
         this.moveMember(metadata, requestType, dropIndexes.dropMemberIndex);
       }
-    }
+//    }
   },
   getDimensionPropertiesMdx: function(){
     var mdx = "";
