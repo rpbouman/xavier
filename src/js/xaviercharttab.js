@@ -455,12 +455,13 @@ var XavierPieChart;
       var percentageLabel = gMsg("Percentage");
       categoriesAxis.eachTuple(function(tuple){
         var category = this.getLabelForTuple(tuple);
+        var value = cellset.cellValue();
         var datum = {
           label: category,
-          fmtValue: cellset.cellFmtValue()
+          fmtValue: cellset.cellFmtValue ? cellset.cellFmtValue() : String(value)
         };
         datum[categoriesAxisLabel] = tuple.index;
-        datum[measure] = cellset.cellValue();
+        datum[measure] = value;
         data.push(datum);
         cellset.nextCell();
       }, this);
@@ -638,11 +639,12 @@ var XavierGroupedBarChart;
           measureOrderIndices[measure] = measureOrder.length;
           measureOrder.push(measure);
         }
+        var value = cellset.cellValue();
         var datum = {
           label: label,
           measure: measure,
-          value: cellset.cellValue(),
-          fmtValue: cellset.cellFmtValue()
+          value: value,
+          fmtValue: cellset.cellFmtValue ? cellset.cellFmtValue() : String(value)
         };
         datum[categoriesAxisLabel] = categoryTuple.index;
         data.push(datum);
@@ -880,11 +882,12 @@ var XavierTimeSeriesChart;
           measureOrderIndices[measure] = measureOrder.length;
           measureOrder.push(measure);
         }
+        var value = cellset.cellValue();
         var datum = {
           label: label,
           measure: measure,
-          value: cellset.cellValue(),
-          fmtValue: cellset.cellFmtValue()
+          value: value,
+          fmtValue: cellset.cellFmtValue ? cellset.cellFmtValue() : String(value)
         };
         datum[categoriesAxisLabel] = categoryTuple.index;
         data.push(datum);
