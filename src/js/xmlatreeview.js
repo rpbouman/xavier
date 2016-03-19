@@ -32,6 +32,9 @@ var XmlaTreeView;
     secondComponent: this.cubeTreePane,
     orientation: SplitPane.orientations.horizontal
   });
+  if (iDef(conf.datasourceNodesInitiallyFlattened)) {
+    this.datasourceNodesInitiallyFlattened = conf.datasourceNodesInitiallyFlattened;
+  }
   if (iDef(conf.catalogNodesInitiallyFlattened)) {
     this.catalogNodesInitiallyFlattened = conf.catalogNodesInitiallyFlattened;
   }
@@ -75,6 +78,9 @@ var XmlaTreeView;
   if (iDef(conf.useDescriptionAsCubeCaption)) {
     this.useDescriptionAsCubeCaption = conf.useDescriptionAsCubeCaption;
   }
+  if (iDef(conf.useAsDatasourceCaption)) {
+    this.useAsDatasourceCaption = conf.useAsDatasourceCaption;
+  }
   if (iRxp(conf.urlRegExp)){
     this.urlRegExp = conf.urlRegExp;
   }
@@ -93,6 +99,8 @@ var XmlaTreeView;
   defaultMemberDiscoveryMethod: Xmla.METHOD_DISCOVER,
   //maximum number of members to allow auto-loading of a level's members
   maxLowCardinalityLevelMembers: 10,
+  //whether datasource nodes should initially be hidden
+  datasourceNodesInitiallyFlattened: true,
   //whether catalog nodes should initially be hidden
   catalogNodesInitiallyFlattened: true,
   //whether or not display of flattened catalog nodes can be toggled by the user.
@@ -109,6 +117,8 @@ var XmlaTreeView;
   dimensionNodesInitiallyFlattened: true,
   //whether to use DESCRIPTION rather than CUBE_CAPTION for cube captions. (SAP/HANA does not have CUBE_CAPTION, but DESCRIPTION often contains the friendly name)
   useDescriptionAsCubeCaption: false,
+  //which field to use as caption for datasource nodes.
+  useAsDatasourceCaption: ["DataSourceName", "DataSourceDescription"],
   checkIsExcluded: function(request, row){
     var xmlaMetadataFilter = this.xmlaMetadataFilter;
     if (!xmlaMetadataFilter) {
@@ -621,34 +631,52 @@ var XmlaTreeView;
 
     doDataSourcesQueue(datasourcesQueue);
   },
+  renderDataSourceNode: function(datasource){
+    //Render MDP providers as treenodes.
+    var schemaTreePaneDom = this.schemaTreePane.getDom();
+    var dataSourceName = datasource.DataSourceName;
+    var dataSourceDescription = datasource.DataSourceDescription || datasource.Description;
+
+    var useAsDatasourceCaption = this.useAsDatasourceCaption;
+    var title, i, n = useAsDatasourceCaption.length;
+    for (i = 0; i < n; i++) {
+      title = useAsDatasourceCaption[i];
+      title = datasource[title];
+      if (title) {
+        break;
+      }
+    }
+    if (!title) {
+      title = "Data Soure";
+    }
+      
+    var state = this.datasourceNodesInitiallyFlattened ? TreeNode.states.flattened : TreeNode.states.expanded;
+    var treeNode = new TreeNode({
+      classes: "datasource",
+      state: state,
+      id: "datasource:" + dataSourceName,
+      parentElement: schemaTreePaneDom,
+      title: title,
+      tooltip: dataSourceDescription || dataSourceName,
+      metadata: datasource
+    });
+    return treeNode;
+  },
   handleDataSources: function(datasources){
     if (datasources.length === 0) {
       this.indicateProgress(gMsg("No datasources found."));
       this.fireEvent("done");
       return;
     }
-    var schemaTreePaneDom = this.schemaTreePane.getDom();
     var providerNodeQueue = [];
     providerNodeQueue.index = -1;
     providerNodeQueue.catalogNodeQueue = [];
     providerNodeQueue.catalogNodeQueue.index = -1;
 
-    var i, n = datasources.length, datasource;
+    var i, n = datasources.length, datasource, treeNode;
     for (i = 0; i < n; i++) {
       datasource = datasources[i];
-
-      //Render MDP providers as treenodes.
-      var dataSourceName = datasource.DataSourceName;
-      var treeNode = new TreeNode({
-        classes: "datasource",
-        state: TreeNode.states.expanded,
-        id: "datasource:" + dataSourceName,
-        parentElement: schemaTreePaneDom,
-        title: dataSourceName,
-        tooltip: datasource.Description || dataSourceName,
-        metadata: datasource
-      });
-
+      treeNode = this.renderDataSourceNode(datasource);
       //push to the queue so we can find the catalogs in a next round.
       providerNodeQueue.push(treeNode);
     }

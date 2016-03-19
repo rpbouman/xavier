@@ -195,23 +195,30 @@ function toggleAutoRunEnabled() {
 /**
 *   TreeView
 */
+function getXmlaTreeOption(name){
+  var option = xavierOptions[name];
+  return iDef(option) ? option : XmlaTreeView.prototype[name];
+}
+
 var xmlaTreeView = new XmlaTreeView({
   xmla: xmla,
   xmlaMetadataFilter: xmlaMetadataFilter,
   metadataRestrictions: xavierOptions.metadataRestrictions,
-  catalogNodesInitiallyFlattened: iDef(xavierOptions.catalogNodesInitiallyFlattened) ? xavierOptions.catalogNodesInitiallyFlattened : XmlaTreeView.prototype.catalogNodesInitiallyFlattened,
-  showCatalogNodesCheckboxDisplayed: iDef(xavierOptions.showCatalogNodesCheckboxDisplayed) ? xavierOptions.showCatalogNodesCheckboxDisplayed : XmlaTreeView.prototype.showCatalogNodesCheckboxDisplayed,
-  useCatalogPrefixForCubes: iDef(xavierOptions.useCatalogPrefixForCubes) ? xavierOptions.useCatalogPrefixForCubes : XmlaTreeView.prototype.useCatalogPrefixForCubes,
-  showCurrentCatalog: iDef(xavierOptions.showCurrentCatalog) ? xavierOptions.showCurrentCatalog : XmlaTreeView.prototype.showCurrentCatalog,
-  showCurrentCube: iDef(xavierOptions.showCurrentCube) ? xavierOptions.showCurrentCube : XmlaTreeView.prototype.showCurrentCube,
-  dimensionNodesInitiallyFlattened: iDef(xavierOptions.dimensionNodesInitiallyFlattened) ? xavierOptions.dimensionNodesInitiallyFlattened : XmlaTreeView.prototype.dimensionNodesInitiallyFlattened,
-  showDimensionNodesCheckboxDisplayed: iDef(xavierOptions.showDimensionNodesCheckboxDisplayed) ? xavierOptions.showDimensionNodesCheckboxDisplayed : XmlaTreeView.prototype.showDimensionNodesCheckboxDisplayed,
-  maxLowCardinalityLevelMembers: iDef(xavierOptions.maxLowCardinalityLevelMembers) ? xavierOptions.maxLowCardinalityLevelMembers : XmlaTreeView.prototype.maxLowCardinalityLevelMembers,
-  defaultMemberDiscoveryMethod: iDef(xavierOptions.defaultMemberDiscoveryMethod) ? xavierOptions.defaultMemberDiscoveryMethod : XmlaTreeView.prototype.defaultMemberDiscoveryMethod,
-  levelCardinalitiesDiscoveryMethod: iDef(xavierOptions.levelCardinalitiesDiscoveryMethod) ? xavierOptions.levelCardinalitiesDiscoveryMethod : XmlaTreeView.prototype.levelCardinalitiesDiscoveryMethod,
-  urlRegExp: iRxp(xavierOptions.urlRegExp) ? xavierOptions.urlRegExp : XmlaTreeView.prototype.urlRegExp,
-  checkIfDescriptionIsAnUrl: iFun(xavierOptions.checkIfDescriptionIsAnUrl) ? xavierOptions.checkIfDescriptionIsAnUrl : XmlaTreeView.prototype.checkIfDescriptionIsAnUrl,
-  useDescriptionAsCubeCaption: iDef(xavierOptions.useDescriptionAsCubeCaption) ? xavierOptions.useDescriptionAsCubeCaption : XmlaTreeView.prototype.useDescriptionAsCubeCaption,
+  datasourceNodesInitiallyFlattened: getXmlaTreeOption("datasourceNodesInitiallyFlattened"),
+  catalogNodesInitiallyFlattened: getXmlaTreeOption("catalogNodesInitiallyFlattened"),
+  showCatalogNodesCheckboxDisplayed: getXmlaTreeOption("showCatalogNodesCheckboxDisplayed"),
+  useCatalogPrefixForCubes: getXmlaTreeOption("useCatalogPrefixForCubes"),
+  showCurrentCatalog: getXmlaTreeOption("showCurrentCatalog"),
+  showCurrentCube: getXmlaTreeOption("showCurrentCube"),
+  dimensionNodesInitiallyFlattened: getXmlaTreeOption("dimensionNodesInitiallyFlattened"),
+  showDimensionNodesCheckboxDisplayed: getXmlaTreeOption("showDimensionNodesCheckboxDisplayed"),
+  maxLowCardinalityLevelMembers: getXmlaTreeOption("maxLowCardinalityLevelMembers"),
+  defaultMemberDiscoveryMethod: getXmlaTreeOption("defaultMemberDiscoveryMethod"),
+  levelCardinalitiesDiscoveryMethod: getXmlaTreeOption("levelCardinalitiesDiscoveryMethod"),
+  urlRegExp: getXmlaTreeOption("urlRegExp"),
+  checkIfDescriptionIsAnUrl: getXmlaTreeOption("checkIfDescriptionIsAnUrl"),
+  useDescriptionAsCubeCaption: getXmlaTreeOption("useDescriptionAsCubeCaption"),
+  useAsDatasourceCaption: getXmlaTreeOption("useAsDatasourceCaption"),
   listeners: {
     busy: function(){
       busy(true);

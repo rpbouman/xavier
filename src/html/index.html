@@ -28,8 +28,12 @@ limitations under the License.
         mantle_win = parent;
       }
       if (window.opener) {
-        if (window.opener.parent) mantle_win = window.opener.parent;
-        else mantle_win = window.opener;
+        if (window.opener.parent) {
+          mantle_win = window.opener.parent;
+        } 
+        else {
+          mantle_win = window.opener;
+        }
       }
 
       if (mantle_win) {
@@ -147,6 +151,10 @@ limitations under the License.
 
     <script type="text/javascript">
       var xavierOptions = {
+        //configure whether data source nodes are flattened (hidden) or not
+        datasourceNodesInitiallyFlattened: true,
+        //determines which field to use as caption for datasource nodes
+        useAsDatasourceCaption: ["DataSourceName", "DataSourceDescription"],
         //levelCardinalitiesDiscoveryMethod determines how cardinalities of levels are discovered.
         //levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER, //get level cardinality estimates from level discovery requests
         levelCardinalitiesDiscoveryMethod: Xmla.METHOD_EXECUTE,  //get exact level cardinalities by running mdx query.
