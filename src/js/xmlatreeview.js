@@ -1476,14 +1476,16 @@ var XmlaTreeView;
           cell = cellset.readCell();
           value = cell.Value;
           if (value !== level.LEVEL_CARDINALITY) {
-            console.log(
-              "Adjusting cardinality for level " +
-              level.LEVEL_UNIQUE_NAME + ". " +
-              " Estimate: " + level.LEVEL_CARDINALITY +
-              "; Actual: " + value
-            );
+            if (console && console.log) {
+              console.log(
+                "Adjusting cardinality for level " +
+                level.LEVEL_UNIQUE_NAME + ". " +
+                " Estimate: " + level.LEVEL_CARDINALITY +
+                "; Actual: " + value
+              );
+            }
+            level.LEVEL_CARDINALITY = value;
           }
-          level.LEVEL_CARDINALITY = value;
           cellset.nextCell();
         }
         callback.call(scope);
