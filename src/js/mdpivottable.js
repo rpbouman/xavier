@@ -1,7 +1,7 @@
 /*
 
 Copyright 2014 - 2016 Roland Bouman (roland.bouman@gmail.com)
-
+  
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -881,6 +881,7 @@ var PivotTable;
         r, c, tds, r1, c1,
         columnOffset
     ;
+    var cellValueExtractor = cellset.cellFmtValue ? "FmtValue" : "Value";
     table.style.display = "none";
     if (dataset.hasPageAxis()) {
       args.push(dataset.getPageAxis().tupleIndex());
@@ -908,7 +909,7 @@ var PivotTable;
         for (i = 0; i < n; i++, k++) {      //loop over columns
           c = tds[columnOffset + i];
           if (cell && cell.ordinal === k) {
-            c.innerHTML = typeof(cell.FmtValue)==="undefined" ? cell.Value : cell.FmtValue;
+            c.innerHTML = cell[cellValueExtractor];
             cell = cells[++l];
           }
           else {
@@ -928,7 +929,7 @@ var PivotTable;
         args[0] = i;
         c = r.cells[i];
         if (cell && cell.ordinal === i) {
-          c.innerHTML = (typeof(cell["FmtValue"]) === "undefined") ? cell.Value : cell.FmtValue;
+          c.innerHTML = cell[cellValueExtractor];
           cell = cells[++l];
         }
         else {

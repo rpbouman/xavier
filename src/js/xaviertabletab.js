@@ -82,6 +82,7 @@ var DataTable;
         onlyMeasures = false;
       }
     }
+    var cellValueExtractor = cellset.cellFmtValue ? cellset.cellFmtValue : cellset.cellValue;
 
     var cellOrdinal = 0, columnIndex, value;
     axis.eachTuple(function(tuple){
@@ -94,7 +95,7 @@ var DataTable;
         if (cellset.cellOrdinal() === cellOrdinal++) {
           columnIndex = cellmap[i];
           column = columns[columnIndex];
-          value = cellset.cellFmtValue();
+          value = cellValueExtractor.call(cellset);
           values[columnIndex] = value;
           cellset.nextCell();
         }
