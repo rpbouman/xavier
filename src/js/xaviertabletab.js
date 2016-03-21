@@ -268,11 +268,12 @@ var XavierTableTab;
 
         expression = metadata.HIERARCHY_UNIQUE_NAME + ".CurrentMember";
         if (calculatedMeasure.isAtMaxLevel !== true) {
-          expression =  "Ancestor(" + expression + ".CurrentMember" +
+          expression =  "Ancestor(" + expression +
                         "," + metadata.LEVEL_UNIQUE_NAME +
                         ")"
           ;
         }
+
         if (calculatedMeasure.type === "property") {
           property = metadata.PROPERTY_NAME;
         }
