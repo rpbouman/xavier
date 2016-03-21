@@ -2312,6 +2312,7 @@ var QueryDesignerAxis;
     return mdx;
   },
   getNonSlicerAxisCalculatedMembersMdx: function(){
+    var mdx = "";
     this.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
       var metadata = setDef.metadata;
       switch (setDef.type) {
@@ -2325,6 +2326,7 @@ var QueryDesignerAxis;
         default:
       }
     }, this);    
+    return mdx;
   },
   getCalculatedMembersMdx: function(){
     if (this.generateSlicerAsTuple()) {
