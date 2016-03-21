@@ -264,7 +264,7 @@ var XavierTableTab;
         metadata = calculatedMeasure.metadata;
         hierarchyName = rowAxis.getHierarchyName(metadata);
         hierarchyName = rowAxis.stripBracesFromIdentifier(hierarchyName);
-        caption = hierarchyName + "." + calculatedMeasure.caption;
+        caption = hierarchyName.split("].[").join(".") + "." + calculatedMeasure.caption;
 
         expression = metadata.HIERARCHY_UNIQUE_NAME + ".CurrentMember";
         if (calculatedMeasure.isAtMaxLevel !== true) {
