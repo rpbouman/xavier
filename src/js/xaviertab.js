@@ -33,8 +33,10 @@ var XavierTab;
   this.component = this;
 
   this.initMetadata();
+  this.clearVisualizationBeforeExecutingQuery = iDef(conf.clearVisualizationBeforeExecutingQuery) ? clearVisualizationBeforeExecutingQuery : arguments.callee.prototype.clearVisualizationBeforeExecutingQuery;
 
 }).prototype = {
+  clearVisualizationBeforeExecutingQuery: false,
   forCube: true,
   queryDesigner: null,
   visualizer: null,
@@ -255,10 +257,12 @@ var XavierTab;
     }
     try {
       busy(true);
-      visualizer.clear();
       if (!queryDesigner.checkValid()) {
         busy(false);
         return;
+      }
+      if (this.clearVisualizationBeforeExecutingQuery) {
+        visualizer.clear();
       }
       this.doLayout();
       var datasource = this.getDatasource();
@@ -278,6 +282,7 @@ var XavierTab;
           //console.timeEnd("executeQuery");
           try {
             //console.time("renderDataset");
+            visualizer.clear();
             visualizer.renderDataset(dataset, queryDesigner);
             //console.timeEnd("renderDataset");
             busy(false);
