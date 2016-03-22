@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<!--
+Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+  <head>
+    <meta http-equiv="Content-Type" content="type=text/html; charset=utf-8" />
+    <title>Wilkommen bei Xavier!</title>
+    <link rel="stylesheet" type="text/css" href="../../css/doc.css"/>
+  </head>
+  <body>
+    <div>
+      <span class="go-back" onclick="history.back()">Zurück</span>
+    </div>
+    <h1>Begriffe und Bezeichnungen</h1>
+    <dl>
+      <dt><dfn class="bar-chart"><a name="bar-chart">Balkendiagramm</a></dfn></dt>
+      <dd>
+        In einem Balkendiagramm stellt jeden Balken eine Kategorie (wie das Geschlecht Mann) dar, die Balkenhöhe entspricht den Wert (die Anzahl Männer).
+        Sie finden weitere Informationen in Wikipedia unter <a href="http://en.wikipedia.org/wiki/Bar_chart"> Balkendiagramm</a>.
+      </dd>
+
+      <dt><dfn class="dimension"><a name="dimension">Dimension</a></dfn></dt>
+      <dd>
+      Die Ausprägungen einer Dimension sind die Schlüsseln, um Fakten differenziert zu betrachten. Das Symbol wird nur gezeigt für Dimensionen mit mehreren Hierarchien zugeordnet und wenn der entsprechende Haken gesetzt wurde.
+      </dd>
+
+      <dt><dfn class="hierarchy"><a name="hierarchy">Hierarchie</a></dfn></dt>
+      <dd>
+        Die Ausprägungen einer Dimension werden in der Regel streng hierarchisch in meheren Ebenen betrachtet - als Eltern/Kind-Beziehungen. 
+		Als Beispiel - wenn 'Tag' der Dimensionschlüssel ist, wird manchmal die Hierarchie in den Ebenen Jahr, Quartier, Monat usw geordnet. Zu einer Dimension können mehrere Hierarchien zugeordnett werden.
+		Mehr lesen in: <a href="http://en.wikipedia.org/wiki/OLAP_cube#Hierarchy">Hierarchien</a> in Wikipedia (engl).
+      </dd>
+
+      <dt><dfn class="level"><a name="level">Ebene</a></dfn></dt>
+      <dd>
+        Stellt eine Ebene der Aggregation (Granularität) in der <a href="#hierarchy">Hierarchie</a> dar.
+      </dd>
+      <dt><dfn class="cube"><a name="cube">Quader, Würfel oder Cubus</a></dfn></dt>
+      <dd>
+        Eine Datenstruktur gut geeignet für die schnelle Analyse von mehr-dimensionale Daten. Voraussetzung ist, dass die Dimensionen der Daten ausreichend zeitlich stabil sind.
+      </dd>
+
+      <dt><dfn class="member"><a name="member">Element</a></dfn></dt>
+      <dd>
+        Ein Element repräsentiert exakt einer der Ausprägungungen einer <a href="#level">Ebene</a> einer <a href="#hierarchy">Hierarchie</a>.
+        Beispielweise kann "2015" als Element der Ebene "Jahr" in eine Zeit-Hierarchie darstellen.
+      </dd>
+
+      <dt>
+        <dfn class="measure"><a name="measure">Wert oder Messung; Weitere :</a></dfn>
+        <dfn class="summed"><a name="summed">Sum;</a></dfn>
+        <dfn class="average"><a name="average">Mittelwert;  </a></dfn>
+        <dfn class="maximum"><a name="maximum">Maximum;  </a></dfn>
+        <dfn class="minimum"><a name="minimum">Minimum</a></dfn>
+      </dt>
+      <dd>
+        Werte oder Messungen (oft Fakten genannt) beziffern eine Quantität.
+        Beispielweise ist "Anzahl Tage" ein Fakt, aber auch "Umsatz in Euro". In einem Sternschema findet man die Werte in einer Faktentabelle oder durch der Anzahl Zeilen.
+        Mehr lesen in: <a href="http://en.wikipedia.org/wiki/Data_warehouse#Facts"> "measures"</a> in Wikipedia(Englisch).
+      </dd>
+
+      <dt><dfn class="olap"><a name="olap"><abbr>OLAP</abbr></a></dfn></dt>
+      <dd>
+        <abbr>OLAP</abbr> is der Kürzel für <dfn class="olap">Online Analytical Processing</dfn>.
+        <abbr>OLAP</abbr> wird u.a. benutzt für die schnelle Analyse und Visualisierung von Geschäftsdaten und Statistiken auf einem ad-hoc Basis .
+        Mehr lesen in: <a href="http://en.wikipedia.org/wiki/Online_analytical_processing"><abbr>OLAP</abbr> in Wikipedia (Englisch)</a>.
+
+        Daten, die mit OLAP-Mitteln analysiert werden sollen, werden oft in einem <abbr>StarSchema(Sternschema)</abbr>-Struktur gespeichert. 
+		Mehr lesen in: <a href="http://de.wikipedia.org/wiki/Sternschema"><abbr>StarSchema/Sternschema</abbr> in Wikipedia</a> und in 
+		<a href="http://de.wikipedia.org/wiki/OLAP-W%C3%BCrfel"><abbr>OLAP-Würfel</abbr> in Wikipedia</a>.
+      </dd>
+      <dt><dfn class="pie-chart"><a name="pie-chart">Kreisdiagramm(Kuchendiagramm)</a></dfn></dt>
+      <dd>
+		Ein Kreisdiagramm (auch Kuchen- oder Tortendiagramm) ist eine Darstellungsform für Teilwerte eines Ganzen als Teile (Kreissektoren) eines Kreises. 
+		Jeder Kreissektor stellt einen Teilwert und der Kreis stellt somit die Summe der Teilwerte (das Ganze) dar. 
+        Mehr lesen in: <a href="http://de.wikipedia.org/w/index.php?title=Kreisdiagramm&redirect=no">Kreisdiagram bei Wikipedia</a>.
+      </dd>
+	  <dt><dfn class="pivot-table"><a name="pivot-table">Kreuztabelle</a></dfn></dt>
+      <dd>
+        Eine Kreuztabelle( engl: pivot table) sind sowohl Zeilen- als auch Spaltenüberschriften Merkmalsausprägungen. 
+        Mehr lesen in: <a href="http://de.wikipedia.org/wiki/Kontingenztafel"><abbr>Kreuztabelle</abbr></a> in Wikipedia.
+      </dd>
+ 
+      <dt><dfn class="table"><a name="table">Tabelle</a></dfn></dt>
+      <dd>
+        sind Reihen mit einer feste Spaltenstruktur.
+        Mehr lesen in: <a href="http://en.wikipedia.org/wiki/Table_(information)"> tables</a> in Wikipedia (Englisch).
+      </dd>
+    </dl>
+  </body>
+</html>
