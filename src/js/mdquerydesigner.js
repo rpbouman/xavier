@@ -2034,7 +2034,8 @@ var QueryDesignerAxis;
     ;
     if (hierarchyIndex === -1) {
       //throw "Hierarchy not present in this axis";
-      this._addHierarchy(this.getHierarchyCount(), metadata);
+      //this._addHierarchy(this.getHierarchyCount(), metadata);
+      this._addHierarchy(memberIndex, metadata);
     }
     var memberInfo = this.getMemberInfo(requestType, metadata);
     var setDefs = this.getSetDefs(hierarchyName);
