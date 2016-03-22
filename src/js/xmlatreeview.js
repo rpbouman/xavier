@@ -1436,7 +1436,7 @@ var XmlaTreeView;
   },
   queryLevelCardinalities: function(levels, url, datasourceInfo, callback, scope) {
     var measuresHierarchyName = QueryDesigner.prototype.measuresHierarchyName;
-    var measureName, measureExpression,
+    var measureName, measureExpression, levelUniqueName, levelName;
         withList = "",
         selectList = ""
     ;
@@ -1446,9 +1446,13 @@ var XmlaTreeView;
 
       measureName = QueryDesignerAxis.prototype.braceIdentifier(String(i));
       measureName = measuresHierarchyName + "." + measureName;
-      measureExpression = QueryDesignerAxis.prototype.braceIdentifier(level.LEVEL_UNIQUE_NAME) +
-                          ".Members.Count"
-      ;
+
+      levelName = level.LEVEL_NAME;
+      levelName = QueryDesignerAxis.prototype.stripBracesFromIdentifier(levelName);
+      levelName = QueryDesignerAxis.prototype.braceIdentifier(levelName);
+      levelUniqueName = level.HIERARCHY_UNIQUE_NAME + "." + levelName;
+
+      measureExpression = levelUniqueName + ".Members.Count";
       withList += "\nMEMBER " + measureName + " AS " + measureExpression;
       if (selectList.length) {
         selectList += ", "
