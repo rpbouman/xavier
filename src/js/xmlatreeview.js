@@ -898,18 +898,21 @@ var XmlaTreeView;
     properties[Xmla.PROP_FORMAT] = Xmla.PROP_FORMAT_MULTIDIMENSIONAL;
     properties[Xmla.PROP_AXISFORMAT] = Xmla.PROP_AXISFORMAT_TUPLE;
 
-    var numChildrenMeasure =  QueryDesigner.prototype.measuresHierarchyName +
-                              "." +
-                              QueryDesignerAxis.prototype.braceIdentifier("NumChildren")
-    ;
+    var numChildrenMeasure = [
+      QueryDesigner.prototype.measuresHierarchyName,
+      QueryDesignerAxis.prototype.braceIdentifier("NumChildren")
+    ].join(".");
 
-    var mdx = "WITH" +
-              "\nMEMBER " + numChildrenMeasure +
-              "\nAS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count " +
-              "\nSELECT {" + numChildrenMeasure + "} ON COLUMNS " +
-              "\n," + metadata.MEMBER_UNIQUE_NAME + ".Children ON ROWS" +
-              "\nFROM [" + metadata.CUBE_NAME + "]"
-    ;
+    var mdx = [
+      "/* renderChildMemberNodes */",
+      "WITH",
+      "MEMBER " + numChildrenMeasure,
+      "AS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count ",
+      "SELECT {" + numChildrenMeasure + "} ON COLUMNS ",
+      "," + metadata.MEMBER_UNIQUE_NAME + ".Children ON ROWS",
+      "FROM " + QueryDesignerAxis.prototype.braceIdentifier(metadata.CUBE_NAME)
+    ].join("\n");
+
     cardinalityEstimateOrExact = "exact";
     me.xmla.execute({
       url: url,
@@ -1469,15 +1472,17 @@ var XmlaTreeView;
       measureExpression = levelUniqueName + ".Members.Count";
       withList += "\nMEMBER " + measureName + " AS " + measureExpression;
       if (selectList.length) {
-        selectList += ", "
+        selectList += "\n, "
       }
       selectList += measureName;
     }
-    var levelCardinalityMdx = "WITH " + withList +
-                              "\n" + "SELECT {" + selectList + "} ON COLUMNS" +
-                              "\n" + "FROM " +
-                              QueryDesignerAxis.prototype.braceIdentifier(level.CUBE_NAME)
-    ;
+    var levelCardinalityMdx = [
+      "/* queryLevelCardinalities */",
+      "WITH " + withList,
+      "SELECT {" + selectList + "} ON COLUMNS",
+      "FROM " + QueryDesignerAxis.prototype.braceIdentifier(level.CUBE_NAME)
+    ].join("\n");
+    
     var me = this;
     this.xmla.execute({
       url: url,
@@ -1830,14 +1835,14 @@ var XmlaTreeView;
     //We dump all members in the sliceraxis. 
     //So far we found we can do this safely even if there are multiple hierarchies of same dimension.
     //This does not always work when we don't use the slicer but a "regular" axis.
-    var tuple = "(" + members.join(",") + ")";
     var measure = measuresHierarchyName + ".[One]";
-    var cubeName = hierarchyMetaData.CUBE_NAME;
-    var mdx = "WITH MEMBER " + measure + " AS 1" +
-              "\nSELECT {" + measure + "} ON COLUMNS" +
-              "\nFROM " + QueryDesignerAxis.prototype.braceIdentifier(cubeName) +
-              "\nWHERE " + tuple
-    ;
+    var mdx = [
+      "/* getDefaultMembersWithMDX */",
+      "WITH MEMBER " + measure + " AS 1",
+      "SELECT {" + measure + "} ON COLUMNS",
+      "FROM " + QueryDesignerAxis.prototype.braceIdentifier(hierarchyMetaData.CUBE_NAME),
+      "WHERE " + "(" + members.join("\n, ") + ")"
+    ].join("\n");
 
     var properties = {};
     properties[Xmla.PROP_DATASOURCEINFO] = conf.dataSourceInfo;
