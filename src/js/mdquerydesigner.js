@@ -781,13 +781,27 @@ var QueryDesigner;
     }, this, true) === false) {
       return null;
     }
-    mdx = "SELECT " + mdx + "\nFROM   [" + cubeName + "]";
+    mdx = [
+      "SELECT ",
+      mdx,
+      "FROM",
+      QueryDesignerAxis.prototype.braceIdentifier(cubeName)
+    ];
+    
     if (slicerMdx) {
-      mdx += "\nWHERE " + slicerMdx;
+      mdx = mdx.concat([
+        "WHERE", 
+        slicerMdx
+      ]);
     }
     if (withClauseMdx) {
-      mdx = "WITH" + withClauseMdx + "\n" + mdx;
+      mdx = [
+        "WITH",
+        withClauseMdx
+      ].concat(mdx);
     }
+    mdx.unshift("/* " + this.getId() + ": getMdx() */");
+    mdx = mdx.join("\n");
     return mdx;
   },
   axisChanged: function(axis, event, data) {
@@ -2249,12 +2263,12 @@ var QueryDesignerAxis;
         }
       }
       if (mdx.length) {
-        mdx += ", ";
+        mdx += "\n, ";
       }
       mdx += intrinsicProperties;
     }
     if (mdx.length) {
-      mdx = " DIMENSION PROPERTIES " + mdx;
+      mdx = "\nDIMENSION PROPERTIES " + mdx;
     }
     return mdx;
   },
@@ -2280,7 +2294,27 @@ var QueryDesignerAxis;
   },
   getOnAxisClauseMdx: function(){
     var conf = this.conf;
-    return " ON Axis(" + this.conf.id + ")";
+    var axisName;
+    switch (this.conf.id) {
+      case 0: 
+        axisName = "COLUMNS";
+        break;
+      case 1: 
+        axisName = "ROWS";
+        break;
+      case 2: 
+        axisName = "PAGES";
+        break;
+      case 3: 
+        axisName = "CHAPTERS";
+        break;
+      case 4: 
+        axisName = "SECTIONS";
+        break;
+      default:
+        axisName = "Axis(" + this.conf.id + ")";
+    }
+    return "\nON " + axisName;
   },
   getSlicerAxisAsTupleMdx: function(){
     var mdx = "";
@@ -2353,6 +2387,7 @@ var QueryDesignerAxis;
   getMemberSetMdx: function(){
     var conf = this.conf;
     var mdx = "";
+    var indent = "";
     this.eachHierarchy(function(hierarchy, hierarchyIndex){
       var members = "";
       this.eachSetDef(function(setDef, setDefIndex){
@@ -2369,7 +2404,8 @@ var QueryDesignerAxis;
       if (!this.isMeasureHierarchy(hierarchy) && !this.isSlicerAxis()) {
         members = "Hierarchize(" + members + ")";
       }
-      mdx = mdx ? "CrossJoin(" + mdx + ", " + members + ")" : members;
+      indent += "  ";
+      mdx = mdx ? "\n" + indent + "CrossJoin(" + mdx + "\n," + indent + members + ")" : members;
     }, this);
 
     if (mdx && conf.isDistinct) {
