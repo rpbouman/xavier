@@ -61,6 +61,8 @@ var XmlaFactory;
       urls.push(base + location.pathname.split("/")[1] + "/Xmla");
       //msas, f.e. http://localhost/OLAP/msmdpump.dll
       urls.push(base + "OLAP/msmdpump.dll");
+      //olaper, f.e. http://localhost:8080/olaper/xmla
+      urls.push(base + "olaper/xmla");
     }
     return urls;
   },
