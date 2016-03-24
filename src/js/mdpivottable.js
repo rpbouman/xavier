@@ -532,19 +532,29 @@ var PivotTable;
     this.dataset = dataset;
 
     if (dataset.hasColumnAxis()) {
+      //console.time("Rendering ColumnAxis");
       var columnAxis = queryDesigner.getColumnAxis();
       this.renderColumnAxis(columnAxis);
+      //console.timeEnd("Rendering ColumnAxis");
     }
     if (dataset.hasRowAxis()) {
+      //console.time("Rendering RowAxis");
       var rowAxis = queryDesigner.getRowAxis();
       this.renderRowAxis(rowAxis);
+      //console.timeEnd("Rendering RowAxis");
     }
     if (dataset.hasPageAxis()) {
       var pageAxis = queryDesigner.getPageAxis();
       this.renderPageAxis(pageAxis);
     }
+    //console.time("Rendering Cells");
     me.renderCells();
+    //console.timeEnd("Rendering Cells");
+
+    //console.time("Loading Cells");
     me.loadCells();
+    //console.timeEnd("Loading Cells");
+
     me.doLayout();
   },
   _createAxisTable: function(idPostfix){
@@ -883,6 +893,10 @@ var PivotTable;
     ;
     var cellValueExtractor = cellset.cellFmtValue ? "FmtValue" : "Value";
     table.style.display = "none";
+    
+    var tableParent = table.parentNode;
+    table = tableParent.removeChild(table);
+    
     if (dataset.hasPageAxis()) {
       args.push(dataset.getPageAxis().tupleIndex());
     }
@@ -899,8 +913,11 @@ var PivotTable;
       args[axisCount - Xmla.Dataset.AXIS_COLUMNS - 1] = n - 1;
       to = cellset.cellOrdinalForTupleIndexes.apply(cellset, args);
 
+      //console.time("fetchRangeAsArray");
       cells = cellset.fetchRangeAsArray(from, to);
+      //console.timeEnd("fetchRangeAsArray");
 
+      //console.time("fillTable");
       //fill the table cells with the values.
       cell = cells.length ? cells[0] : null;
       for (j = l = k = columnOffset = 0; j < m; j++){  //loop over rows
@@ -917,13 +934,19 @@ var PivotTable;
           }
         }
       }
+      //console.timeEnd("fillTable");
     }
     else
     if (dataset.hasColumnAxis()) {
       r = rows[0];
       from = cellset.cellOrdinalForTupleIndexes(0);
       to = cellset.cellOrdinalForTupleIndexes(n - 1);
+
+      //console.time("fetchRangeAsArray");
       cells = cellset.fetchRangeAsArray(from, to);
+      //console.timeEnd("fetchRangeAsArray");
+
+      //console.time("fillTable");
       cell = cells.length ? cells[0] : null;
       for (i = 0, l = 0; i < n; i++) {
         args[0] = i;
@@ -936,8 +959,13 @@ var PivotTable;
           c.innerHTML = "";
         }
       }
+      //console.timeEnd("fillTable");
     }
 
+    tableParent.appendChild(table);
+    
+
+    //console.time("alignCells");
     //align the columnn header
     if (dataset.hasColumnAxis()){
       table.style.display = "";
@@ -964,6 +992,7 @@ var PivotTable;
         }
       }
     }
+    //console.timeEnd("alignCells");
   },
   getColumnOffset: function() {
     return this.columnOffset;
