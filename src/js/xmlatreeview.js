@@ -81,6 +81,9 @@ var XmlaTreeView;
   if (iDef(conf.useAsDatasourceCaption)) {
     this.useAsDatasourceCaption = conf.useAsDatasourceCaption;
   }
+  if (iDef(conf.renderPropertyNodes)) {
+    this.renderPropertyNodes = conf.renderPropertyNodes;
+  }
   if (iRxp(conf.urlRegExp)){
     this.urlRegExp = conf.urlRegExp;
   }
@@ -119,6 +122,8 @@ var XmlaTreeView;
   useDescriptionAsCubeCaption: false,
   //which field to use as caption for datasource nodes.
   useAsDatasourceCaption: ["DataSourceName", "DataSourceDescription"],
+  //whether to render property nodes.
+  renderPropertyNodes: true,
   checkIsExcluded: function(request, row){
     var xmlaMetadataFilter = this.xmlaMetadataFilter;
     if (!xmlaMetadataFilter) {
@@ -1349,24 +1354,33 @@ var XmlaTreeView;
           me.renderLevelTreeNode(conf, row);
         });
 
-        me.renderLevelPropertyNodes(conf, function(){
-          switch (me.levelCardinalitiesDiscoveryMethod) {
-            case Xmla.METHOD_EXECUTE:
-              me.queryLevelCardinalities(levels, url, properties.DataSourceInfo, function(){
-                me.renderMemberNodes(conf, levels, "exact");
-              }, me);
-              break;
-            case Xmla.METHOD_DISCOVER:
-            default:
-              me.renderMemberNodes(conf, levels, "estimate");
-          }
-        });        
+        if (me.renderPropertyNodes === false) {
+          me._renderLevelMemberNodes(conf, levels);
+        }
+        else {
+          me.renderLevelPropertyNodes(conf, function(){
+            me._renderLevelMemberNodes(conf, levels);
+          });        
+        }
       },
       error: function(xmla, options, error){
         conf.callback();
         me.fireEvent("error", error);
       },
     });
+  },
+  _renderLevelMemberNodes: function(conf, levels){
+    var me = this;
+    switch (me.levelCardinalitiesDiscoveryMethod) {
+      case Xmla.METHOD_EXECUTE:
+        me.queryLevelCardinalities(levels, conf.url, conf.dataSourceInfo, function(){
+          me.renderMemberNodes(conf, levels, "exact");
+        }, me);
+        break;
+      case Xmla.METHOD_DISCOVER:
+      default:
+        me.renderMemberNodes(conf, levels, "estimate");
+    }
   },
   renderLevelTreeNodes: function(conf, success, error, scope){
     var me = this;

@@ -211,6 +211,7 @@ var xmlaTreeView = new XmlaTreeView({
   showCurrentCatalog: getXmlaTreeOption("showCurrentCatalog"),
   showCurrentCube: getXmlaTreeOption("showCurrentCube"),
   dimensionNodesInitiallyFlattened: getXmlaTreeOption("dimensionNodesInitiallyFlattened"),
+  renderPropertyNodes: getXmlaTreeOption("renderPropertyNodes"),
   showDimensionNodesCheckboxDisplayed: getXmlaTreeOption("showDimensionNodesCheckboxDisplayed"),
   maxLowCardinalityLevelMembers: getXmlaTreeOption("maxLowCardinalityLevelMembers"),
   defaultMemberDiscoveryMethod: getXmlaTreeOption("defaultMemberDiscoveryMethod"),
