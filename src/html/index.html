@@ -151,6 +151,8 @@ limitations under the License.
 
     <script type="text/javascript">
       var xavierOptions = {
+        //false to suppress the toolbar. Useful if you're integrating xavier.
+        createToolbar: true,
         //configure whether data source nodes are flattened (hidden) or not
         datasourceNodesInitiallyFlattened: true,
         //determines which field to use as caption for datasource nodes
@@ -456,8 +458,17 @@ limitations under the License.
             ]
           }
         ],
+        //visualization to create automatically when selecting a cube.
+        autoCreateVisualization: {
+          id: "pivot-table",
+          //you can suppress the tab being closeable by setting this to false.
+          closeable: true
+        },
         visualizations: [
-          {id: "table", tooltip: "New Data table", componentConstructor: XavierTableTab},
+          {id: "table", tooltip: "New Data table", componentConstructor: XavierTableTab, 
+            //you can suppress creating a toolbar button to create the visualization tabe by setting this to false.
+            createToolbarButton: true
+          },
           {id: "pivot-table", tooltip: "New Pivot table", componentConstructor: XavierPivotTableTab},
           {id: "pie-chart", tooltip: "New Pie chart", componentConstructor: XavierPieChartTab},
           {id: "bar-chart", tooltip: "New Bar chart", componentConstructor: XavierGroupedBarChartTab},
