@@ -1232,9 +1232,6 @@ var XmlaTreeView;
     var i, level, n = levels.length, estimateOrExact;
     for (i = 0; i < n; i++){
       level = levels[i];
-      //if (!row.LEVEL_IS_VISIBLE) {
-      //return;
-      //}
       var cardinality;
       //SAP thinks "All" levels could have a cardinality > 1, like, what the hell - 10.000
       if (level.LEVEL_TYPE === 1) { //1: MDLEVEL_TYPE_ALL
@@ -1385,6 +1382,8 @@ var XmlaTreeView;
         me.renderMemberNodes(conf, levels, "estimate");
     }
   },
+  //This method renderLevelTreeNodes is currently not used. 
+  //Idea was that maybe, getting all levels for an entire cube in advance might give a better user experience.
   renderLevelTreeNodes: function(conf, success, error, scope){
     var me = this;
     me.fireEvent("busy");
