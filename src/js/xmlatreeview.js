@@ -72,6 +72,9 @@ var XmlaTreeView;
   if (iDef(conf.defaultMemberDiscoveryMethod)) {
     this.defaultMemberDiscoveryMethod = conf.defaultMemberDiscoveryMethod;
   }
+  if (iDef(conf.levelMembersDiscoveryMethod)) {
+    this.levelMembersDiscoveryMethod = conf.levelMembersDiscoveryMethod;
+  }
   if (iDef(conf.levelCardinalitiesDiscoveryMethod)) {
     this.levelCardinalitiesDiscoveryMethod = conf.levelCardinalitiesDiscoveryMethod;
   }
@@ -92,7 +95,11 @@ var XmlaTreeView;
   }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
+  //urlRegExp is checked against descriptions of discovered metadata. If there is a match, we consider it a url and the tree will render in info icon that an be used to link to the resource.
   urlRegExp: /^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(([\w\.]|%\d\d)+\/)*(([\w\.]|%\d\d)+\.\w+)(\?([\w\.=\&]|%\d\d)*)?(#\w*)?$/,
+  //levelCardinalitiesDiscoveryMethod determines how cardinalities of levels are discovered.
+  //levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER, //get level cardinality estimates from level discovery requests
+  //levelCardinalitiesDiscoveryMethod: Xmla.METHOD_EXECUTE,  //get exact level cardinalities by running mdx query.
   levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER,
   //how to retrieve captions for default members of hierarchies.
   //options are
@@ -100,6 +107,14 @@ var XmlaTreeView;
   //- "Execute" (Xmla.METHOD_EXECUTE) - get all members in a single MDX request. should be quicker than Discover, but less correct
   //- anything else (false) - don't get default members. This means users can't drag entire hierarchies into their query.
   defaultMemberDiscoveryMethod: Xmla.METHOD_DISCOVER,
+  //levelMembersDiscoveryMethod: how to find the members of levels.
+  //- "Discover" (Xmla.METHOD_DISCOVER) - use a MDSCHEMA_MEMBERS discover request.
+  //- "Execute" (Xmla.METHOD_EXECUTE) - ask for LEVEL.members to find the members. 
+  //main reason to make this configurable is that there may be performance differences between providers. 
+  //also, the MDX versio gives more flexibility to filter members (should I ever implement a filter)
+  //Finally, SAP HANA sometimes needs input parameters, and while these can be passed to MDX statements, 
+  //we know not of any way to push input params into discover requests.
+  levelMembersDiscoveryMethod: Xmla.METHOD_DISCOVER,
   //maximum number of members to allow auto-loading of a level's members
   maxLowCardinalityLevelMembers: 10,
   //whether datasource nodes should initially be hidden
@@ -884,110 +899,6 @@ var XmlaTreeView;
       }
     });
   },
-  renderChildMemberNodes: function(conf){
-    var me = this,
-        url = conf.url,
-        parentNode = conf.parentNode,
-        parentNodeConf = parentNode.conf,
-        metadata = parentNodeConf.metadata
-    ;
-
-    var properties = {};
-    properties[Xmla.PROP_DATASOURCEINFO] = conf.dataSourceInfo;
-    properties[Xmla.PROP_CATALOG] = metadata.CATALOG_NAME;
-    properties[Xmla.PROP_FORMAT] = Xmla.PROP_FORMAT_MULTIDIMENSIONAL;
-    properties[Xmla.PROP_AXISFORMAT] = Xmla.PROP_AXISFORMAT_TUPLE;
-
-    var numChildrenMeasure = [
-      QueryDesigner.prototype.measuresHierarchyName,
-      QueryDesignerAxis.prototype.braceIdentifier("NumChildren")
-    ].join(".");
-
-    var mdx = [
-      "/* renderChildMemberNodes */",
-      "WITH",
-      "MEMBER " + numChildrenMeasure,
-      "AS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count ",
-      "SELECT {" + numChildrenMeasure + "} ON COLUMNS ",
-      "," + metadata.MEMBER_UNIQUE_NAME + ".Children ON ROWS",
-      "FROM " + QueryDesignerAxis.prototype.braceIdentifier(metadata.CUBE_NAME)
-    ].join("\n");
-
-    cardinalityEstimateOrExact = "exact";
-    me.xmla.execute({
-      url: url,
-      properties: properties,
-      statement: mdx,
-      cube: metadata.CUBE_NAME,
-      hierarchy: metadata.HIERARCHY_UNIQUE_NAME,
-      metadata: metadata,
-      //requestType: options.requestType,
-      success: function(xmla, req, resp){
-        var cellset = resp.getCellset();
-        var tupleCount = 0;
-        resp.getRowAxis().eachTuple(function(tuple){
-          var childCount = cellset.cellValue(),
-              metadata = req.metadata,
-              member = tuple.members[0],
-              memberUniqueName = member.UName,
-              memberCaption = member.Caption,
-              title = memberCaption,
-              nodeId,
-              state
-          ;
-          //Only make this a leaf node if we're really sure there are no children.
-          if (cardinalityEstimateOrExact === "exact" && childCount === 0) {
-            state = TreeNode.states.leaf;
-          }
-          else {
-          //If this node might have children, allow it to be expanded.
-            state = TreeNode.states.collapsed;
-          }
-          var childMetaData = merge({
-            MEMBER_UNIQUE_NAME: memberUniqueName,
-            MEMBER_CAPTION: memberCaption,
-            LEVEL_UNIQUE_NAME: member.LName,
-            LEVEL_NUMBER: member.LNum,
-            CHILDREN_CARDINALITY: childCount,
-          }, metadata);
-          var classes = ["member", "cardinality-" + cardinalityEstimateOrExact];
-          var title = me.getMemberNodeTitle(childMetaData, cardinalityEstimateOrExact);
-          var state = me.getMemberNodeState(childMetaData, cardinalityEstimateOrExact);
-          new TreeNode({
-            id: parentNode.conf.id + ":" + memberUniqueName,
-            parentTreeNode: parentNode,
-            classes: classes,
-            title: title,
-            tooltip: memberUniqueName,
-            state: state,
-            metadata: childMetaData,
-            loadChildren: function(callback){
-              conf.parentNode = this;
-              conf.callback = callback;
-              me.renderChildMemberNodes(conf);
-            }
-          });
-          cellset.nextCell();
-          tupleCount++;
-        });
-        resp.close();
-        var parentNodeDom = parentNode.getDom();
-        if (hCls(parentNodeDom, "cardinality-estimate")) {
-          rCls(parentNodeDom, "cardinality-estimate", "cardinality-exact");
-          metadata.CHILDREN_CARDINALITY = tupleCount;
-        }
-        parentNode.setTitle(me.getMemberNodeTitle(metadata, "exact"));
-        if (tupleCount === 0) {
-          parentNode.setState(TreeNode.states.leaf);
-        }
-        conf.callback();
-      },
-      error: function(xhr, options, exception){
-        conf.callback();
-        me.fireEvent("error", exception);
-      }
-    });
-  },
   getMemberNodeTitle: function(metadata, cardinalityEstimateOrExact){
     var title = metadata.MEMBER_CAPTION || metadata.MEMBER_NAME;
     var cardinality = metadata.CHILDREN_CARDINALITY;
@@ -1040,11 +951,151 @@ var XmlaTreeView;
       loadChildren: function(callback){
         conf.parentNode = this;
         conf.callback = callback;
-        me.renderChildMemberNodes(conf);
+        me.renderChildMemberNodes(conf, callback);
       }
     });
   },
   renderLevelMemberNodes: function(conf, callback, scope){
+    var levelMembersDiscoveryMethod = this.levelMembersDiscoveryMethod;
+    var xmla = this.xmla;
+    switch (levelMembersDiscoveryMethod) {
+      case xmla.METHOD_EXECUTE:
+        this.renderLevelMemberNodesWithExecute(conf, callback, scope);
+        break;
+      case xmla.METHOD_DISCOVER:
+      default:
+        this.renderLevelMemberNodesWithDiscover(conf, callback, scope);
+        break;
+    }
+  },
+  renderChildMemberNodes: function(conf, callback, scope){
+    var me = this,
+        url = conf.url,
+        parentNode = conf.parentNode,
+        parentNodeConf = parentNode.conf,
+        metadata = parentNodeConf.metadata
+    ;
+    var memberExpression = [
+      metadata.MEMBER_UNIQUE_NAME,
+      "Children"
+    ].join(".");
+    
+    this.renderMemberNodesWithExecute(conf, metadata, parentNode, memberExpression, callback, scope);
+  },
+  renderLevelMemberNodesWithExecute: function(conf, callback, scope) {
+    var me = this;
+    var membersTreeNode = conf.membersTreeNode;
+
+    var levelTreeNode = membersTreeNode.getParentTreeNode()
+    var levelMetaData = levelTreeNode.conf.metadata;
+
+    var memberExpression = [
+      levelMetaData.LEVEL_UNIQUE_NAME,
+      "Members"
+    ].join(".");
+    
+    this.renderMemberNodesWithExecute(conf, levelMetaData, membersTreeNode, memberExpression, callback, scope);
+  },
+  renderMemberNodesWithExecute: function(conf, metadata, parentNode, memberExpression, callback, scope){
+    var me = this, url = conf.url, properties = {};
+    
+    var hierarchyUniqueName = metadata.HIERARCHY_UNIQUE_NAME;
+    var cubeName = metadata.CUBE_NAME;
+
+    properties[Xmla.PROP_DATASOURCEINFO] = conf.dataSourceInfo;
+    properties[Xmla.PROP_CATALOG] = metadata.CATALOG_NAME;
+    properties[Xmla.PROP_FORMAT] = Xmla.PROP_FORMAT_MULTIDIMENSIONAL;
+    properties[Xmla.PROP_AXISFORMAT] = Xmla.PROP_AXISFORMAT_TUPLE;
+
+    var numChildrenMeasure = [
+      QueryDesigner.prototype.measuresHierarchyName,
+      QueryDesignerAxis.prototype.braceIdentifier("NumChildren")
+    ].join(".");
+
+    var mdx = [
+      "/* renderChildMemberNodes */",
+      "WITH",
+      "MEMBER " + numChildrenMeasure,
+      "AS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count ",
+      "SELECT {" + numChildrenMeasure + "} ON COLUMNS ",
+      "," + memberExpression + " ON ROWS",
+      "FROM " + QueryDesignerAxis.prototype.braceIdentifier(cubeName)
+    ].join("\n");
+
+    var cardinalityEstimateOrExact = "exact";
+    me.xmla.execute({
+      url: url,
+      properties: properties,
+      statement: mdx,
+      cube: metadata.CUBE_NAME,
+      hierarchy: metadata.HIERARCHY_UNIQUE_NAME,
+      metadata: metadata,
+      success: function(xmla, req, resp){
+        var cellset = resp.getCellset();
+        var tupleCount = 0;
+        resp.getRowAxis().eachTuple(function(tuple){
+          var childCount = cellset.cellValue(),
+              metadata = req.metadata,
+              member = tuple.members[0],
+              memberUniqueName = member.UName,
+              memberCaption = member.Caption,
+              title = memberCaption,
+              nodeId,
+              state
+          ;
+          //Only make this a leaf node if we're really sure there are no children.
+          if (cardinalityEstimateOrExact === "exact" && childCount === 0) {
+            state = TreeNode.states.leaf;
+          }
+          else {
+          //If this node might have children, allow it to be expanded.
+            state = TreeNode.states.collapsed;
+          }
+          var childMetaData = merge({
+            MEMBER_UNIQUE_NAME: memberUniqueName,
+            MEMBER_CAPTION: memberCaption,
+            LEVEL_UNIQUE_NAME: member.LName,
+            LEVEL_NUMBER: member.LNum,
+            CHILDREN_CARDINALITY: childCount,
+          }, metadata);
+          var classes = ["member", "cardinality-" + cardinalityEstimateOrExact];
+          var title = me.getMemberNodeTitle(childMetaData, cardinalityEstimateOrExact);
+          var state = me.getMemberNodeState(childMetaData, cardinalityEstimateOrExact);
+          new TreeNode({
+            id: parentNode.conf.id + ":" + memberUniqueName,
+            parentTreeNode: parentNode,
+            classes: classes,
+            title: title,
+            tooltip: memberUniqueName,
+            state: state,
+            metadata: childMetaData,
+            loadChildren: function(callback){
+              conf.parentNode = this;
+              me.renderChildMemberNodes(conf, callback);
+            }
+          });
+          cellset.nextCell();
+          tupleCount++;
+        });
+        resp.close();
+        var parentNodeDom = parentNode.getDom();
+        if (hCls(parentNodeDom, "cardinality-estimate")) {
+          rCls(parentNodeDom, "cardinality-estimate", "cardinality-exact");
+          metadata.CHILDREN_CARDINALITY = tupleCount;
+        }
+        parentNode.setTitle(me.getMemberNodeTitle(metadata, "exact"));
+        if (tupleCount === 0) {
+          parentNode.setState(TreeNode.states.leaf);
+        }
+        callback.call(scope || null);
+      },
+      error: function(xhr, options, exception){
+        callback.call(scope || null);
+        me.fireEvent("error", exception);
+      }
+    });
+  },
+  renderLevelMemberNodesWithDiscover: function(conf, callback, scope){
     var me = this;
     var membersTreeNode = conf.membersTreeNode;
 
@@ -1122,6 +1173,7 @@ var XmlaTreeView;
     var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME) + ":members";
     var title = this.getLevelMembersNodeTitle(row.LEVEL_CARDINALITY);
     var classes = ["members", "cardinality-" + cardinalityEstimateOrExact];
+    
     return new TreeNode({
       parentTreeNode: levelTreeNode,
       classes: classes,
