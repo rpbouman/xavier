@@ -1419,12 +1419,13 @@ var QueryDesignerAxis;
       return false;
     }
 
+    //if this axis already has a hierarchy with this dimension, then we can't accept another.
+    if (!queryDesigner.allowMultipleHierarchiesFromSameDimensionOnOneAxis && !thisAxisHasHierarchy && this.hasDimension(dimensionName)) {
+      return false;
+    }
+    
     switch (requestType) {
       case "hierarchy":
-        //if this axis already has a hierarchy with this dimension, then we can't accept another.
-        if (!queryDesigner.allowMultipleHierarchiesFromSameDimensionOnOneAxis && !thisAxisHasHierarchy && this.hasDimension(dimensionName)) {
-          return false;
-        }
         //fallthrough
       case "measures":
         if (dragInfo.dragOrigin instanceof QueryDesigner) {
