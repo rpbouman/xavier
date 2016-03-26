@@ -1071,6 +1071,19 @@ var XavierTimeSeriesChartTab;
               return false;
             }
             return canDrop;
+          },
+          getMdx: function(){
+            var mdx = "";
+            this.eachSetDef(function(setDef){
+              if (mdx) {
+                mdx += ":";
+              }
+              mdx += setDef.expression;
+            }, this);
+            mdx = "{" + mdx + "}";
+            mdx += this.getDimensionPropertiesMdx();
+            mdx += this.getOnAxisClauseMdx();
+            return mdx;
           }
 /*
           checkAxisValid: function(){
