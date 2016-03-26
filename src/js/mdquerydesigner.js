@@ -846,7 +846,10 @@ QueryDesigner.lookup = function(el){
 ***************************************************************/
 var QueryDesignerAxis;
 (QueryDesignerAxis = function(conf){
-  this.conf = conf;
+  this.conf = conf || {};
+  if (iFun(conf.getMdx)) {
+    this.getMdx = conf.getMdx;
+  }
   this.reset();
   QueryDesignerAxis.instances[this.getId()] = this;
 }).prototype = {
