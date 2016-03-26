@@ -1394,7 +1394,7 @@ var QueryDesignerAxis;
 
     //if the max hierarchy count is equal to or increases the hierarchy count,
     //and the new item belongs to another hierarchy, then we have to reject the item
-    //sine we are not supposed to add yet another hierarchy
+    //since we are not supposed to add yet another hierarchy
     var thisAxisHasHierarchy = this.hasHierarchy(hierarchyName);
     var queryDesignerHasHierarchy = thisAxisHasHierarchy || queryDesigner.hasHierarchy(hierarchyName);
     if (iDef(conf.maxHierarchyCount) && conf.maxHierarchyCount <= this.getHierarchyCount() && !thisAxisHasHierarchy) {
