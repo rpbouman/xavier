@@ -255,7 +255,7 @@ var xmlaTreeView = new XmlaTreeView({
       var tabs = workArea.getTabsForCube(currentCube);
 
       //check if the current tab belongs to the current cube
-      if (tabs.indexOf(pDec(selectedTab.id)) === -1) {
+      if (!selectedTab || tabs.indexOf(pDec(selectedTab.id)) === -1) {
         //nope, so switch tabs.
         if (tabs.length) {  //we have at least one tab for this cube, so select it.
           selectedTab = tabs[0];
@@ -307,6 +307,7 @@ app.xmlaTreeView = xmlaTreeView;
 *   Tabs (Workarea)
 */
 var workArea = new XavierTabPane({
+  tabs: xavierOptions.showWelcomeTab === false ? [] : undefined,
   dnd: dnd,
   xmla: xmla,
   xmlaTreeView: xmlaTreeView,
