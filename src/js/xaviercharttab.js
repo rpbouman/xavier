@@ -453,9 +453,18 @@ var XavierPieChart;
       var data = [];
       var measure = this.getLabelForTuple(tuple);
       var percentageLabel = gMsg("Percentage");
+      var countNegative = 0, countPositive = 0;
       categoriesAxis.eachTuple(function(tuple){
         var category = this.getLabelForTuple(tuple);
         var value = cellset.cellValue();
+        if (value > 0) {
+          countPositive++;
+        }
+        else
+        if (value < 0) {
+          countNegative++;
+          value = -value;
+        }
         var datum = {
           label: category,
           fmtValue: cellset.cellFmtValue ? cellset.cellFmtValue() : String(value)
@@ -467,24 +476,38 @@ var XavierPieChart;
       }, this);
 
       var body = dom.lastChild;
+      if (countNegative > 0 && countPositive > 0) {
+        body.innerHTML = "Can't render Piechart. Found negative and positive values."
+        return false;
+      }
+      
       var svg = dimple.newSvg("#" + body.id, body.clientWidth, body.clientHeight);
       var chart = new dimple.chart(svg, data);
       var measureAxis = chart.addMeasureAxis("p", measure);
-      var series = chart.addSeries(categoriesAxisLabel, dimple.plot.pie);
-      series.innerRadius = "50%";
+      var series = chart.addSeries("label", dimple.plot.pie);
+      //innerRadius will make this a donut chart. 
+      //donuts are even more useless than pies so let's not.
+      //series.innerRadius = "50%";
       series.getTooltipText = function(d){
         var tooltip = [];
-        var datum = data[d.aggField[0]];
+        var i, n = data.length, datum;
+        for (i = 0; i < n; i++) {
+          datum = data[i];
+          if (datum.label !== d.aggField[0]) {
+            continue;
+          }
+          break;
+        }
         tooltip.push(datum.label + ": " + datum.fmtValue);
         if (datum.fmtValue.indexOf("%") === -1) {
-          var pct = this.p._getFormat()(d.angle) + " (" + (d3.format("%")(d.piePct)) + ")";
+          var pct =  d3.format("%")(d.piePct);
           tooltip.push(percentageLabel + ": " + pct);
         }
         return tooltip;
       };
       if (this.isCleared) {
         //TODO: print legend
-        //chart.legend();
+        chart.addLegend(0, 0, 100, dom.clientHeight, "left");
         this.isCleared = false;
       }
       chart.draw();
@@ -1018,12 +1041,14 @@ var XavierTimeSeriesChartTab;
           "class": "dimensiontype1",
           userSortable: false,
           drop: {
-            include: ["member", "level"]
+            include: ["member"]
           },
           metadataFilter: {
             DIMENSION_TYPE: Xmla.Rowset.MD_DIMTYPE_TIME
           },
           maxHierarchyCount: 1,
+          maxMemberCount: 2,
+          minMemberCount: 2,
           canDropItem: function(target, dragInfo){
             //first, do all the "regular", "standard" drop item checks.
             var canDrop = this._canDropItem(target, dragInfo);

@@ -54,14 +54,14 @@ limitations under the License.
   <body class="pentaho-page-background" >
     <!--[if lte IE 9]><script src="../../lib/aight-2.1.1/aight.min.js"></script><![endif]-->
 
-    <script type="text/javascript" src="../../lib/d3-3.5.5/d3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../lib/d3-3.5.16/d3.js" charset="utf-8"></script>
     <!--
-    <script type="text/javascript" src="../../lib/d3-3.5.5/d3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../lib/d3-3.5.16/d3.min.js" charset="utf-8"></script>
     -->
 
-    <script type="text/javascript" src="../../lib/dimple-2.1.2/dimple.v2.1.2.js"></script>
+    <script type="text/javascript" src="../../lib/dimple-2.1.6/dimple.v2.1.6.js"></script>
     <!--
-    <script type="text/javascript" src="../../lib/dimple-2.1.2/dimple.v2.1.2.min.js"></script>
+    <script type="text/javascript" src="../../lib/dimple-2.1.6/dimple.v2.1.6.min.js"></script>
     -->
 
     <!-- zip lib required to do excel export -->
@@ -151,6 +151,8 @@ limitations under the License.
 
     <script type="text/javascript">
       var xavierOptions = {
+        //you can add any custom stylesheets here. They will be added at the end of the <head> so you can override the default styles.
+        stylesheets: [],
         //false to suppress the toolbar. Useful if you're integrating xavier.
         createToolbar: true,
         //whether to generate a tuple (true) or set for the slicer. Must be true for SAP/HANA
