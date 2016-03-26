@@ -260,6 +260,7 @@ var XavierTab;
     try {
       busy(true);
       if (!queryDesigner.checkValid()) {
+        visualizer.clear();
         busy(false);
         return;
       }
