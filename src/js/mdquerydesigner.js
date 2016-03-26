@@ -28,6 +28,9 @@ var QueryDesigner;
     if (iUnd(conf.generateTupleForSlicer)) {
     	conf.generateTupleForSlicer = this.generateTupleForSlicer;
     }
+    if (iUnd(conf.allowMultipleHierarchiesFromSameDimensionOnOneAxis)) {
+    	conf.allowMultipleHierarchiesFromSameDimensionOnOneAxis = this.allowMultipleHierarchiesFromSameDimensionOnOneAxis;
+    }
     this.axes = {};
     this.createAxes();
     if (iFun(conf.getMdx)) {
@@ -35,7 +38,16 @@ var QueryDesigner;
     }
     QueryDesigner.instances[this.getId()] = this;
 }).prototype = {
+  //flag to ccontrol how the slicer is generated. 
+  //when false, Xavier will generate a Set expression.
+  //when true, Xavier will generate a set expression, but squash it to a tuple using Aggregate
+  //This is to overcome the limitation in some XML/A providers (SAP/HANA) only accept a Tuple in the WHERE clause (and not a Set).
   generateTupleForSlicer: true,
+  //Flag that controls whether a query axis can have items from different hierarchies from one and the same dimension on one query axis.
+  //By default it is false. This makes sense since hierarchies are supposed ley independent from each other.
+  //In SAP HANA however, one is sometimes forced to create multiple hierarchies in a Dimension Calc view.
+  //In XML/A that ends up as one dimension with many hierarchies, and we typically would like to use these on any axis.
+  allowMultipleHierarchiesFromSameDimensionOnOneAxis: false,
   measuresHierarchyName: "[Measures]",
   setMandatoryDimensions: function(mandatoryDimensions) {
     this.mandatoryDimensions = mandatoryDimensions;
@@ -1403,14 +1415,14 @@ var QueryDesignerAxis;
     }
 
     //if we are dragging from the tree to this axis, but we already have such an item then dissallow.
-    if (dragInfo.dragOrigin !== this.getQueryDesigner() && this.containsSetDef(requestType, metadata)) {
+    if (dragInfo.dragOrigin !== queryDesigner && this.containsSetDef(requestType, metadata)) {
       return false;
     }
 
     switch (requestType) {
       case "hierarchy":
         //if this axis already has a hierarchy with this dimension, then we can't accept another.
-        if (!thisAxisHasHierarchy && this.hasDimension(dimensionName)) {
+        if (!queryDesigner.allowMultipleHierarchiesFromSameDimensionOnOneAxis && !thisAxisHasHierarchy && this.hasDimension(dimensionName)) {
           return false;
         }
         //fallthrough

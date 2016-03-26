@@ -21,8 +21,8 @@ limitations under the License.
 var XavierPivotTableTab;
 (XavierPivotTableTab = function(conf){
   conf = conf || {};
-  conf.showColumnHierarchyHeaders = Boolean(conf.showColumnHierarchyHeaders);
-  conf.showRowHierarchyHeaders = Boolean(conf.showRowHierarchyHeaders);
+  conf.showHorizontalHierarchyHeaders = Boolean(conf.showHorizontalHierarchyHeaders);
+  conf.showVerticalHierarchyHeaders = Boolean(conf.showVerticalHierarchyHeaders);
   this.classes = ["pivot-table"];
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
@@ -36,12 +36,12 @@ var XavierPivotTableTab;
       {"class": "show-column-hierarchy-headers",
         tooltip: gMsg("Show column hierarchy headers"),
         toggleGroup: "show-column-hierarchy-headers",
-        depressed: conf.showColumnHierarchyHeaders
+        depressed: conf.showHorizontalHierarchyHeaders
       },
       {"class": "show-row-hierarchy-headers",
         tooltip: gMsg("Show row hierarchy headers"),
         toggleGroup: "show-row-hierarchy-headers",
-        depressed: conf.showRowHierarchyHeaders
+        depressed: conf.showVerticalHierarchyHeaders
       }
     ]);
     toolbar.listen({
@@ -57,12 +57,6 @@ var XavierPivotTableTab;
       afterToggleGroupStateChanged: function(toolbar, event, data){
         var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
         switch (data.group) {
-          case "edit":
-            this.editMode(depressedButton);
-            break;
-          case "show-empty":
-            this.emptyCells(depressedButton);
-            break;
           case "show-column-hierarchy-headers":
             this.visualizer.showHorizontalHierarchyHeaders(depressedButton ? true : false);
             break;
@@ -114,7 +108,8 @@ var XavierPivotTableTab;
   showHorizontalHierarchyHeaders: function(setting){
     var toolbar = this.toolbar;
     if (iDef(setting)) {
-      //todo: set the button and propery on the pivot table
+      toolbar.getButtonWithClass("show-column-hierarchy-headers").setDepressed(setting);
+      this.visualizer.showHorizontalHierarchyHeaders(setting)
     }
     else {
       return toolbar.getDepressedButtonInToggleGroup("show-column-hierarchy-headers") ? true : false;
@@ -123,7 +118,8 @@ var XavierPivotTableTab;
   showVerticalHierarchyHeaders: function(setting){
     var toolbar = this.toolbar;
     if (iDef(setting)) {
-      //todo: set the button and propery on the pivot table
+      toolbar.getButtonWithClass("show-row-hierarchy-headers").setDepressed(setting);
+      this.visualizer.showVerticalHierarchyHeaders(setting);
     }
     else {
       return toolbar.getDepressedButtonInToggleGroup("show-row-hierarchy-headers") ? true : false;

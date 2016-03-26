@@ -89,9 +89,15 @@ function createVisualizationTab(conf){
     return;
   }
   var componentConstructor = visualization.componentConstructor;
+  
   var tabConf = merge({
     tabPane: workArea
-  }, conf);
+  }, conf, visualization.conf || {}, {
+    generateTupleForSlicer: xavierOptions.generateTupleForSlicer || false,
+    allowMultipleHierarchiesFromSameDimensionOnOneAxis: xavierOptions.allowMultipleHierarchiesFromSameDimensionOnOneAxis || false,
+    clearVisualizationBeforeExecutingQuery: xavierOptions.clearVisualizationBeforeExecutingQuery || false
+  });
+  
   var vizualizationInstance = componentConstructor.newInstance(tabConf);
   var tab = workArea.newTab(vizualizationInstance);
   return tab;

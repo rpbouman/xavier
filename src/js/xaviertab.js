@@ -33,7 +33,9 @@ var XavierTab;
   this.component = this;
 
   this.initMetadata();
-  this.clearVisualizationBeforeExecutingQuery = iDef(conf.clearVisualizationBeforeExecutingQuery) ? clearVisualizationBeforeExecutingQuery : arguments.callee.prototype.clearVisualizationBeforeExecutingQuery;
+  this.clearVisualizationBeforeExecutingQuery = iDef(conf.clearVisualizationBeforeExecutingQuery) ? conf.clearVisualizationBeforeExecutingQuery : arguments.callee.prototype.clearVisualizationBeforeExecutingQuery;
+  this.allowMultipleHierarchiesFromSameDimensionOnOneAxis = iDef(conf.allowMultipleHierarchiesFromSameDimensionOnOneAxis) ? conf.allowMultipleHierarchiesFromSameDimensionOnOneAxis : QueryDesigner.prototype.allowMultipleHierarchiesFromSameDimensionOnOneAxis;
+  this.generateTupleForSlicer = iDef(conf.generateTupleForSlicer) ? conf.generateTupleForSlicer : QueryDesigner.prototype.generateTupleForSlicer;
 
 }).prototype = {
   clearVisualizationBeforeExecutingQuery: false,
@@ -426,7 +428,10 @@ var XavierTab;
   },
   initQueryDesigner: function(dom, noRender){
     var queryDesigner = this.queryDesigner = this.createQueryDesigner(dom, this);
-
+    
+    queryDesigner.generateTupleForSlicer = this.generateTupleForSlicer;
+    queryDesigner.allowMultipleHierarchiesFromSameDimensionOnOneAxis = this.allowMultipleHierarchiesFromSameDimensionOnOneAxis;
+    
     queryDesigner.listen({
       changed: function(queryDesigner, event, data){
         if (this.getAutoRunEnabled()) {

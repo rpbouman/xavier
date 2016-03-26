@@ -153,6 +153,12 @@ limitations under the License.
       var xavierOptions = {
         //false to suppress the toolbar. Useful if you're integrating xavier.
         createToolbar: true,
+        //whether to generate a tuple (true) or set for the slicer. Must be true for SAP/HANA
+        generateTupleForSlicer: true,
+        //Whether one query axis can have items from different hierarchies of the same dimension.
+        allowMultipleHierarchiesFromSameDimensionOnOneAxis: false,
+        //whether to clear the visualization while waiting on a new query.
+        clearVisualizationBeforeExecutingQuery: false
         //configure whether data source nodes are flattened (hidden) or not
         datasourceNodesInitiallyFlattened: true,
         //determines which field to use as caption for datasource nodes
