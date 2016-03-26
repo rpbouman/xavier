@@ -957,12 +957,11 @@ var XmlaTreeView;
   },
   renderLevelMemberNodes: function(conf, callback, scope){
     var levelMembersDiscoveryMethod = this.levelMembersDiscoveryMethod;
-    var xmla = this.xmla;
     switch (levelMembersDiscoveryMethod) {
-      case xmla.METHOD_EXECUTE:
+      case Xmla.METHOD_EXECUTE:
         this.renderLevelMemberNodesWithExecute(conf, callback, scope);
         break;
-      case xmla.METHOD_DISCOVER:
+      case Xmla.METHOD_DISCOVER:
       default:
         this.renderLevelMemberNodesWithDiscover(conf, callback, scope);
         break;
