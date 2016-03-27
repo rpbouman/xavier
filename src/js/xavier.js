@@ -56,10 +56,12 @@ if (xavierOptions.createToolbar !== false) {
   mainToolbar = new Toolbar({
     container: body
   });
+  /*
   mainToolbar.addButton([
     {"class": "refresh", tooltip: gMsg("Refresh metadata")},
     {"class": "separator"},
   ]);
+  */
 }
 app.toolbar = mainToolbar;
 
