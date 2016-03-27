@@ -1012,7 +1012,7 @@ var XmlaTreeView;
     ].join(".");
 
     var mdx = [
-      "/* renderChildMemberNodes */",
+      "/* renderMemberNodesWithExecute */",
       "WITH",
       "MEMBER " + numChildrenMeasure,
       "AS " + metadata.HIERARCHY_UNIQUE_NAME  + ".CurrentMember.Children.Count ",
@@ -1077,14 +1077,21 @@ var XmlaTreeView;
           tupleCount++;
         });
         resp.close();
+        
         var parentNodeDom = parentNode.getDom();
-        if (hCls(parentNodeDom, "cardinality-estimate")) {
-          rCls(parentNodeDom, "cardinality-estimate", "cardinality-exact");
-          metadata.CHILDREN_CARDINALITY = tupleCount;
+        //parent node could either be a members folder, ...
+        if (hCls(parentNodeDom, "members")) {
+          me.afterRenderingLevelMembers(parentNode);
         }
-        parentNode.setTitle(me.getMemberNodeTitle(metadata, "exact"));
-        if (tupleCount === 0) {
-          parentNode.setState(TreeNode.states.leaf);
+        else {  //...or itself a member node.
+          if (hCls(parentNodeDom, "cardinality-estimate")) {
+            rCls(parentNodeDom, "cardinality-estimate", "cardinality-exact");
+            metadata.CHILDREN_CARDINALITY = tupleCount;
+          }
+          parentNode.setTitle(me.getMemberNodeTitle(metadata, "exact"));
+          if (tupleCount === 0) {
+            parentNode.setState(TreeNode.states.leaf);
+          }
         }
         callback.call(scope || null);
       },
@@ -1093,6 +1100,32 @@ var XmlaTreeView;
         me.fireEvent("error", exception);
       }
     });
+  },
+  afterRenderingLevelMembers: function(membersTreeNode){
+    //now that we actually retrieved the members, see if we can adjust the tree according to actual cardinality.
+    var childNodeCount = membersTreeNode.getChildNodeCount();
+    var levelNode = membersTreeNode.getParentTreeNode();
+    var levelNodeConf = levelNode.conf;
+    var levelMetadata = levelNodeConf.metadata;
+    var maxLowCardinalityLevelMembers = this.maxLowCardinalityLevelMembers;
+    if (levelMetadata.LEVEL_CARDINALITY !== childNodeCount) {
+      levelMetadata.LEVEL_CARDINALITY = childNodeCount;
+      var membersNodeState, membersNodeTitle;
+      if (childNodeCount <= maxLowCardinalityLevelMembers) {
+        //actual number of members is small. Flatten the members folder node.
+        membersNodeState = TreeNode.states.flattened;
+      }
+      else
+      if (childNodeCount >= maxLowCardinalityLevelMembers){
+        //the estimate was lower than actual number. Expand this node. (unflatten if it was flattened)
+        membersNodeState = TreeNode.states.expanded;
+      }
+      membersTreeNode.setState(membersNodeState);
+      
+      membersNodeTitle = this.getLevelMembersNodeTitle(childNodeCount);
+      membersTreeNode.setTitle(membersNodeTitle);
+    }
+    rCls(membersTreeNode.getDom(), "cardinality-estimate", "cardinality-exact");
   },
   renderLevelMemberNodesWithDiscover: function(conf, callback, scope){
     var me = this;
@@ -1128,26 +1161,7 @@ var XmlaTreeView;
           i++;
         });
         //done rendering member treenodes
-
-        //now that we actually retrieved the members, see if we can adjust the tree according to actual cardinality.
-        var levelNode = membersTreeNode.getParentTreeNode();
-        var levelNodeConf = levelNode.conf;
-        var levelMetadata = levelNodeConf.metadata;
-        if (levelMetadata.LEVEL_CARDINALITY !== i) {
-          levelMetadata.LEVEL_CARDINALITY = i;
-          if (i <= me.maxLowCardinalityLevelMembers) {
-            //actual number of members is small. Flatten the members folder node.
-            membersTreeNode.setState(TreeNode.states.flattened);
-          }
-          else
-          if (i >= me.maxLowCardinalityLevelMembers){
-            //the estimate was lower than actual number. Expand this node. (unflatten if it was flattened)
-            membersTreeNode.setState(TreeNode.states.expanded);
-          }
-          var title = me.getLevelMembersNodeTitle(i);
-          membersTreeNode.setTitle(title);
-        }
-        rCls(membersTreeNode.getDom(), "cardinality-estimate", "cardinality-exact");
+        me.afterRenderingLevelMembers(membersTreeNode);
 
         if (callback) {
           callback.call(scope);
