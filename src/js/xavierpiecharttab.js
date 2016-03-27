@@ -170,7 +170,7 @@ var XavierPieChartTab;
           mandatory: true,
           canBeEmpty: false,
           isDistinct: true,
-          "class": "levels",
+          "class": "categories",
           drop: {
             include: ["level", "member"]
           }

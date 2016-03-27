@@ -340,6 +340,11 @@ table.query-designer-axis {
   background-image: url('../images/measures.png');
 }
 
+.query-designer .query-designer-axis .categories .query-designer-axis-header,
+.query-designer .query-designer-axis .series .query-designer-axis-header {
+  background-image: url('../images/categories.png');
+}
+
 .query-designer .dimensiontype1 .query-designer-axis-header {
   background-image: url('../images/date-hierarchy2.png');
 }

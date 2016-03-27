@@ -25,6 +25,13 @@ var XavierTimeSeriesChart;
   conf.classes.push(arguments.callee.prefix);
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  axisDesignations: {
+    measures: Xmla.Dataset.AXIS_COLUMNS,
+    time: Xmla.Dataset.AXIS_ROWS,
+    categories: Xmla.Dataset.AXIS_PAGES,
+    multiColumns: Xmla.Dataset.AXIS_SECTIONS,
+    multiRows: Xmla.Dataset.AXIS_CHAPTERS
+  },
   generateTitleText: function(dataset, queryDesigner){
     var categoriesAxisLabel = "";
     var categoriesAxis = queryDesigner.getRowAxis();
@@ -51,8 +58,8 @@ var XavierTimeSeriesChart;
     return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
   },
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
-    var categoriesAxis = dataset.getAxis(axisDesignations.categories);
-    var measuresAxis = dataset.getAxis(axisDesignations.series);
+    var timeAxis = dataset.getAxis(axisDesignations.time);
+    var measuresAxis = dataset.getAxis(axisDesignations.measures);
     var cellset = dataset.getCellset();
 
     var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
@@ -63,7 +70,7 @@ var XavierTimeSeriesChart;
         measureOrder = [], measureOrderIndices = {}
     ;
     var categoriesAxisLabel = this.categoriesAxisLabel;
-    categoriesAxis.eachTuple(function(categoryTuple){
+    timeAxis.eachTuple(function(categoryTuple){
       var categoryAndLabel = this.getCategoryAndLabelForTuple(categoryTuple);
       var category = categoryAndLabel.category;
       var label = categoryAndLabel.label;
@@ -91,11 +98,7 @@ var XavierTimeSeriesChart;
 
     var chart = new dimple.chart(svg, data);
 
-    //this will create a grouped bar chart: category groups with a bar for each measure
     var categoryAxis = chart.addCategoryAxis("x", [categoriesAxisLabel, "measure"]);
-
-    //this will create a stacked bar chart: one stack of measures per category.
-    //var categoryAxis = chart.addCategoryAxis("x", "category");
 
     categoryAxis.title = this.categoriesAxisLabel;
 
@@ -269,6 +272,7 @@ var XavierTimeSeriesChartTab;
           },
           getMdx: function(){
             var mdx = "";
+            //make a date range out of the time series members.
             this.eachSetDef(function(setDef){
               if (mdx) {
                 mdx += ":";
@@ -276,6 +280,7 @@ var XavierTimeSeriesChartTab;
               mdx += setDef.expression;
             }, this);
             mdx = "{" + mdx + "}";
+            mdx = this.getNonEmptyClauseMdx() + mdx;
             mdx += this.getDimensionPropertiesMdx();
             mdx += this.getOnAxisClauseMdx();
             return mdx;
@@ -292,6 +297,18 @@ var XavierTimeSeriesChartTab;
         },
         {
           id: Xmla.Dataset.AXIS_PAGES,
+          label: gMsg("Categories"),
+          tooltip: gMsg("Use series to draw multiple lines for each measure."),
+          hint: gMsg("Optionally, drop levels or members on the series axis to draw multiple lines for each measure."),
+          canBeEmpty: false,
+          isDistinct: true,
+          "class": "categories",
+          drop: {
+            include: ["level", "member"]
+          }
+        },
+        {
+          id: Xmla.Dataset.AXIS_SECTIONS,
           label: gMsg("Columns"),
           tooltip: gMsg("For each unique combination of members, a chart is created."),
           hint: gMsg("Optionally, drop levels or members on the columns axis to create a list of multiple charts."),
