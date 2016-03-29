@@ -676,6 +676,8 @@ var QueryDesigner;
     var add, remove;
     if (axis.isPopulated()) {
       var n = empty.length;
+      //if this axis is populated, but any previous axis was not, then we have a gap.
+      //normally, a gap is not ok, except for the slicer axis.
       if (!axis.isSlicerAxis() && n) {
         valid = false;  //we have gap
         var i;
@@ -696,7 +698,9 @@ var QueryDesigner;
         valid = false;
       }
       else {
-        empty.push(axis);
+        if (axis.allowGap !== true) {
+          empty.push(axis);
+        }
         add = "axis-message-area-empty";
         remove = ["axis-message-area-invalid", "axis-message-area-populated"];
       }
@@ -850,9 +854,14 @@ var QueryDesignerAxis;
   if (iFun(conf.getMdx)) {
     this.getMdx = conf.getMdx;
   }
+  if (iDef(conf.allowGap)){
+    this.allowGap = conf.allowGap;
+  }
   this.reset();
   QueryDesignerAxis.instances[this.getId()] = this;
 }).prototype = {
+  //whether this axis is allowed to be empty even if the next axis is populated.
+  allowGap: false,
   userSortable: true,
   userSortOptions: ["measure", "level", "property"],
   userSortBreaksHierarchy: true,
@@ -1350,8 +1359,108 @@ var QueryDesignerAxis;
     }
     return true;
   },
-  checkValid: function(){ //override to check specific requirements.
+  checkValid: function(stats){
+    if (iUnd(stats)) {
+      stats = this.getStats();
+    }
+
+    var conf = this.conf || {};
+    var cardinalities = conf.cardinalities;
+    
+    if (iUnd(cardinalities)) {
+      return true;
+    }
+    
+    //check itemCount
+    if (iDef(cardinalities.items)) {
+      //axis has less than min required number of items
+      if (iDef(cardinalities.items.min) && stats.itemCount < cardinalities.items.min) {
+        return false;
+      }
+      //axis has more than max allowed number of items
+      if (iDef(cardinalities.items.max) && stats.itemCount > cardinalities.items.max) {
+        return false;
+      }
+    }
+    
+    //check hierarchyCount
+    if (iDef(cardinalities.hierarchies)) {
+      //axis has less than min required number of items
+      if (iDef(cardinalities.hierarchies.min) && stats.hierarchyCount < cardinalities.hierarchies.min) {
+        return false;
+      }
+      //axis has more than max allowed number of items
+      if (iDef(cardinalities.hierarchies.max) && stats.hierarchyCount > cardinalities.hierarchies.max) {
+        return false;
+      }
+    }
+    
+    //check types
+    if (iDef(cardinalities.types)){
+      var typeName, type, typeStats;
+      for (typeName in cardinalities.types) {
+        type = cardinalities.types[typeName];
+        typeStats = stats.types[typeName];
+        if (iUnd(typeStats)) {
+          if (type.min === 0) {
+            typeStats = 0;
+          }
+          else {
+            return false;
+          }
+        }
+        if (iDef(type.min) && typeStats < type.min) {
+          return false;
+        }
+        if (iDef(type.max) && typeStats > type.max) {
+          return false;
+        }
+      }
+    }
+    
     return true;
+  },
+  getStats: function(){ //override to check specific requirements.
+    var stats = {
+      hierarchyCount: 0,
+      itemCount: 0,
+      hierarchiesStats: {},
+      types: {}
+    };
+    
+    this.eachSetDef(function(setDef, i, hierarchy, hierarchyIndex){
+      stats.itemCount += 1;
+
+      //update global type count
+      var setDefType = setDef.type;
+      var statsTypes = stats.types;
+      if (iUnd(statsTypes[setDefType])) {
+        statsTypes[setDefType] = 0;
+      }
+      statsTypes[setDefType] += 1;
+
+      //update hierarchy stats.
+      var hierarchyName = this.getHierarchyName(hierarchy);
+      var hierarchiesStats = stats.hierarchiesStats;
+      if (iUnd(hierarchiesStats[hierarchyName])) {
+        hierarchiesStats[hierarchyName] = {
+          itemCount: 0,
+          types: {}
+        };
+        stats.hierarchyCount += 1;
+      }
+      
+      var hierarchyStats = hierarchiesStats[hierarchyName];
+      hierarchyStats.itemCount += 1;
+
+      var hierarchyStatsTypes = hierarchyStats.types;      
+      if (iUnd(hierarchyStatsTypes[setDefType])) {
+        hierarchyStatsTypes[setDefType] = 0;
+      }
+      hierarchyStatsTypes[setDefType] += 1;
+    }, this);
+    
+    return stats;
   },
   _canDropItem: function(target, dragInfo) {
     var conf = this.conf,
@@ -1405,11 +1514,8 @@ var QueryDesignerAxis;
     if (iDef(metadataFilter)) {
       switch (typeof(metadataFilter)) {
         case "object":
-          if (eq(metadataFilter, metadata)){
-            return true;
-          }
-          else {
-            //...TODO: look up in the hierarchy?
+          if (!eq(metadataFilter, metadata)){
+            return false;
           }
           break;
         case "function":
@@ -1429,11 +1535,7 @@ var QueryDesignerAxis;
     
     switch (requestType) {
       case "hierarchy":
-        //fallthrough
       case "measures":
-        if (dragInfo.dragOrigin instanceof QueryDesigner) {
-          return true;
-        }
         //if this axis already has this hierarchy then we can't drop it again.
         if (thisAxisHasHierarchy) {
           return false;
@@ -1441,69 +1543,43 @@ var QueryDesignerAxis;
         if (queryDesignerHasHierarchy){
           return false;
         }
-        break;
       case "level":
       case "member":
-        if (thisAxisHasHierarchy) {
-          var newLevel = metadata.LEVEL_UNIQUE_NAME;
-          var maxLevelsPerHierarchyCount = conf.maxLevelsPerHierarchyCount;
-          var minItemsPerHierarchy = conf.minItemsPerHierarchy;
-          var maxItemsPerHierarchy = conf.maxItemsPerHierarchy;
-          var minMembersPerHierarchy = conf.minMembersPerHierarchy;
-          var maxMembersPerHierarchy = conf.maxMembersPerHierarchy;
-          if (
-            (iDef(newLevel) && iDef(maxLevelsPerHierarchyCount)) ||
-            iDef(maxItemsPerHierarchy)
-          ) {
-            var levels = {};
-            var levelCount;
-            if (newLevel) {
-              levelCount = levels[newLevel] = 1;
-            }
-            else {
-              levelCount = 0;
-            }
-            var itemCount = 1, memberCount;
-            memberCount = (requestType === "member") ? 1 : 0;
-
-            this.eachSetDef(function(setDef, setDefIndex){
-              itemCount++;
-              var setDefMetadata = setDef.metadata;
-              var levelUniqueName = setDefMetadata.LEVEL_UNIQUE_NAME;
-              var count;
-              if (setDef.type === "member") {
-                memberCount++;
-              }
-              if (iDef(levelUniqueName)) {
-                if (iDef(levels[levelUniqueName])){
-                  ++levels[levelUniqueName];
-                }
-                else {
-                  levelCount++;
-                  levels[levelUniqueName] = 1;
-                }
-              }
-            }, this, hierarchyName);
-
-            if (iDef(maxLevelsPerHierarchyCount) && (levelCount > maxLevelsPerHierarchyCount)) {
-              return false;
-            }
-            else
-            if (iDef(maxItemsPerHierarchy) && itemCount > maxItemsPerHierarchy) {
-              return false;
-            }
-            else
-            if (iDef(maxMembersPerHierarchy) && memberCount > maxMembersPerHierarchy) {
-              return false;
-            }
-          }
-        }
         //fall through
       case "derived-measure":
       case "measure":
       case "property":
-        if (queryDesignerHasHierarchy && !thisAxisHasHierarchy) {
-          //if the hierarchy is already present on another axis then disallow drop.
+        if (queryDesignerHasHierarchy && !thisAxisHasHierarchy && !(dragInfo.dragOrigin instanceof QueryDesigner)) {
+          return false;
+        }
+        
+        //get the stats
+        var stats = this.getStats();
+        
+        //modify them to reflect the situation if the new item would have been added
+        stats.itemCount += 1;
+
+        var typeStats = stats.types;
+        if (iUnd(typeStats[requestType])) {
+          typeStats[requestType] = 0
+        }
+        typeStats[requestType] += 1;
+
+        if (!thisAxisHasHierarchy) {
+          stats.hierarchyCount += 1;
+          stats.hierarchiesStats[hierarchyName] = {
+            types: {},
+            itemCount: 0
+          };
+        }
+        stats.hierarchiesStats[hierarchyName].itemCount += 1;
+        if (iUnd(stats.hierarchiesStats[hierarchyName].types[requestType])) {
+          stats.hierarchiesStats[hierarchyName].types[requestType] = 0;
+        }
+        stats.hierarchiesStats[hierarchyName].types[requestType] += 1;
+                
+        //check if the modified stats would still consitute a valid axis.
+        if (!QueryDesignerAxis.prototype.checkValid.call(this, stats)){
           return false;
         }
         break;
@@ -2309,28 +2385,14 @@ var QueryDesignerAxis;
     return mdx;
   },
   getOnAxisClauseMdx: function(){
+    //please don't bother with named axes like COLUMNS, ROWS etc. 
+    //different MDX implementations have different opinions on what to call the axes beyond the pages axis.
+    //see for example https://msdn.microsoft.com/en-us/library/windows/desktop/ms713616(v=vs.85).aspx
+    //and https://docs.oracle.com/cloud/farel9/financialscs_gs/FADAG/dmaxldml.html#dmaxldml_22
+    //and http://mondrian.pentaho.com/api/mondrian/olap/AxisOrdinal.StandardAxisOrdinal.html
+    //Also, the Axis(x) syntax might not be supported.
     var conf = this.conf;
-    var axisName;
-    switch (this.conf.id) {
-      case 0: 
-        axisName = "COLUMNS";
-        break;
-      case 1: 
-        axisName = "ROWS";
-        break;
-      case 2: 
-        axisName = "PAGES";
-        break;
-      case 3: 
-        axisName = "CHAPTERS";
-        break;
-      case 4: 
-        axisName = "SECTIONS";
-        break;
-      default:
-        axisName = "Axis(" + this.conf.id + ")";
-    }
-    return "\nON " + axisName;
+    return "\nON " + conf.id;
   },
   getSlicerAxisAsTupleMdx: function(){
     var mdx = "";
