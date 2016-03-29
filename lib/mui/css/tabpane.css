@@ -48,6 +48,7 @@ limitations under the License.
   right: 0px;
   bottom: 0px;
   overflow: hidden;
+  /* border-top: solid 1px #99B2CC; */
 }
 
 .pentaho-tabWidget {
@@ -55,16 +56,14 @@ limitations under the License.
   background: transparent;
   cursor: pointer;
   margin-left: 0px;
-  padding: 6px 8px;
+  padding: 3px;
+  position: relative;
+  /* height: 17px; */
 }
 
 .pentaho-tabWidget > .pentaho-tabWidgetLabel {
   background-repeat: no-repeat;
   font-size: 14px; /* had to add this for crystal theme. */
-}
-
-.pentaho-tabWidget {
-  padding: 3px;
 }
 
 .pentaho-tabWidget > .pentaho-tabWidget-close {
@@ -75,7 +74,7 @@ limitations under the License.
 }
 
 .pentaho-tabWidget-selected {
-  margin-top: 1px;
+  /* margin-top: 1px; */
   border-top: solid 1px #99B2CC;
   border-left: solid 1px #99B2CC;
   border-right: solid 1px #99B2CC;
@@ -86,6 +85,7 @@ limitations under the License.
   border-top-right-radius: 1px;
   border-top-left-radius: 1px;
   background: #FFF;
+  z-index: 1;
 }
 .pentaho-tabWidget > .pentaho-tabWidget-close:before {
   /* content: "\00A0\00A0\0274C\00A0\00A0"; */
