@@ -822,6 +822,16 @@ var QueryDesigner;
   },
   axisChanged: function(axis, event, data) {
     this.fireEvent("changed", axis);
+  },
+  isPopulated: function(){
+    var populated = false;
+    this.eachAxis(function(id, axis){
+      if (axis.isPopulated()){
+        populated = true;
+        return false;
+      }
+    }, this);
+    return populated;
   }
 };
 

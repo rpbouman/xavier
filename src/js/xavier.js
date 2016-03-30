@@ -253,28 +253,59 @@ var xmlaTreeView = new XmlaTreeView({
       workArea.setCube(currentCube);
 
       //see if we have to switch tab (selected tab must belong to current cube, or welcome tab)
-      var selectedTab = workArea.getSelectedTab();
-      var tabs = workArea.getTabsForCube(currentCube);
-
-      //check if the current tab belongs to the current cube
-      if (!selectedTab || tabs.indexOf(pDec(selectedTab.id)) === -1) {
-        //nope, so switch tabs.
-        if (tabs.length) {  //we have at least one tab for this cube, so select it.
-          selectedTab = tabs[0];
-        }
-        else {  //we don't have any tabs for this cube, then
-          if (xavierOptions.autoCreateVisualization) {
-            selectedTab = createVisualizationTab(xavierOptions.autoCreateVisualization);
+      var selectedTab = workArea.getSelectedTab(), needToSwitch = false;
+      if (selectedTab) {
+        //if the currently selected tab is the sort that is bound to a cube
+        if (selectedTab.forCube === true) {
+          //and if the currently selected tab is not bound to the current cube
+          if (!selectedTab.isForCube(currentCube)) {
+            //and if the query in the current tab is already populated
+            if (selectedTab.getQueryDesigner().isPopulated()) {
+              //then we need to switch tabs.
+              needToSwitch = true;
+            }
+            else {
+              //if the query is not yet populated, then simply bind the tab to the current cube.
+              selectedTab.initMetadata();
+            }
           }
-          else {
-            selectedTab = workArea.getWelcomeTab();
-          }
         }
-        
-        if (selectedTab) {
-          workArea.setSelectedTab(selectedTab);
+        else {
+          needToSwitch = true;
         }
       }
+      else {
+        needToSwitch = true;
+      }
+
+      //if we need to switch tabs, then find the best option.
+      if (needToSwitch === true) {
+        var newTabToSelect;
+        //see if there are already tabs for the current cube
+        var tabsForThisCube = workArea.getTabsForCube(currentCube);
+        if (tabsForThisCube.length) {  
+          //we have at least one tab for this cube, so select it.
+          newTabToSelect = tabsForThisCube[0];
+        }
+        else {  
+          //we don't have any tabs for this cube
+          if (xavierOptions.autoCreateVisualization) {
+            //we should auto create as per configuration
+            newTabToSelect = createVisualizationTab(xavierOptions.autoCreateVisualization);
+          }
+          else
+          if (selectedTab.forCube === true) {
+            //only if the currently selected tab is the sort that is bound to a cube do we need to switch.
+            newTabToSelect = workArea.getWelcomeTab();
+          }
+        }        
+        
+        //if we found a new tab to select, select it.
+        if (newTabToSelect) {
+          workArea.setSelectedTab(newTabToSelect);
+        }
+      } 
+      
     },
     //called when an information icon is clicked.
     requestinfo: function(xmlaTreeView, event, data){
