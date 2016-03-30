@@ -123,11 +123,7 @@ var XavierPieChart;
         }
         return tooltip;
       };
-      if (this.isCleared) {
-        //TODO: print legend
-        this.addLegend(chart);
-        this.isCleared = false;
-      }
+      this.addLegend(chart);
       chart.draw();
     }, this);
   }

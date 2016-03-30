@@ -91,8 +91,13 @@ var XavierVisualizer;
     if (!this.renderLegend) {
       return;
     }
+    //we only want to make one legend (suppress multiple legends when we have multiple graphs.)
+    if (!this.isCleared) {
+      return;
+    }
     var legendConfig = this.getLegendConfig();
     chart.addLegend(legendConfig.x, legendConfig.y, legendConfig.width, legendConfig.height, legendConfig.position);
+    this.isCleared = false;
   },
   getAxisDesignations: function(){
     var conf = this.conf || {};
