@@ -55,7 +55,7 @@ var XavierVisualizer;
     series: Xmla.Dataset.AXIS_COLUMNS,
     categories: Xmla.Dataset.AXIS_ROWS,
     multiColumns: Xmla.Dataset.AXIS_PAGES,
-    multiRows: Xmla.Dataset.AXIS_CHAPTERS
+    multiRows: Xmla.Dataset.AXIS_SECTIONS
   },
   getAxisDesignations: function(){
     var conf = this.conf || {};
@@ -284,6 +284,7 @@ var XavierVisualizer;
 
       trellisColumnsAxis.eachTuple(function(tuple) {
         td = tr.insertCell(tr.cells.length);
+        td.id = this.getChartId();
         this.renderCharts(td, dataset, queryDesigner, axisDesignations);
       }, this);
     }, this);
