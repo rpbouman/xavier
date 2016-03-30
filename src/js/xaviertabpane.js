@@ -32,7 +32,7 @@ var XavierTabPane;
   if (!conf.tabs) {
     this.welcomeTab = new XavierDocumentTab({
       tabPane: this,
-      closeable: false
+      closeable: true
     });
     conf.tabs = [this.welcomeTab];
   }

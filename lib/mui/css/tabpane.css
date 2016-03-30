@@ -48,7 +48,7 @@ limitations under the License.
   right: 0px;
   bottom: 0px;
   overflow: hidden;
-  /* border-top: solid 1px #99B2CC; */
+  border-top: solid 1px #99B2CC;
 }
 
 .pentaho-tabWidget {
