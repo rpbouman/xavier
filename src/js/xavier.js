@@ -634,7 +634,7 @@ function dragFromAxisToOtherAxis(dragInfo, queryDesigner, queryDesignerAxis, tar
       break;
     default:
       if (dragInfo.metadata === "query-designer-axis-header") {
-        queryDesigner.swapAxes(dragInfo.queryDesignerAxis, queryDesignerAxis);
+        queryDesigner.swapContentOfAxes(dragInfo.queryDesignerAxis, queryDesignerAxis);
       }
   }
 }

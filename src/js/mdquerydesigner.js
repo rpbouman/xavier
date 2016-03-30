@@ -242,11 +242,7 @@ var QueryDesigner;
         var table = target.parentNode.parentNode.parentNode;
         className = /query-designer-axis(\d+|SlicerAxis)/g.exec(table.className);
         classes = confCls(table.className);
-        label = ({
-          "query-designer-axis0": "Columns",
-          "query-designer-axis1": "Rows",
-          "query-designer-axisSlicerAxis": "Slicer"
-        })[className];
+        label = queryDesignerAxis.getLabel();
         className = className[0];
         break;
       case "hierarchy":
@@ -333,6 +329,26 @@ var QueryDesigner;
 
     this.axes[axis2.getAxisId()] = axis2;
     QueryDesignerAxis.instances[axis2.getId()] = axis2;
+
+    var dom = this.getDom(false);
+    if (dom) {
+      this.render();
+    }
+    this.fireEvent("changed");
+  },
+  removeAxisContents: function(axis){
+    var contents = axis.removeContents();
+    return contents;
+  },
+  setAxisContents: function(axis, contents){
+    axis.setContents(contents);
+  },
+  swapContentOfAxes: function(axis1, axis2){
+    var axis1Contents = axis1.removeContents();
+    var axis2Contents = axis2.removeContents();
+
+    axis1.setContents(axis2Contents);
+    axis2.setContents(axis1Contents);
 
     var dom = this.getDom(false);
     if (dom) {
@@ -893,6 +909,22 @@ var QueryDesignerAxis;
       this.fireEvent("changed");
     }
   },
+  removeContents: function(){
+    var contents = {
+      hierarchies: this.hierarchies,
+      dimensions: this.dimensions,
+      setDefs: this.setDefs,
+      sortOption: this.sortOption
+    };
+    this.reset(false);
+    return contents;
+  },
+  setContents: function(contents){
+      this.hierarchies = contents.hierarchies;
+      this.dimensions = contents.dimensions;
+      this.setDefs = contents.setDefs;
+      this.sortOption = contents.sortOption; 
+  },
   destroy: function(){
     var queryDesigner = this.conf.queryDesigner;
     var id = queryDesigner.getAxisId(this.conf.id);
@@ -911,11 +943,14 @@ var QueryDesignerAxis;
     var axisId = this.conf.id;
     return queryDesignerId + "-axis-message-area-" + axisId;
   },
-  reset: function() {
+  reset: function(updateDom) {
     this.hierarchies = [];
     this.dimensions = {};
     this.setDefs = {};
-    this.updateDom();
+    delete this.sortOption;
+    if (updateDom !== false) {
+      this.updateDom();
+    }
   },
   getLayout: function() {
     return this.conf.layout;
