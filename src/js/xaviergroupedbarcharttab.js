@@ -226,7 +226,7 @@ var XavierGroupedBarChartTab;
           }
         },
         {
-          id: Xmla.Dataset.AXIS_CHAPTERS,
+          id: Xmla.Dataset.AXIS_SECTIONS,
           label: gMsg("Rows"),
           tooltip: gMsg("For each unique combination of members, one row is layed out and each column is filled with a bar chart."),
           hint: gMsg("Optionally, drop levels or members on the columns axis and rows axis to create a matrix of multiple bar charts."),

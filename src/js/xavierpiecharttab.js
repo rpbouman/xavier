@@ -188,7 +188,7 @@ var XavierPieChartTab;
           }
         },
         {
-          id: Xmla.Dataset.AXIS_CHAPTERS,
+          id: Xmla.Dataset.AXIS_SECTIONS,
           label: gMsg("Rows"),
           tooltip: gMsg("For each unique combination of members, one row is layed out and its columns are filled with pie charts."),
           hint: gMsg("Optionally, drop levels or members on the rows axis and on the column axis to create a matrix of multiple pies."),
