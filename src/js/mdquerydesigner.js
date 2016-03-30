@@ -867,9 +867,13 @@ var QueryDesignerAxis;
   if (iDef(conf.allowGap)){
     this.allowGap = conf.allowGap;
   }
+  if (iDef(conf.hierarchized)) {
+    this.hierarchized = conf.hierarchized;
+  }
   this.reset();
   QueryDesignerAxis.instances[this.getId()] = this;
 }).prototype = {
+  hierarchized: true,
   //whether this axis is allowed to be empty even if the next axis is populated.
   allowGap: false,
   userSortable: true,
@@ -2489,7 +2493,7 @@ var QueryDesignerAxis;
         members += setDef.expression;
       }, this, hierarchy);
       members = "{" + members + "}";
-      if (!this.isMeasureHierarchy(hierarchy) && !this.isSlicerAxis()) {
+      if (this.hierarchized === true && !this.isMeasureHierarchy(hierarchy) && !this.isSlicerAxis()) {
         members = "Hierarchize(" + members + ")";
       }
       indent += "  ";
