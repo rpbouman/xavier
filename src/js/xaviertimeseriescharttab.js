@@ -28,55 +28,64 @@ var XavierTimeSeriesChart;
   axisDesignations: {
     measures: Xmla.Dataset.AXIS_COLUMNS,
     time: Xmla.Dataset.AXIS_ROWS,
-    categories: Xmla.Dataset.AXIS_PAGES,
-    multiColumns: Xmla.Dataset.AXIS_SECTIONS,
-    multiRows: Xmla.Dataset.AXIS_CHAPTERS
+    categories: Xmla.Dataset.AXIS_ROWS,
+    multiColumns: Xmla.Dataset.AXIS_PAGES,
+    multiRows: Xmla.Dataset.AXIS_SECTIONS
   },
   generateTitleText: function(dataset, queryDesigner){
-    var categoriesAxisLabel = "";
-    var categoriesAxis = queryDesigner.getRowAxis();
-    var lastHierarchy = categoriesAxis.getHierarchyCount() - 1;
-    categoriesAxis.eachHierarchy(function(hierarchy, i){
-      if (categoriesAxisLabel) {
-        categoriesAxisLabel += ((i === lastHierarchy) ? " " + gMsg("and") : ",") + " ";
-      }
-      categoriesAxisLabel += hierarchy.HIERARCHY_CAPTION;
+    var timeAxisLabel = "";
+    var timeAxis = queryDesigner.getRowAxis();
+    timeAxis.eachHierarchy(function(hierarchy, i){
+      timeAxisLabel += hierarchy.HIERARCHY_CAPTION;
     }, this);
-    this.categoriesAxisLabel = categoriesAxisLabel;
-
-    var measuresAxisLabel = "";
-    var measuresAxis = dataset.getColumnAxis();
-    var lastTuple = measuresAxis.tupleCount() - 1;
-    measuresAxis.eachTuple(function(measure){
-      if (measuresAxisLabel) {
-        measuresAxisLabel +=  ((measure.index === lastTuple) ? " " + gMsg("and") : ",") + " ";
-      }
-      measuresAxisLabel += this.getLabelForTuple(measure);
+    this.timeAxisLabel = timeAxisLabel;
+    
+    var measureAxisLabel = "";
+    var measureAxis = queryDesigner.getColumnAxis();
+    var measureLabels = [];
+    measureAxis.eachSetDef(function(setDef, i, hierarchy, hierarchyIndex){
+      measureLabels.push(setDef.caption);
     }, this);
-    this.measuresAxisLabel = measuresAxisLabel;
-
-    return measuresAxisLabel + " " + gMsg("per") + " " + categoriesAxisLabel;
+    switch (measureLabels.length) {
+      case 1:
+        measureAxisLabel = measureLabels[0];
+        break;
+      case 2:
+        measureAxisLabel = measureLabels.join(gMsg(" and "));
+        break;
+      default:
+        var last = measureLabels.pop();
+        measureAxisLabel = measureLabels.join(", ");
+        measureAxisLabel += ", " + gMsg("and ") + last;
+    }
+    this.measureAxisLabel  = measureAxisLabel;
+    
+    return measureAxisLabel + " " + gMsg("over") + " " + timeAxisLabel;
   },
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
+    var measureAxis = dataset.getAxis(axisDesignations.measures);
     var timeAxis = dataset.getAxis(axisDesignations.time);
-    var measuresAxis = dataset.getAxis(axisDesignations.measures);
     var cellset = dataset.getCellset();
 
-    var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
 
     //prepare the data set. data will be an array of {category, measure, value} objects
     var data = [],
         categoryOrder = [], categoryLabels = [],
         measureOrder = [], measureOrderIndices = {}
     ;
-    var categoriesAxisLabel = this.categoriesAxisLabel;
+    var timeAxisLabel = this.timeAxisLabel;
+    var labelCount = queryDesigner.labelCount;
+    var measureAxis = dataset.getAxis(axisDesignations.measures);
+    var timeAxis = dataset.getAxis(axisDesignations.time);
+    var cellset = dataset.getCellset();
+
     timeAxis.eachTuple(function(categoryTuple){
       var categoryAndLabel = this.getCategoryAndLabelForTuple(categoryTuple);
       var category = categoryAndLabel.category;
       var label = categoryAndLabel.label;
       categoryOrder.push(category);
       categoryLabels.push(label);
-      measuresAxis.eachTuple(function(measureTuple){
+      measureAxis.eachTuple(function(measureTuple){
         var measure = this.getLabelForTuple(measureTuple);
         if (categoryTuple.index === 0) {
           measureOrderIndices[measure] = measureOrder.length;
@@ -89,24 +98,25 @@ var XavierTimeSeriesChart;
           value: value,
           fmtValue: cellset.cellFmtValue ? cellset.cellFmtValue() : String(value)
         };
-        datum[categoriesAxisLabel] = categoryTuple.index;
+        datum[timeAxisLabel] = categoryTuple.index;
         data.push(datum);
         cellset.nextCell();
       }, this);
 
     }, this);
 
+    var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
     var chart = new dimple.chart(svg, data);
 
-    var categoryAxis = chart.addCategoryAxis("x", [categoriesAxisLabel, "measure"]);
+    var categoryAxis = chart.addCategoryAxis("x", [timeAxisLabel, "measure"]);
 
-    categoryAxis.title = this.categoriesAxisLabel;
+    categoryAxis.title = this.timeAxisLabel;
 
     categoryAxis.addOrderRule(categoryOrder);
     categoryAxis.addGroupOrderRule(measureOrder);
 
     var measureAxis = chart.addMeasureAxis("y", "value");
-    measureAxis.title = this.measuresAxisLabel;
+    measureAxis.title = this.measureAxisLabel;
 
     measureAxis.addOrderRule(measureOrder);
     var measureSeries = chart.addSeries("measure", dimple.plot.line);
@@ -120,10 +130,145 @@ var XavierTimeSeriesChart;
       var datum = data[measureNumber * categoryOrder.length + categoryNumber];
       return [
         measure + ": " + datum.fmtValue,
-        categoriesAxisLabel + ": " + datum.label
+        timeAxisLabel + ": " + datum.label
       ];
     };
 
+    chart.draw();
+
+    //update the category axis labels.
+    //have to do this after drawing the chart.
+    var chartWidth = chart._widthPixels();
+    var maxAvailableLabelWidth = chartWidth / categoryLabels.length;
+    var maxLabelWidth = 0;
+
+    //http://stackoverflow.com/questions/17791926/how-to-rotate-x-axis-text-in-dimple-js
+    //first pass: set the label for the categories
+    //also, keep track of the maximum labelwidth
+    categoryAxis.shapes.selectAll("text").each(function(d){
+      this.textContent = categoryLabels[d];
+      var bbox = this.getBBox();
+      var width = bbox.width;
+      if (width > maxLabelWidth) {
+        maxLabelWidth = width;
+      }
+    });
+    //if there are labels that are too wide, we rotate all labels so they won't overlap
+    if (maxLabelWidth > maxAvailableLabelWidth) {
+      categoryAxis.shapes.selectAll("text").each(function(d){
+        var x = this.getAttribute("x");
+        this.setAttribute("x", 0);
+        this.setAttribute("transform", "translate(" + x + " -5) rotate(10)");
+        this.style.textAnchor = "";
+      });
+    }
+
+    //make the axis titles bold.
+    categoryAxis.titleShape[0][0].style.fontWeight = "bold";
+    measureAxis.titleShape[0][0].style.fontWeight = "bold";
+
+    //position the category axis title left of the axis
+    var titleShape = categoryAxis.titleShape[0][0];
+    var titleShapeBBox = titleShape.getBBox();
+    var categoryAxisShape = categoryAxis.shapes[0][0];
+    var y = categoryAxisShape.transform.baseVal[0].matrix.f;
+    var x = categoryAxisShape.children[0].transform.baseVal[0].matrix.e;
+    x = x - titleShapeBBox.width;
+    y = y + 2*titleShapeBBox.height;
+    if (x < 70) {
+      x = 70;
+    }
+    titleShape.setAttribute("x", x);
+    titleShape.setAttribute("y", y);
+  },
+  renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
+    var measureAxis = dataset.getAxis(axisDesignations.measures);
+    var timeAxis = dataset.getAxis(axisDesignations.time);
+    var timeAxisLabel = this.timeAxisLabel;
+    var labelCount = queryDesigner.labelCount;
+    var cellset = dataset.getCellset();
+    var data = [],
+        categoryOrder = [], categoryLabels = [],
+        measureOrder = [], measureOrderIndices = {}
+    ;
+
+    //prepare the data set. data will be an array of {category, measure, value} objects
+
+    //get all labels for the measures axis
+    var measureLabels = [], labelIndex = 0;
+    measureAxis.eachTuple(function(measureTuple){
+      if (labelIndex < labelCount) {
+        labelIndex += 1;
+        return;
+      }
+      measureLabels[measureTuple.index] = this.getLabelForTuple(measureTuple);
+      measureOrderIndices[measureTuple] = measureOrder.length;
+      measureOrder.push(measureTuple);
+    }, this);
+
+    var data = [];
+    
+    //get the dataset.
+    timeAxis.eachTuple(function(timeTuple){
+      
+      //loop over the time labels
+      var i, label = [], value;
+      for (i = 0; i < labelCount; i++) {
+        value = cellset.cellValue();
+        if (value) {
+          label.push(value);        
+        }
+        cellset.nextCell();
+      }
+      label = label.join("-");
+      categoryOrder.push(label);
+      categoryLabels.push(label);
+
+      //loop over actual cells
+      for (i; i < measureLabels.length; i++) {
+        var value = cellset.cellValue();
+        var datum = {
+          label: label,
+          measure: measureLabels[i],
+          value: value,
+          fmtValue: cellset.cellFmtValue ? cellset.cellFmtValue() : String(value)
+        };
+        datum[timeAxisLabel] = timeTuple.index;
+        data.push(datum);
+        cellset.nextCell();
+      }
+    }, this);
+
+    var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
+    var chart = new dimple.chart(svg, data);
+
+    var categoryAxis = chart.addCategoryAxis("x", [timeAxisLabel, "measure"]);
+
+    categoryAxis.title = this.timeAxisLabel;
+
+    //categoryAxis.addOrderRule(categoryOrder);
+    //categoryAxis.addGroupOrderRule(measureOrder);
+
+    var measureAxis = chart.addMeasureAxis("y", "value");
+    measureAxis.title = this.measureAxisLabel;
+
+    //measureAxis.addOrderRule(measureOrder);
+    var measureSeries = chart.addSeries("measure", dimple.plot.line);
+    //measureSeries.addOrderRule(measureOrder);
+
+    //set the tooltip text
+    measureSeries.getTooltipText = function(d){
+      var categoryNumber = d.xField[0];
+      var measure = d.xField[1];
+      var measureNumber = measureOrder.indexOf(measure);
+      var datum = data[measureNumber * categoryOrder.length + categoryNumber];
+      return [
+        measure + ": " + datum.fmtValue,
+        timeAxisLabel + ": " + datum.label
+      ];
+    };
+
+    chart.addLegend(0, 0, 150, dom.clientHeight, "left");
     chart.draw();
 
     //update the category axis labels.
@@ -206,22 +351,29 @@ var XavierTimeSeriesChartTab;
         {
           id: Xmla.Dataset.AXIS_ROWS,
           label: gMsg("Time"),
-          tooltip: gMsg("Drag two members of one date hierarchy level to define the time period."),
-          hint: gMsg("Drag two members of one date hierarchy level to define the time period."),
+          tooltip: gMsg("Drag 2 members of one date hierarchy level to define the time period."),
+          hint: gMsg("Drag 1 or 2 members from one single date hierarchy level to define the time period. Optionally, drag one or more levels from the date hierarchy to define the time unit and the date parts that make up the labels for the time series."),
           mandatory: true,
           canBeEmpty: false,
           isDistinct: true,
           "class": "dimensiontype1",
           userSortable: false,
           drop: {
-            include: ["member"]
+            include: ["member", "level"]
           },
           metadataFilter: {
             DIMENSION_TYPE: Xmla.Rowset.MD_DIMTYPE_TIME
           },
-          maxHierarchyCount: 1,
-          maxMemberCount: 2,
-          minMemberCount: 2,
+          cardinalities: {
+            hierarchies: {
+               min: 1, max: 1
+            },
+            types: {
+              member: {
+                min: 1, max: 2
+              }
+            }
+          },
           canDropItem: function(target, dragInfo){
             //first, do all the "regular", "standard" drop item checks.
             var canDrop = this._canDropItem(target, dragInfo);
@@ -231,32 +383,33 @@ var XavierTimeSeriesChartTab;
             var memberFrom; //start of time period
             var memberTo;   //end of time period
             this.eachSetDef(function(setDef, setDefIndex, hierarchyDef, hierarchyIndex){
-              if (setDef.type === "member") {
-                //is there a "from" member? If not, then this is it.
-                if (!memberFrom) {
-                  memberFrom = setDef;
-                  if (dragInfo.className === "member" && eq(dragInfo.metadata, setDef.metadata)) {
-                    //new item already on axis: reject
-                    canDrop = false;
-                    return false;
-                  }
-                }
-                //is there a "to" member? If not, then this is it.
-                else
-                if (!memberTo) {
-                  memberTo = setDef;
-                  if (dragInfo.className === "member" && eq(dragInfo.metadata, setDef.metadata)) {
-                    //new item already on axis: reject
-                    canDrop = false;
-                    return false;
-                  }
-                }
-                else
-                if (dragInfo.className === "member"){
-                  //already have two members: reject
+              if (setDef.type !== "member") {
+                return;
+              }
+              //is there a "from" member? If not, then this is it.
+              if (!memberFrom) {
+                memberFrom = setDef;
+                if (dragInfo.className === "member" && eq(dragInfo.metadata, setDef.metadata)) {
+                  //new item already on axis: reject
                   canDrop = false;
                   return false;
                 }
+              }
+              //is there a "to" member? If not, then this is it.
+              else
+              if (!memberTo) {
+                memberTo = setDef;
+                if (dragInfo.className === "member" && eq(dragInfo.metadata, setDef.metadata)) {
+                  //new item already on axis: reject
+                  canDrop = false;
+                  return false;
+                }
+              }
+              else
+              if (dragInfo.className === "member"){
+                //already have two members: reject
+                canDrop = false;
+                return false;
               }
             }, this);
             
@@ -269,31 +422,7 @@ var XavierTimeSeriesChartTab;
               return false;
             }
             return canDrop;
-          },
-          getMdx: function(){
-            var mdx = "";
-            //make a date range out of the time series members.
-            this.eachSetDef(function(setDef){
-              if (mdx) {
-                mdx += ":";
-              }
-              mdx += setDef.expression;
-            }, this);
-            mdx = "{" + mdx + "}";
-            mdx = this.getNonEmptyClauseMdx() + mdx;
-            mdx += this.getDimensionPropertiesMdx();
-            mdx += this.getOnAxisClauseMdx();
-            return mdx;
           }
-/*
-          checkAxisValid: function(){
-            var valid = false;
-            this.eachSetDef(function(setDef, setDefIndex, hierarchy, hierarchyIndex){
-              if (hierarchy.DIMENSION_TYPE)
-            }, this);
-            return valid;
-          }
-*/
         },
         {
           id: Xmla.Dataset.AXIS_PAGES,
@@ -303,6 +432,7 @@ var XavierTimeSeriesChartTab;
           canBeEmpty: false,
           isDistinct: true,
           "class": "categories",
+          allowGap: true,
           drop: {
             include: ["level", "member"]
           }
@@ -334,9 +464,221 @@ var XavierTimeSeriesChartTab;
         {
           id: Xmla.Dataset.AXIS_SLICER
         }
-      ]
+      ],
+      getMdx: this.getMdx
     });
     return queryDesigner;
+  },
+  getMdx: function(cubeName){
+    var valuesSet = QueryDesignerAxis.prototype.braceIdentifier("Values"),
+        periodSet = QueryDesignerAxis.prototype.braceIdentifier("Period"), 
+        labelSet = QueryDesignerAxis.prototype.braceIdentifier("Labels"),
+        currentOrdinalExpression = periodSet + ".CurrentOrdinal"
+        currentPeriodMember = periodSet + ".Item(" + currentOrdinalExpression + ")", 
+        previousPeriodMember = currentPeriodMember + ".PrevMember", 
+        categoriesSet = QueryDesignerAxis.prototype.braceIdentifier("Categories")
+    ;
+    var mdx = "";
+
+    //make a named set for the measures.
+    var measureAxis = this.getColumnAxis();
+    var measureAxisMdx = measureAxis.getMemberSetMdx();
+    var withClauseMdx = [
+      "WITH",
+      "SET " + valuesSet,
+      "AS " + measureAxisMdx,
+    ].join("\n");
+
+    //make a named set for our period:
+    var rowAxis = this.getRowAxis();
+
+    //analyze contents of the time dimension axis, generate calculated members for time labels.
+    var labelExpressions = [], periodMembers = [], periodLevels = [];
+    rowAxis.eachSetDef(function(setDef){      
+      var labelExpression, 
+          metadata = setDef.metadata,
+          levelNumber = metadata.LEVEL_NUMBER, 
+          levelUniqueName = metadata.LEVEL_UNIQUE_NAME,
+          labelMeasureName = [
+            QueryDesigner.prototype.measuresHierarchyName,
+            QueryDesignerAxis.prototype.braceIdentifier("Time Label " + levelNumber)
+          ].join(".")
+      ;
+      switch (setDef.type) {
+        case "member":
+          periodMembers.push(setDef);
+          break;
+        case "level":
+          periodLevels.push(setDef);
+          break;
+      }
+
+      var ancestorExpression = "Ancestor(" + currentPeriodMember + ", " + levelUniqueName + ")",
+          prevAncestorExpression = "Ancestor(" + previousPeriodMember + ", " + levelUniqueName + ")" 
+          labelExpression = [
+            "MEMBER " + labelMeasureName,
+            "AS Iif(" + currentOrdinalExpression + " = 0 Or ",
+            "       " + ancestorExpression + " <> " + prevAncestorExpression + ",", 
+            "       " + ancestorExpression + ".Properties(\"MEMBER_CAPTION\"), \"\")"
+          ].join("\n");
+      labelExpressions[levelNumber] = {
+        labelMeasureName: labelMeasureName,
+        labelExpression: labelExpression,
+        levelUniqueName: levelUniqueName
+      };
+    }, this);
+    
+    //make a range of our time period
+    var periodSetMdx = periodMembers[0].expression;
+    if (periodMembers.length === 2) {
+      periodSetMdx += " : " + periodMembers[1].expression;
+    }
+    periodSetMdx = "{" + periodSetMdx + "}";
+    
+    //sort the levels by level number by ascending level number
+    //this should allow us to create a label by reading cells from left to right and concatenating the cell values.
+    if (periodLevels.length) {
+      periodLevels.sort(function(a, b){
+        var aLevel = a.metadata.LEVEL_NUMBER;
+        var bLevel = b.metadata.LEVEL_NUMBER;
+        if (aLevel > bLevel) {
+          return -1;
+        }
+        else
+        if (aLevel < bLevel) {
+          return 1;
+        }
+        else {
+          return 0;
+        }
+      });
+      var maxLevel = periodLevels[periodLevels.length - 1];
+      
+      var minMember = periodMembers[0];
+      if (labelExpressions.length > minMember.metadata.LEVEL_NUMBER) {
+        //the max level exceeds the members that demarcate the interval. IOW we have a level with LEVEL_NUMBER that exceeeds the LEVEL_NUMBER of the member(s).
+        //this means we have to rewrite the members to the first and last descendent that live at the max level.
+        periodSetMdx = "Descendants(" + periodSetMdx + ", " + labelExpressions[labelExpressions.length - 1].levelUniqueName + ", SELF)";
+      }
+    }
+    
+    withClauseMdx += "\n" + [
+      "SET " + periodSet,
+      "AS " + periodSetMdx
+    ].join("\n");
+    
+    var rowsMdx = periodSet;
+    rowsMdx += rowAxis.getOnAxisClauseMdx();
+    
+    //add calculated members for labels
+    var n = labelExpressions.length, labelCount = 0, labelSetMdx = "";
+    if (n) {
+      var i, labelExpression; 
+      for (i = 0; i < n; i++){
+        labelExpression = labelExpressions[i];
+        if (iUnd(labelExpression)) {
+          continue;
+        }
+        labelCount += 1;
+        withClauseMdx += "\n" + labelExpression.labelExpression;
+        if (labelSetMdx) {
+          labelSetMdx += ",";
+        }
+        labelSetMdx += labelExpression.labelMeasureName;
+      }
+    }
+    withClauseMdx += "\n" + [
+      "SET " + labelSet,
+      "AS " + "{" + labelSetMdx + "}"
+    ].join("\n");
+    this.labelCount = labelCount;
+
+    var pageAxis = this.getPageAxis();
+    var pageAxisMdx = pageAxis.getMemberSetMdx();
+    if (pageAxisMdx) {
+      withClauseMdx += [
+        "",
+        "SET " + categoriesSet,
+        "AS " + pageAxisMdx
+      ].join("\n");
+    }
+    
+    //fold the measures and the categories into one set. This will be the columns axis
+    var columnsMdx = valuesSet;
+    if (pageAxisMdx) {
+      labelSet  = [
+        "CrossJoin(", 
+          categoriesSet + ".Item(1),",
+          labelSet,
+        ")"
+      ].join("");
+
+      columnsMdx = [
+        "CrossJoin(", 
+          categoriesSet + ",",
+          columnsMdx,
+        ")"
+      ].join("");
+    }
+    columnsMdx = [
+      "Union(",
+        labelSet + ",",
+        columnsMdx,
+      ")"
+    ].join("");
+    columnsMdx += measureAxis.getOnAxisClauseMdx();
+    
+    mdx = withClauseMdx;
+    mdx += [
+      "",
+      "SELECT ",
+      columnsMdx,
+      ",",
+      rowsMdx
+    ].join("\n");
+
+    //trellis columns. Note that since categories and measures axis are folded into the Columns axis, we have to 
+    //project the sections axis which holds the trellis columns as the pages axis.
+    var sectionAxis = this.getSectionAxis();
+    var sectionAxisMdx = sectionAxis.getMemberSetMdx();
+    if (sectionAxisMdx) {
+      mdx += [
+        ",",
+        sectionAxisMdx,
+        " ON 2"
+      ].join("\n");
+    }
+
+    //trellis rows. Note that since categories and measures axis are folded into the Columns axis, we have to 
+    //project the chapters axis which holds the trellis columns as the sections axis.
+    var chapterAxis = this.getChapterAxis();
+    var chapterAxisMdx = chapterAxis.getMemberSetMdx();
+    if (chapterAxisMdx) {
+      mdx += [
+        ",",
+        chapterAxisMdx,
+        " ON 3"
+      ].join("\n");
+    }
+
+    mdx += [
+      "",
+      "FROM " + QueryDesignerAxis.prototype.braceIdentifier(cubeName)
+    ].join("\n");
+    
+    //slicer.
+    var slicerAxis = this.getSlicerAxis();
+    var slicerMdx = slicerAxis.getMdx();
+    if (slicerMdx) {
+      mdx += [
+        "",
+        "WHERE", 
+        slicerMdx
+      ].join("\n");
+    }
+    
+    //done.
+    return mdx;
   },
   initChart: function(dom, tab){
     var chart = new XavierTimeSeriesChart({
