@@ -216,6 +216,7 @@ var xmlaTreeView = new XmlaTreeView({
   catalogNodesInitiallyFlattened: getXmlaTreeOption("catalogNodesInitiallyFlattened"),
   showCatalogNodesCheckboxDisplayed: getXmlaTreeOption("showCatalogNodesCheckboxDisplayed"),
   useCatalogPrefixForCubes: getXmlaTreeOption("useCatalogPrefixForCubes"),
+  useDimensionPrefixForHierarchies: getXmlaTreeOption("useDimensionPrefixForHierarchies"),
   showCurrentCatalog: getXmlaTreeOption("showCurrentCatalog"),
   showCurrentCube: getXmlaTreeOption("showCurrentCube"),
   dimensionNodesInitiallyFlattened: getXmlaTreeOption("dimensionNodesInitiallyFlattened"),

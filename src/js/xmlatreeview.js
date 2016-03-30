@@ -45,6 +45,10 @@ var XmlaTreeView;
   if (iDef(conf.useCatalogPrefixForCubes)) {
     this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
   }
+  
+  if (iDef(conf.useDimensionPrefixForHierarchies)) {
+    this.useDimensionPrefixForHierarchies = conf.useDimensionPrefixForHierarchies;
+  }
 
   if (iDef(conf.showCurrentCube)) {
     this.showCurrentCube = conf.showCurrentCube;
@@ -127,6 +131,8 @@ var XmlaTreeView;
   showDimensionNodesCheckboxDisplayed: false,
   //whether labels of cube nodes are prefixed by catalog name. Prefix only shown if the catalog node is flattened. This option can be used to suppress the prefix alltogether.
   useCatalogPrefixForCubes: true,
+  //whether labels of hierarchy nodes are prefixed by dimension caption. Prefix only shown if the dimension node is flattened. This option can be used to suppress the prefix alltogether.
+  useDimensionPrefixForHierarchies: true,
   //whether or not to display the current catalog in the cube pane.
   showCurrentCatalog: false,
   //whether or not to display the current cube in the cube pane.
@@ -1693,16 +1699,21 @@ var XmlaTreeView;
   },
   renderHierarchyTreeNode: function(conf, row){
     var me = this;
+
     var dimensionNode = TreeNode.getInstance("node:dimension:" + row.DIMENSION_UNIQUE_NAME);
     if (dimensionNode.isFlattened() && dimensionNode.getChildNodeCount() >= 1) {
       dimensionNode.setState(TreeNode.states.unflattened);
     }
-    var dimensionTitle = dimensionNode.conf.objectName;
     var objectName = row.HIERARCHY_CAPTION || row.HIERARCHY_NAME;
     var hierarchyTitle = objectName;
-    if (dimensionTitle !== hierarchyTitle) {
-      hierarchyTitle = "<span class=\"label label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
+
+    if (this.useDimensionPrefixForHierarchies) {
+      var dimensionTitle = dimensionNode.conf.objectName;
+      if (dimensionTitle !== hierarchyTitle) {
+        hierarchyTitle = "<span class=\"label label-prefix\">" + dimensionTitle + "</span>" + hierarchyTitle;
+      }
     }
+
     var tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(row.DESCRIPTION || row.HIERARCHY_CAPTION);
     var tooltip = tooltipAndInfoLabel.tooltip || hierarchyTitle;
     var title = hierarchyTitle+ tooltipAndInfoLabel.infoLabel;
