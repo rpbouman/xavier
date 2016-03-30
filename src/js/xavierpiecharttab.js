@@ -125,7 +125,7 @@ var XavierPieChart;
       };
       if (this.isCleared) {
         //TODO: print legend
-        chart.addLegend(0, 0, 100, dom.clientHeight, "left");
+        this.addLegend(chart);
         this.isCleared = false;
       }
       chart.draw();

@@ -65,125 +65,6 @@ var XavierTimeSeriesChart;
   renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
     var measureAxis = dataset.getAxis(axisDesignations.measures);
     var timeAxis = dataset.getAxis(axisDesignations.time);
-    var cellset = dataset.getCellset();
-
-
-    //prepare the data set. data will be an array of {category, measure, value} objects
-    var data = [],
-        categoryOrder = [], categoryLabels = [],
-        measureOrder = [], measureOrderIndices = {}
-    ;
-    var timeAxisLabel = this.timeAxisLabel;
-    var labelCount = queryDesigner.labelCount;
-    var measureAxis = dataset.getAxis(axisDesignations.measures);
-    var timeAxis = dataset.getAxis(axisDesignations.time);
-    var cellset = dataset.getCellset();
-
-    timeAxis.eachTuple(function(categoryTuple){
-      var categoryAndLabel = this.getCategoryAndLabelForTuple(categoryTuple);
-      var category = categoryAndLabel.category;
-      var label = categoryAndLabel.label;
-      categoryOrder.push(category);
-      categoryLabels.push(label);
-      measureAxis.eachTuple(function(measureTuple){
-        var measure = this.getLabelForTuple(measureTuple);
-        if (categoryTuple.index === 0) {
-          measureOrderIndices[measure] = measureOrder.length;
-          measureOrder.push(measure);
-        }
-        var value = cellset.cellValue();
-        var datum = {
-          label: label,
-          measure: measure,
-          value: value,
-          fmtValue: cellset.cellFmtValue ? cellset.cellFmtValue() : String(value)
-        };
-        datum[timeAxisLabel] = categoryTuple.index;
-        data.push(datum);
-        cellset.nextCell();
-      }, this);
-
-    }, this);
-
-    var svg = dimple.newSvg("#" + dom.id, dom.clientWidth, dom.clientHeight);
-    var chart = new dimple.chart(svg, data);
-
-    var categoryAxis = chart.addCategoryAxis("x", [timeAxisLabel, "measure"]);
-
-    categoryAxis.title = this.timeAxisLabel;
-
-    categoryAxis.addOrderRule(categoryOrder);
-    categoryAxis.addGroupOrderRule(measureOrder);
-
-    var measureAxis = chart.addMeasureAxis("y", "value");
-    measureAxis.title = this.measureAxisLabel;
-
-    measureAxis.addOrderRule(measureOrder);
-    var measureSeries = chart.addSeries("measure", dimple.plot.line);
-    measureSeries.addOrderRule(measureOrder);
-
-    //set the tooltip text
-    measureSeries.getTooltipText = function(d){
-      var categoryNumber = d.xField[0];
-      var measure = d.xField[1];
-      var measureNumber = measureOrder.indexOf(measure);
-      var datum = data[measureNumber * categoryOrder.length + categoryNumber];
-      return [
-        measure + ": " + datum.fmtValue,
-        timeAxisLabel + ": " + datum.label
-      ];
-    };
-
-    chart.draw();
-
-    //update the category axis labels.
-    //have to do this after drawing the chart.
-    var chartWidth = chart._widthPixels();
-    var maxAvailableLabelWidth = chartWidth / categoryLabels.length;
-    var maxLabelWidth = 0;
-
-    //http://stackoverflow.com/questions/17791926/how-to-rotate-x-axis-text-in-dimple-js
-    //first pass: set the label for the categories
-    //also, keep track of the maximum labelwidth
-    categoryAxis.shapes.selectAll("text").each(function(d){
-      this.textContent = categoryLabels[d];
-      var bbox = this.getBBox();
-      var width = bbox.width;
-      if (width > maxLabelWidth) {
-        maxLabelWidth = width;
-      }
-    });
-    //if there are labels that are too wide, we rotate all labels so they won't overlap
-    if (maxLabelWidth > maxAvailableLabelWidth) {
-      categoryAxis.shapes.selectAll("text").each(function(d){
-        var x = this.getAttribute("x");
-        this.setAttribute("x", 0);
-        this.setAttribute("transform", "translate(" + x + " -5) rotate(10)");
-        this.style.textAnchor = "";
-      });
-    }
-
-    //make the axis titles bold.
-    categoryAxis.titleShape[0][0].style.fontWeight = "bold";
-    measureAxis.titleShape[0][0].style.fontWeight = "bold";
-
-    //position the category axis title left of the axis
-    var titleShape = categoryAxis.titleShape[0][0];
-    var titleShapeBBox = titleShape.getBBox();
-    var categoryAxisShape = categoryAxis.shapes[0][0];
-    var y = categoryAxisShape.transform.baseVal[0].matrix.f;
-    var x = categoryAxisShape.children[0].transform.baseVal[0].matrix.e;
-    x = x - titleShapeBBox.width;
-    y = y + 2*titleShapeBBox.height;
-    if (x < 70) {
-      x = 70;
-    }
-    titleShape.setAttribute("x", x);
-    titleShape.setAttribute("y", y);
-  },
-  renderCharts: function(dom, dataset, queryDesigner, axisDesignations){
-    var measureAxis = dataset.getAxis(axisDesignations.measures);
-    var timeAxis = dataset.getAxis(axisDesignations.time);
     var timeAxisLabel = this.timeAxisLabel;
     var labelCount = queryDesigner.labelCount;
     var cellset = dataset.getCellset();
@@ -268,7 +149,7 @@ var XavierTimeSeriesChart;
       ];
     };
 
-    chart.addLegend(0, 0, 150, dom.clientHeight, "left");
+    this.addLegend(chart);
     chart.draw();
 
     //update the category axis labels.
@@ -346,7 +227,8 @@ var XavierTimeSeriesChartTab;
           drop: {
             include: ["measure", "derived-measure"]
           },
-          userSortable: false
+          userSortable: false,
+          hierarchized: false,
         },
         {
           id: Xmla.Dataset.AXIS_ROWS,
@@ -358,6 +240,7 @@ var XavierTimeSeriesChartTab;
           isDistinct: true,
           "class": "dimensiontype1",
           userSortable: false,
+          hierarchized: false,
           drop: {
             include: ["member", "level"]
           },
@@ -608,7 +491,7 @@ var XavierTimeSeriesChartTab;
     if (pageAxisMdx) {
       labelSet  = [
         "CrossJoin(", 
-          categoriesSet + ".Item(1),",
+          categoriesSet + ".Item(0),",
           labelSet,
         ")"
       ].join("");

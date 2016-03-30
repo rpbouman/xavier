@@ -47,8 +47,26 @@ var XavierVisualizer;
   if (!conf.classes) {
     conf.classes = [];
   }
+
+  if (iDef(conf.renderLegend)){
+    this.renderLegend = conf.renderLegend;
+  }
+  else {
+    this.renderLegend = arguments.callee.prototype.renderLegend
+  }
+  
   conf.classes.push(arguments.callee.prefix);
 }).prototype = {
+  renderLegend: true,
+  legendConfig: {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: function(){
+      return this.getDom().clientHeight;
+    },
+    position: "left"
+  },
   titlePosition: "top",
   padding: 5,
   axisDesignations: {
@@ -56,6 +74,25 @@ var XavierVisualizer;
     categories: Xmla.Dataset.AXIS_ROWS,
     multiColumns: Xmla.Dataset.AXIS_PAGES,
     multiRows: Xmla.Dataset.AXIS_SECTIONS
+  },
+  getLegendConfig: function(){
+    var legendConfig = merge({}, this.conf.legendConfig || {}, XavierVisualizer.prototype.legendConfig);
+    var p, v;
+    for (p in legendConfig) {
+      v = legendConfig[p];
+      if (iFun(v)){
+        v = v.call(this);
+      }
+      legendConfig[p] = v;
+    }
+    return legendConfig;
+  },
+  addLegend: function(chart){
+    if (!this.renderLegend) {
+      return;
+    }
+    var legendConfig = this.getLegendConfig();
+    chart.addLegend(legendConfig.x, legendConfig.y, legendConfig.width, legendConfig.height, legendConfig.position);
   },
   getAxisDesignations: function(){
     var conf = this.conf || {};

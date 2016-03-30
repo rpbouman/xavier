@@ -121,6 +121,7 @@ var XavierGroupedBarChart;
       ];
     };
 
+    this.addLegend(chart);
     chart.draw();
 
     //update the category axis labels.
