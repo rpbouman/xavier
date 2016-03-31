@@ -144,7 +144,7 @@ var XavierTimeSeriesChart;
       var measureNumber = measureOrder.indexOf(measure);
       var datum = data[measureNumber * categoryOrder.length + categoryNumber];
       return [
-        measure + ": " + datum.fmtValue,
+        measure + ": " + (datum.fmtValue || datum.value),
         timeAxisLabel + ": " + datum.label
       ];
     };
