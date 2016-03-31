@@ -685,7 +685,8 @@ function windowResized(){
   if (resizeEvent === null) {
     return;
   }
-  xmlaTreeView.getSplitPane().setSplitterPosition((100 * resizeEvent.factor) + "%");
+  xmlaTreeView.getSplitPane().setSplitterPosition((100 * resizeEvent.treeSplitPaneFactor) + "%");
+  mainSplitPane.setSplitterPosition((100 * resizeEvent.mainSplitPaneFactor) + "%");
   workArea.doLayout();
   resizeEvent = null;
 }
@@ -699,7 +700,8 @@ var resizeTimer = new Timer({
 listen(window, "resize", function(){
   if (resizeEvent === null) {
     resizeEvent = {
-      factor: xmlaTreeView.getSplitPane().getSplitterRatio()
+      treeSplitPaneFactor: xmlaTreeView.getSplitPane().getSplitterRatio(),
+      mainSplitPaneFactor: mainSplitPane.getSplitterRatio()
     };
   }
   resizeTimer.start();
