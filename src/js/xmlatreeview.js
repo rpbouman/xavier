@@ -912,7 +912,7 @@ var XmlaTreeView;
       if (cardinalityEstimateOrExact !== "exact" || cardinality > 0) {
         var childMsg = cardinality === 1 ? "${1} child" : "${1} children";
         childMsg = gMsg(childMsg, cardinality);
-        title += " (<span class=\"cardinality\">" + childMsg + "</span>)";
+        title += " (<span class=\"cardinality label\">" + childMsg + "</span>)";
       }
     }
     return title;
