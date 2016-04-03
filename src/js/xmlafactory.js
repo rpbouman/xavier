@@ -28,7 +28,13 @@ var XmlaFactory;
 
     //if a xmlaUrl was specified in the conf of the factory, then that is what we'll use
     if (conf.xmlaUrl) {
-      urls.push(conf.xmlaUrl);
+      if (iArr(conf.xmlaUrl)) {
+        urls = conf.xmlaUrl;
+      }
+      else 
+      if (iStr(conf.xmlaUrl)) {
+        urls.push(conf.xmlaUrl);
+      }
     }
     else
     //if the xmlaUrl was specified through the url, then that is what we'll use
