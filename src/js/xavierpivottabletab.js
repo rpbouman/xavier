@@ -211,7 +211,7 @@ var XavierPivotTableTab;
           throw "Unknown drill direction " + drillDirection;
       }
     };
-
+    busy(true);
     xmla.discoverMDMembers({
       url: datasource.URL,
       properties: properties,
