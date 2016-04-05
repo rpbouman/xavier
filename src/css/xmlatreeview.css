@@ -258,6 +258,10 @@ span.current-cube,
   background-image: url('../images/cube.png');
 }
 
+.tree .dimensions > .head > .toggle {
+  background-image: url('../images/dimension.png');
+}
+
 .tree .dimension > .head > .toggle {
   background-image: url('../images/dimension.png');
 }
@@ -371,14 +375,6 @@ span.current-cube,
 
 /* end of time dimension */
 
-/* Derived measures folder */
-
-.tree .derived-measures-folder-collapsed > .head > .toggle {
-  background-image: url('../images/folder-closed.png');
-}
-.tree .derived-measures-folder-expanded > .head > .toggle {
-  background-image: url('../images/folder-open.png');
-}
 
 /* Derived measures */
 .derived-measure-percentage-dragging,
@@ -453,13 +449,15 @@ span.current-cube,
 }
 
 .members-dragging,
+.tree .dimensions-collapsed > .head > .toggle,
+.tree .derived-measures-folder-collapsed > .head > .toggle,
 .tree .members-collapsed > .head > .toggle {
-/*  background-image: url('../../lib/mui/images/folder16x16.png'); */
   background-image: url('../images/folder-closed.png');
 }
 
+.tree .dimensions-expanded > .head > .toggle,
+.tree .derived-measures-folder-expanded > .head > .toggle,
 .tree .members-expanded > .head > .toggle {
-/*  background-image: url('../../lib/mui/images/folder16x16.png'); */
   background-image: url('../images/folder-open.png');
 }
 
@@ -538,6 +536,10 @@ div.flattened.multiple > div.body > div.node > div.head > span.label > span.labe
   display: inline;
 }
 
+div.node.hierarchy.flattened > div.body > div.node.level > div.head > span.label > span.label-prefix {
+  display: inline;
+}
+
 /* mandatory nodes */
 div.mandatory > div.head > span.label {
   font-weight: bold;
@@ -546,4 +548,10 @@ div.mandatory > div.head > span.label {
 /* hierarchies of mandatory dimensions get to be bold. */
 div.mandatory > div.body > div.hierarchy > div.head > span.label {
   font-weight: bold;
+}
+
+
+/* Provide a little extra space in case we have a splitter between dimensions and measures*/
+.cube-contents > .splitpane > .node  {
+  /*margin: 3px 0px;*/
 }

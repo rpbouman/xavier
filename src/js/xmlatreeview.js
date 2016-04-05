@@ -26,11 +26,29 @@ var XmlaTreeView;
   this.cubeTreePane = new ContentPane({
     classes: ["tree", "cube-contents"]
   });
+  var splitterRatio;
   this.splitPane = new SplitPane({
     classes: "xmlatreeview",
     firstComponent: this.schemaTreePane,
     secondComponent: this.cubeTreePane,
-    orientation: SplitPane.orientations.horizontal
+    orientation: SplitPane.orientations.horizontal,
+    listeners: {
+      beforeSplitterPositionChange: function(){
+        var measuresAndDimensionsSplitPane = this.getMeasuresAndDimensionsSplitPane();
+        if (!measuresAndDimensionsSplitPane) {
+          return;
+        }
+        var splitterRatio = measuresAndDimensionsSplitPane.getSplitterRatio();
+      },
+      splitterPositionChanged: function(){
+        var measuresAndDimensionsSplitPane = this.getMeasuresAndDimensionsSplitPane();
+        if (!measuresAndDimensionsSplitPane) {
+          return;
+        }
+        measuresAndDimensionsSplitPane.setSplitterPosition((100 * splitterRatio) + "%");
+      },
+      scope: this
+    }
   });
   if (iDef(conf.datasourceNodesInitiallyFlattened)) {
     this.datasourceNodesInitiallyFlattened = conf.datasourceNodesInitiallyFlattened;
@@ -41,6 +59,19 @@ var XmlaTreeView;
   if (iDef(conf.showCatalogNodesCheckboxDisplayed)) {
     this.showCatalogNodesCheckboxDisplayed = conf.showCatalogNodesCheckboxDisplayed;
   }
+  
+  if (iDef(conf.initialMeasuresTreeNodeState)){
+    this.initialMeasuresTreeNodeState = conf.initialMeasuresTreeNodeState;
+  }
+  if (iDef(conf.initialDimensionsTreeNodeState)){
+    this.initialDimensionsTreeNodeState = conf.initialDimensionsTreeNodeState;
+  }
+  if (iDef(conf.initialHierarchyTreeNodeState)){
+    this.initialHierarchyTreeNodeState = conf.initialHierarchyTreeNodeState;
+  }
+  if (iDef(conf.loadLevelsImmediately)){
+    this.loadLevelsImmediately = conf.loadLevelsImmediately;
+  }
 
   if (iDef(conf.useCatalogPrefixForCubes)) {
     this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
@@ -50,6 +81,10 @@ var XmlaTreeView;
     this.useDimensionPrefixForHierarchies = conf.useDimensionPrefixForHierarchies;
   }
 
+  if (iDef(conf.useHierarchyPrefixForLevels)) {
+    this.useHierarchyPrefixForLevels = conf.useHierarchyPrefixForLevels;
+  }  
+  
   if (iDef(conf.showCurrentCube)) {
     this.showCurrentCube = conf.showCurrentCube;
   }
@@ -97,10 +132,23 @@ var XmlaTreeView;
   if (iFun(conf.checkIfDescriptionIsAnUrl)){
     this.checkIfDescriptionIsAnUrl = conf.checkIfDescriptionIsAnUrl;
   }
+  if (iDef(conf.splitterBetweenMeasuresAndDimensions)) {
+    this.splitterBetweenMeasuresAndDimensions = conf.splitterBetweenMeasuresAndDimensions;
+  }
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
   //urlRegExp is checked against descriptions of discovered metadata. If there is a match, we consider it a url and the tree will render in info icon that an be used to link to the resource.
   urlRegExp: /^((https?:\/\/)?(((\w+)(\.[\w]+)*|(\d{1,3})(\.\d{1,3}){3})(:\d+)?)\/)?(([\w\.]|%\d\d)+\/)*(([\w\.]|%\d\d)+\.\w+)(\?([\w\.=\&]|%\d\d)*)?(#\w*)?$/,
+  //loadLevelsImmediately determines whether levels should be immediately discovered after loading a cube.
+  //if false, initial loading stops after the hierarchies are discovered, and levels are lazily loaded by expanding a hierarchy node.
+  //if true, then levels are loaded immediately after loading the hierarchy nodes.
+  loadLevelsImmediately: false,
+  //initialMeasuresTreeNodeState: Initial state of dimensions Treenode: "collapsed", "expanded", "flattened", "unflattened", "leaf"
+  initialMeasuresTreeNodeState: TreeNode.states.expanded,
+  //initialDimensionsTreeNodeState: Initial state of dimensions Treenode: "collapsed", "expanded", "flattened", "unflattened", "leaf"
+  initialDimensionsTreeNodeState: TreeNode.states.expanded,
+  //initialHierarchyTreeNodeState: Initial state of hierarchy Treenodes: "collapsed", "expanded", "flattened", "unflattened", "leaf"
+  initialHierarchyTreeNodeState: TreeNode.states.collapsed,
   //levelCardinalitiesDiscoveryMethod determines how cardinalities of levels are discovered.
   //levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER, //get level cardinality estimates from level discovery requests
   //levelCardinalitiesDiscoveryMethod: Xmla.METHOD_EXECUTE,  //get exact level cardinalities by running mdx query.
@@ -133,6 +181,8 @@ var XmlaTreeView;
   useCatalogPrefixForCubes: true,
   //whether labels of hierarchy nodes are prefixed by dimension caption. Prefix only shown if the dimension node is flattened. This option can be used to suppress the prefix alltogether.
   useDimensionPrefixForHierarchies: true,
+  //whether labels of level nodes are prefixed by hierarchy caption. Prefix only shown if the hierarchy node is flattened.
+  useHierarchyPrefixForLevels: true,
   //whether or not to display the current catalog in the cube pane.
   showCurrentCatalog: false,
   //whether or not to display the current cube in the cube pane.
@@ -145,6 +195,8 @@ var XmlaTreeView;
   useAsDatasourceCaption: ["DataSourceName", "DataSourceDescription"],
   //whether to render property nodes.
   renderPropertyNodes: true,
+  //splitterBetweenMeasuresAndDimensions: divide the cube pane with a horizontal splitter into a measures and a dimensions section.
+  splitterBetweenMeasuresAndDimensions: true,
   checkIsExcluded: function(request, row){
     var xmlaMetadataFilter = this.xmlaMetadataFilter;
     if (!xmlaMetadataFilter) {
@@ -168,6 +220,23 @@ var XmlaTreeView;
     }
     treePane.clearAll();
   },
+  clearSchemaTreePane: function(){
+    this.clearTreePane(this.getSchemaTreePane());
+  },
+  clearCubeTreePane: function(){
+    var cubeTreePane = this.getCubeTreePane();
+    if (this.measuresAndDimensionsSplitPane) {
+      var measuresNode = this.getMeasuresTreeNode();
+      measuresNode.removeFromParent(false);
+      var dimensionsNode = this.getDimensionsTreeNode();
+      dimensionsNode.removeFromParent(false);
+      this.measuresAndDimensionsSplitPane = null;
+    }
+    else {
+      this.clearTreePane(cubeTreePane);
+    }
+    cubeTreePane.clearAll();
+  },
   checkIfDescriptionIsAnUrl: function(description){
     var urlRegExp = this.urlRegExp;
     urlRegExp.lastIndex = 0;
@@ -178,7 +247,6 @@ var XmlaTreeView;
     description = description.trim();
     var type;
     var len = description.length;
-    //      protocol       domain name      ip address                port      path                resource         query name/value       anchor
     if (this.checkIfDescriptionIsAnUrl(description)) {
       type = "url";
     }
@@ -298,7 +366,7 @@ var XmlaTreeView;
             parentTreeNode: providerNode,
             objectName: objectName,
             title: objectName + tooltipAndInfoLabel.infoLabel,
-            tooltip: tooltipAndInfoLabel.tooltip || objectName,
+//            tooltip: tooltipAndInfoLabel.tooltip || objectName,
             metadata: row,
             cubeRestrictions: options.cubeRestrictions
           });
@@ -401,7 +469,7 @@ var XmlaTreeView;
             objectName: objectName,
             parentTreeNode: catalogNode,
             title: title,
-            tooltip: tooltip,
+//            tooltip: tooltip,
             metadata: row,
             cubeMetaData: options.cubeMetaData
           });
@@ -555,8 +623,8 @@ var XmlaTreeView;
     var me = this;
     var xmla = this.xmla;
     this.hideSchemaTreePane();
+    this.clearSchemaTreePane();
     var schemaTreePane = this.schemaTreePane;
-    this.clearTreePane(schemaTreePane);
     var schemaTreePaneDom = schemaTreePane.getDom();
     if (!this.progressIndicator) {
       this.createProgressIndicator();
@@ -683,7 +751,7 @@ var XmlaTreeView;
       id: "datasource:" + dataSourceName,
       parentElement: schemaTreePaneDom,
       title: title,
-      tooltip: dataSourceDescription || dataSourceName,
+//      tooltip: dataSourceDescription || dataSourceName,
       metadata: datasource
     });
     return treeNode;
@@ -822,6 +890,7 @@ var XmlaTreeView;
     }, this)
   },
   checkStartDrag: function(event, ddHandler){
+    this.getCubeTreePane().getDom().style.overflow = "hidden";
     var treeNode;
     if (event instanceof TreeNode) {
       treeNode = event;
@@ -847,7 +916,6 @@ var XmlaTreeView;
       case "level":
       case "member":
       case "property":
-        this.getCubeTreePane().getDom().style.overflow = "hidden";
         break;
       default:
         return false;
@@ -950,7 +1018,7 @@ var XmlaTreeView;
       parentTreeNode: membersTreeNode,
       classes: classes,
       id: memberNodeId,
-      tooltip: row.MEMBER_UNIQUE_NAME,
+//      tooltip: row.MEMBER_UNIQUE_NAME,
       title: title,
       metadata: row,
       state: state,
@@ -1071,7 +1139,7 @@ var XmlaTreeView;
             parentTreeNode: parentNode,
             classes: classes,
             title: title,
-            tooltip: memberUniqueName,
+//            tooltip: memberUniqueName,
             state: state,
             metadata: childMetaData,
             loadChildren: function(callback){
@@ -1193,7 +1261,7 @@ var XmlaTreeView;
     var title = this.getLevelMembersNodeTitle(row.LEVEL_CARDINALITY);
     var classes = ["members", "cardinality-" + cardinalityEstimateOrExact];
     
-    return new TreeNode({
+    var treeNode = new TreeNode({
       parentTreeNode: levelTreeNode,
       classes: classes,
       id: id,
@@ -1205,7 +1273,9 @@ var XmlaTreeView;
         conf.callback = callback;
         me.renderLevelMemberNodes(conf, callback, this);
       }
-    })
+    });
+    
+    return treeNode;
   },
   renderLevelPropertyNode: function(conf, row) {
     var hierarchyTreeNode = conf.hierarchyTreeNode;
@@ -1249,7 +1319,7 @@ var XmlaTreeView;
       id: id + ":property:" + row.PROPERTY_NAME,
       objectName: objectName,
       title: title,
-      tooltip: tooltip,
+//      tooltip: tooltip,
       state: state,
       metadata: row
     })
@@ -1320,10 +1390,14 @@ var XmlaTreeView;
     }
 
     var callback = conf.callback;
-    delete conf.callback;
+    if (callback) {
+      delete conf.callback;
+    }
 
     this.flattenLevelMembersNodes(levelMembersNodes, 0, function(){
-      callback();
+      if (callback) {
+        callback();
+      }
       me.fireEvent("done");
     });
   },
@@ -1348,13 +1422,37 @@ var XmlaTreeView;
       callback();
     }
   },
+  loadLevelTreeNodeChildren: function(conf, levels){
+    var me = this;
+    if (!iArr(levels)) {
+      levels = [levels];
+    }
+    if (this.renderPropertyNodes === false) {
+      this._renderLevelMemberNodes(conf, levels);
+    }
+    else {
+      this.renderLevelPropertyNodes(conf, function(){
+        me._renderLevelMemberNodes(conf, levels);
+      });        
+    }
+  },
   renderLevelTreeNode: function(conf, row){
+    var me = this;
     var hierarchyTreeNode = conf.hierarchyTreeNode;
     if (!hierarchyTreeNode) {
       hierarchyTreeNode = this.getHierarchyTreeNode(row.HIERARCHY_UNIQUE_NAME);
     }
     var id = this.getLevelTreeNodeId(row.LEVEL_UNIQUE_NAME);
     var levelCaption = row.LEVEL_CAPTION;
+    
+    var levelTitle = levelCaption;
+    if (this.useHierarchyPrefixForLevels) {
+      var hierarchyTitle = hierarchyTreeNode.conf.objectName;
+      if (levelTitle.indexOf(hierarchyTitle) !== 0) {
+        levelTitle = "<span class=\"label label-prefix\">" + hierarchyTitle + "</span>" + levelTitle;
+      }
+    }
+    
     var url = conf.url;
     var properties = {
       DataSourceInfo: conf.dataSourceInfo,
@@ -1373,17 +1471,24 @@ var XmlaTreeView;
     title = title + tooltipAndInfoLabel.infoLabel;
     //if this is the all level, then flatten it to make the tree tidier.
     //typically we are not very interested in the "all" level (although the "all" member can be useful sometimes)
-    var state = row.LEVEL_TYPE === 1 ? TreeNode.states.flattened : TreeNode.states.expanded;
-    return new TreeNode({
+    var state = this.loadLevelsImmediately ? TreeNode.states.collapsed : (row.LEVEL_TYPE === 1 ? TreeNode.states.flattened : TreeNode.states.expanded);
+    var levelTreeNodeConf = {
       parentTreeNode: hierarchyTreeNode,
       classes: ["level", "leveltype" + row.LEVEL_TYPE, "levelunicity" + row.LEVEL_UNIQUE_SETTINGS],
       id: id,
       objectName: objectName,
-      title: title,
-      tooltip: tooltip,
+      title: levelTitle,
+//      tooltip: tooltip,
       metadata: row,
-      state: state
-    });
+      state: state,
+      loadChildren: function(callback){
+        conf.hierarchyTreeNode = this.getParentTreeNode();
+        me.loadLevelTreeNodeChildren(conf, row);
+        callback();
+      }
+    };
+    var treeNode = new TreeNode(levelTreeNodeConf);
+    return treeNode;
   },
   renderHierarchyLevelTreeNodes: function(conf){
     var me = this;
@@ -1425,14 +1530,7 @@ var XmlaTreeView;
           me.renderLevelTreeNode(conf, row);
         });
 
-        if (me.renderPropertyNodes === false) {
-          me._renderLevelMemberNodes(conf, levels);
-        }
-        else {
-          me.renderLevelPropertyNodes(conf, function(){
-            me._renderLevelMemberNodes(conf, levels);
-          });        
-        }
+        me.loadLevelTreeNodeChildren(conf, levels);
       },
       error: function(xmla, options, error){
         conf.callback();
@@ -1453,8 +1551,7 @@ var XmlaTreeView;
         me.renderMemberNodes(conf, levels, "estimate");
     }
   },
-  //This method renderLevelTreeNodes is currently not used. 
-  //Idea was that maybe, getting all levels for an entire cube in advance might give a better user experience.
+  //this gets called to load levels immediately, this happens when the hierarchy nodes are initially expanded or flattened
   renderLevelTreeNodes: function(conf, success, error, scope){
     var me = this;
     me.fireEvent("busy");
@@ -1483,7 +1580,11 @@ var XmlaTreeView;
           if (!hierarchyMetadata || hierarchyMetadata.HIERARCHY_UNIQUE_NAME !== row.HIERARCHY_UNIQUE_NAME) {
             hierarchyMetadata = me.getHierarchyMetadata(row.HIERARCHY_UNIQUE_NAME);
           }
-          row.DIMENSION_TYPE = hierarchyMetadata.DIMENSION_TYPE;
+          var dimensionType = hierarchyMetadata.DIMENSION_TYPE;
+          if (dimensionType === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
+            return;
+          }
+          row.DIMENSION_TYPE = dimensionType;
           row.HIERARCHY_CAPTION = hierarchyMetadata.HIERARCHY_CAPTION;
           levels.push(row);
           //https://technet.microsoft.com/en-us/library/ms126038(v=sql.110).aspx reads:
@@ -1494,20 +1595,6 @@ var XmlaTreeView;
           //}
           me.renderLevelTreeNode(conf, row);
         });
-/*
-        me.renderLevelPropertyNodes(conf, function(){
-          switch (me.levelCardinalitiesDiscoveryMethod) {
-            case Xmla.METHOD_EXECUTE:
-              me.queryLevelCardinalities(levels, url, properties.DataSourceInfo, function(){
-                me.renderMemberNodes(conf, levels, "exact");
-              }, me);
-              break;
-            case Xmla.METHOD_DISCOVER:
-            default:
-              me.renderMemberNodes(conf, levels, "estimate");
-          }
-        });
-*/        
         if (success) {
           success.call(scope || null);
         }
@@ -1600,16 +1687,26 @@ var XmlaTreeView;
     var title = objectName;
     var tooltip = tooltipAndInfoLabel.tooltip || title;
     title = title + tooltipAndInfoLabel.infoLabel;
-    return new TreeNode({
-      state: TreeNode.states.expanded,
-      parentElement: this.cubeTreePane.getDom(),
+    var state = this.dimensionNodesInitiallyFlattened ? TreeNode.states.flattened : TreeNode.states.expanded;
+    
+    var dimensionTreeNodeConf = {
+      state: state,
       classes: classes,
       id: "dimension:" + row.DIMENSION_UNIQUE_NAME,
       objectName: objectName,
       title: title,
-      tooltip: tooltip,
+//      tooltip: tooltip,
       metadata: row
-    });
+    };
+    if (conf.dimensionsTreeNode) {
+      dimensionTreeNodeConf.parentTreeNode = conf.dimensionsTreeNode;
+    }
+    else {
+      dimensionTreeNodeConf.parentElement = this.cubeTreePane.getDom();
+    }
+    
+    var dimensionTreeNode= new TreeNode(dimensionTreeNodeConf);
+    return dimensionTreeNode;
   },
   renderDimensionTreeNodes: function(conf){
     var me = this;
@@ -1645,7 +1742,7 @@ var XmlaTreeView;
           //if this dimension happens to be a measure dimension, don't render it.
           //We already have measures
           if (row.DIMENSION_TYPE === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
-            conf.measuresTreeNode.conf.metadata = row;
+            //conf.measuresTreeNode.conf.metadata = row;
             return;
           }
           //actually add a treenode for the hierarchy.
@@ -1662,6 +1759,20 @@ var XmlaTreeView;
         me.renderHierarchyTreeNodes(conf);
       }
     });
+  },
+  getDimensionsTreeNodeId: function(){
+    return "dimensions";
+  },
+  renderDimensionsTreeNode: function(conf) {
+    var dimensionsTreeNode = new TreeNode({
+      state: this.initialDimensionsTreeNodeState,
+      parentElement: this.cubeTreePane.getDom(),
+      classes: ["dimensions", "dimensiontype" + Xmla.Rowset.MD_DIMTYPE_OTHER],
+      id: this.getDimensionsTreeNodeId(),
+      title: gMsg("Dimensions"),
+//      tooltip: gMsg("Dimensions")
+    });
+    return dimensionsTreeNode;
   },
   getHierarchyTreeNodeId: function(hierarchyUniqueName){
     if (hierarchyUniqueName === QueryDesigner.prototype.measuresHierarchyName) {
@@ -1701,8 +1812,8 @@ var XmlaTreeView;
     var me = this;
 
     var dimensionNode = TreeNode.getInstance("node:dimension:" + row.DIMENSION_UNIQUE_NAME);
-    if (dimensionNode.isFlattened() && dimensionNode.getChildNodeCount() >= 1) {
-      dimensionNode.setState(TreeNode.states.unflattened);
+    if (!this.dimensionNodesInitiallyFlattened && dimensionNode.isFlattened() && dimensionNode.getChildNodeCount() >= 1) {
+      dimensionNode.setState(TreeNode.states.expanded);
     }
     var objectName = row.HIERARCHY_CAPTION || row.HIERARCHY_NAME;
     var hierarchyTitle = objectName;
@@ -1719,13 +1830,13 @@ var XmlaTreeView;
     var title = hierarchyTitle+ tooltipAndInfoLabel.infoLabel;
 
     var hierarchyTreeNode = new TreeNode({
-      state: TreeNode.states.collapsed,
+      state: me.initialHierarchyTreeNodeState,
       parentTreeNode: dimensionNode,
       classes: ["hierarchy", "dimensiontype" + row.DIMENSION_TYPE],
       id: this.getHierarchyTreeNodeId(row),
       objectName: objectName,
       title: title,
-      tooltip: tooltip,
+//      tooltip: tooltip,
       metadata: row,
       loadChildren: function(callback) {
         //get the level of the hierarchy.
@@ -1780,8 +1891,8 @@ var XmlaTreeView;
             return;
           }
           else
-          //if the hierarchy is not visible, don't render it.
           if (iDef(row.HIERARCHY_IS_VISIBLE) && row.HIERARCHY_IS_VISIBLE === false) {
+            //if the hierarchy is not visible, don't render it.
             return;
           }
           //actually add a treenode for the hierarchy.
@@ -1799,8 +1910,26 @@ var XmlaTreeView;
           me.createShowDimensionNodesCheckbox();
         }
 
-        me.getDefaultMembers(conf, defaultMemberQueue);
         //done rendering hierarchy treenodes
+        
+        //optionally, load the levels.
+        if (me.loadLevelsImmediately) {
+          me.renderLevelTreeNodes(
+            conf, 
+            function(){
+              //get info about default members. We do this in case the user drags a hierarchy unto a query.
+              me.getDefaultMembers(conf, defaultMemberQueue);
+            }, 
+            function(){
+              debugger;
+            }, 
+            me
+          );
+        }
+        else {
+          //get info about default members. We do this in case the user drags a hierarchy unto a query.
+          me.getDefaultMembers(conf, defaultMemberQueue);          
+        }
       }
     });
   },
@@ -2009,6 +2138,10 @@ var XmlaTreeView;
     var id = this.getMeasuresTreeNodeId();
     return TreeNode.getInstance("node:" + id);
   },
+  getDimensionsTreeNode: function(){
+    var id = this.getDimensionsTreeNodeId();
+    return TreeNode.getInstance("node:" + id);
+  },
   getDerivedMeasureTreeNodeId: function(derivedMeasure) {
     var measure = derivedMeasure.derivedFrom;
     var measureUniqueName = measure.MEASURE_UNIQUE_NAME;
@@ -2052,7 +2185,7 @@ var XmlaTreeView;
       classes: derivedMeasure.classes,
       id: this.getDerivedMeasureTreeNodeId(derivedMeasure),
       title: derivedMeasure.MEASURE_CAPTION,
-      tooltip: gMsg(derivedMeasure.tooltipMessageKey, measureCaption),
+//      tooltip: gMsg(derivedMeasure.tooltipMessageKey, measureCaption),
       metadata: derivedMeasure,
       compare: XmlaTreeView.prototype.derivedMeasureTreeNodeComparator
     });
@@ -2168,7 +2301,7 @@ var XmlaTreeView;
       id: measureTreeNodeId,
       objectName: objectName,
       title: title,
-      tooltip: tooltip,
+//      tooltip: tooltip,
       sorted: true,
       metadata: row
     };
@@ -2247,24 +2380,22 @@ var XmlaTreeView;
         }
 
         //All measures are now in the treeview. Let's add dimensions (beneath the measures level).
-        me.renderDimensionTreeNodes(conf);
+        //me.renderDimensionTreeNodes(conf);
       }
     });
   },
   getMeasuresTreeNodeId: function(){
     return "[Measures]";
   },
-  renderMeasuresNode: function(conf){
+  renderMeasuresTreeNode: function(conf){
     var measuresTreeNode = new TreeNode({
-      state: TreeNode.states.expanded,
+      state: this.initialMeasuresTreeNodeState,
       parentElement: this.cubeTreePane.getDom(),
       classes: ["measures", "hierarchy", "dimensiontype" + Xmla.Rowset.MD_DIMTYPE_MEASURE],
       id: this.getMeasuresTreeNodeId(),
       title: gMsg("Measures"),
-      tooltip: gMsg("Measures")
+//      tooltip: gMsg("Measures")
     });
-    conf.measuresTreeNode = measuresTreeNode;
-    this.renderMeasureNodes(conf);
     return measuresTreeNode;
   },
   getCurrentCubeTreeNode: function(){
@@ -2352,6 +2483,17 @@ var XmlaTreeView;
       this.autoSelectCube = null;
       this.fadeInSchemaTreePane();
     }
+
+    var cubeTreePane = this.getCubeTreePane();
+    var cubeTreePaneDom = cubeTreePane.getDom();
+    
+    var measuresTreeNode = this.getMeasuresTreeNode();
+    measuresTreeNodeBodyDom = measuresTreeNode.getDomBody();
+    var splitterPosition = Math.min(
+      Math.floor(cubeTreePaneDom.clientHeight * .33), //max available height * 33%
+      5 + measuresTreeNodeBodyDom.clientHeight  //max required height
+    );
+    this.measuresAndDimensionsSplitPane.setSplitterPosition(splitterPosition);
   },
   loadCube: function(cubeTreeNode){
     if (!(cubeTreeNode instanceof TreeNode)) {
@@ -2374,10 +2516,11 @@ var XmlaTreeView;
     var me = this;
     this.fireEvent("busy");
     var xmla = this.xmla;
+
+    this.clearCubeTreePane();
+
     var cubeTreePane = this.cubeTreePane;
-    this.clearTreePane(cubeTreePane);
     var cubeTreePaneDom = cubeTreePane.getDom();
-    this.hideCubeTreePane();
 
     var cube = cubeTreeNode.conf.metadata;
     var cubeName = cube.CUBE_NAME;
@@ -2409,6 +2552,7 @@ var XmlaTreeView;
         this.showCurrentCube === false
       ) ? " hidden" : "")
     }, [currentCatalog, currentCube], cubeTreePaneDom);
+
     listen(currentCatalogAndCube, "click", function(e){
       var target = e.getTarget();
       if (hCls(target, "info-icon")) {
@@ -2432,13 +2576,38 @@ var XmlaTreeView;
     cEl("DIV", {
       "class": "tooltip"
     }, tooltipAndInfoLabel.tooltip, currentCube);
+        
+    this.collapseSchema();
+    var currentCatalogAndCubeHeight = (currentCatalogAndCube.offsetHeight) + "px";
+    this.hideCubeTreePane();
 
-    this.renderMeasuresNode({
+    var conf = {
       url: url,
       dataSourceInfo: dataSourceInfo,
       catalog: catalogName,
       cube: cubeName
-    });
+    };
+    var measuresTreeNode = this.renderMeasuresTreeNode(conf);
+    var dimensionsTreeNode = this.renderDimensionsTreeNode(conf);
+
+    if (this.splitterBetweenMeasuresAndDimensions) {
+      var measuresAndDimensionsSplitPane = this.measuresAndDimensionsSplitPane = new SplitPane({
+        container: cubeTreePane,
+        firstComponent: measuresTreeNode,
+        secondComponent: dimensionsTreeNode,
+        orientation: SplitPane.orientations.horizontal,
+        style: {
+          top: currentCatalogAndCubeHeight
+        }
+      });
+      measuresAndDimensionsSplitPane.getDom();
+    }
+
+    conf.measuresTreeNode = measuresTreeNode;
+    this.renderMeasureNodes(conf);
+    conf.dimensionsTreeNode = dimensionsTreeNode;
+    this.renderDimensionTreeNodes(conf);
+    
   },
   getDom: function(){
     return this.splitPane.getDom();
@@ -2451,6 +2620,9 @@ var XmlaTreeView;
   },
   getSplitPane: function(){
     return this.splitPane;
+  },
+  getMeasuresAndDimensionsSplitPane: function(){
+    return this.measuresAndDimensionsSplitPane;
   },
   collapseCube: function(){
     this.getSplitPane().collapse(this.getCubeTreePane().getDom());

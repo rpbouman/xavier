@@ -217,6 +217,7 @@ var xmlaTreeView = new XmlaTreeView({
   showCatalogNodesCheckboxDisplayed: getXmlaTreeOption("showCatalogNodesCheckboxDisplayed"),
   useCatalogPrefixForCubes: getXmlaTreeOption("useCatalogPrefixForCubes"),
   useDimensionPrefixForHierarchies: getXmlaTreeOption("useDimensionPrefixForHierarchies"),
+  useHierarchyPrefixForLevels: getXmlaTreeOption("useHierarchyPrefixForLevels"),
   showCurrentCatalog: getXmlaTreeOption("showCurrentCatalog"),
   showCurrentCube: getXmlaTreeOption("showCurrentCube"),
   dimensionNodesInitiallyFlattened: getXmlaTreeOption("dimensionNodesInitiallyFlattened"),
@@ -225,6 +226,20 @@ var xmlaTreeView = new XmlaTreeView({
   maxLowCardinalityLevelMembers: getXmlaTreeOption("maxLowCardinalityLevelMembers"),
   levelMembersDiscoveryMethod: getXmlaTreeOption("levelMembersDiscoveryMethod"),
   defaultMemberDiscoveryMethod: getXmlaTreeOption("defaultMemberDiscoveryMethod"),
+  initialMeasuresTreeNodeState: getXmlaTreeOption("initialMeasuresTreeNodeState"),
+  initialDimensionsTreeNodeState: getXmlaTreeOption("initialDimensionsTreeNodeState"),
+  initialHierarchyTreeNodeState: (
+    iDef(xavierOptions.initialHierarchyTreeNodeState) ? xavierOptions.initialHierarchyTreeNodeState : (
+      getXmlaTreeOption("loadLevelsImmediately") ? TreeNode.states.expanded : TreeNode.states.collapsed
+    )
+  ),
+  loadLevelsImmediately: (
+    //if loadLevelsImmediately is explicitly specified, go with that setting.
+    iDef(xavierOptions.loadLevelsImmediately) ? xavierOptions.loadLevelsImmediately : (
+      //if loadLevelsImmediately is not explicitly specified then try to do something sensible based on initialHierarchyTreeNodeState
+      (xavierOptions.initialHierarchyTreeNodeState || XmlaTreeView.prototype.initialHierarchyTreeNodeState) === TreeNode.states.collaped ? false : true
+    )
+  ),
   levelCardinalitiesDiscoveryMethod: getXmlaTreeOption("levelCardinalitiesDiscoveryMethod"),
   urlRegExp: getXmlaTreeOption("urlRegExp"),
   checkIfDescriptionIsAnUrl: getXmlaTreeOption("checkIfDescriptionIsAnUrl"),

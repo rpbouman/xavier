@@ -166,6 +166,8 @@ limitations under the License.
         allowMultipleHierarchiesFromSameDimensionOnOneAxis: false,
         //whether to clear the visualization while waiting on a new query.
         clearVisualizationBeforeExecutingQuery: false,
+        //whether to create a splitter between measures and dimensions/hierarchies
+        splitterBetweenMeasuresAndDimensions: true,
         //configure whether data source nodes are flattened (hidden) or not
         datasourceNodesInitiallyFlattened: true,
         //determines which field to use as caption for datasource nodes
@@ -178,6 +180,19 @@ limitations under the License.
         //Finally, SAP HANA sometimes needs input parameters, and while these can be passed to MDX statements, 
         //we know not of any way to push input params into discover requests.
         levelMembersDiscoveryMethod: Xmla.METHOD_EXECUTE,
+        //initialMeasuresTreeNodeState: Initial state of dimensions Treenode: "collapsed", "expanded", "flattened", "unflattened", "leaf"
+        initialMeasuresTreeNodeState: "flattened",
+        //initialMeasuresTreeNodeState: "expanded",
+        //initialDimensionsTreeNodeState: Initial state of dimensions Treenode: "collapsed", "expanded", "flattened", "unflattened", "leaf"
+        initialDimensionsTreeNodeState: "flattened",
+        //initialDimensionsTreeNodeState: "expanded",
+        //initialHierarchyTreeNodeState: Initial state of hierarchy Treenodes: "collapsed", "expanded", "flattened", "unflattened", "leaf"
+        initialHierarchyTreeNodeState: "flattened",
+        //loadLevelsImmediately determines whether levels should be immediately discovered after loading a cube.
+        //if false, initial loading stops after the hierarchies are discovered, and levels are lazily loaded by expanding a hierarchy node.
+        //if true, then levels are loaded immediately after loading the hierarchy nodes.
+        //if not specified levels are loaded based on setting of initialHierarchyTreeNodeState 
+        //loadLevelsImmediately: false,
         //levelCardinalitiesDiscoveryMethod determines how cardinalities of levels are discovered.
         //levelCardinalitiesDiscoveryMethod: Xmla.METHOD_DISCOVER, //get level cardinality estimates from level discovery requests
         levelCardinalitiesDiscoveryMethod: Xmla.METHOD_EXECUTE,  //get exact level cardinalities by running mdx query.
@@ -195,6 +210,8 @@ limitations under the License.
         useCatalogPrefixForCubes: true,
         //whether labels of hierarchy nodes are prefixed by dimension caption. Prefix only shown if the dimension node is flattened. This option can be used to suppress the prefix alltogether.
         useDimensionPrefixForHierarchies: true,
+        //whether labels of hierarchy nodes are prefixed by dimension caption. Prefix only shown if the dimension node is flattened. This option can be used to suppress the prefix alltogether.
+        useHierarchyPrefixForLevels: true,
         //whether to show the current catalog in the cube pane
         showCurrentCatalog: true,
         //whether to show the current cube in the cube pane
