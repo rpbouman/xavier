@@ -1528,6 +1528,10 @@ var QueryDesignerAxis;
         }
       }
     }
+    
+    //this check is too strict.
+    //when we drag a hierarchy from a query axis, then requestType will be "hierarchy"
+    //whereas we are in fact only dragging the items that are associated with that hierarchy, not the hierarchy itself.
     if (!this.dropIncludes(requestType)) {
       return false;
     }
