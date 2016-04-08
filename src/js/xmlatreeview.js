@@ -1605,16 +1605,17 @@ var XmlaTreeView;
         var levels = [], i = 0, hierarchyMetadata;
         //create a treenode for each level
         rowset.eachRow(function(row){
+          if (row.DIMENSION_UNIQUE_NAME === QueryDesigner.prototype.measuresHierarchyName) {
+            return;
+          }   
           if (me.checkIsExcluded(options, row)) {
             return;
           }
           if (!hierarchyMetadata || hierarchyMetadata.HIERARCHY_UNIQUE_NAME !== row.HIERARCHY_UNIQUE_NAME) {
             hierarchyMetadata = me.getHierarchyMetadata(row.HIERARCHY_UNIQUE_NAME);
           }
+          
           var dimensionType = hierarchyMetadata.DIMENSION_TYPE;
-          if (dimensionType === Xmla.Rowset.MD_DIMTYPE_MEASURE) {
-            return;
-          }
           row.DIMENSION_TYPE = dimensionType;
           row.HIERARCHY_CAPTION = hierarchyMetadata.HIERARCHY_CAPTION;
           levels.push(row);
