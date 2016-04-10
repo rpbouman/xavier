@@ -37,7 +37,7 @@ limitations under the License.
     <static-path url="/xavier/resources/html" localFolder="resources/html"/>
     <static-path url="/xavier/resources/doc" localFolder="resources/doc"/>
     <static-path url="/xavier/resources/mui" localFolder="resources/mui"/>
-    <static-path url="/xavier/resources/xmla4js" localFolder="resources/xmla4js"/>
+    <static-path url="/xavier/resources/messages" localFolder="resources/messages"/>
     <static-path url="/xavier/lib" localFolder="lib"/>
   </static-paths>
 
