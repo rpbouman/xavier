@@ -1398,7 +1398,7 @@ var XmlaTreeView;
       }
     });
   },
-  renderMemberNodes: function(conf, levels, cardinalityEstimateOrExact){
+  renderMemberNodes: function(conf, levels, cardinalityEstimateOrExact, callback){
     var me = this;
     var levelMembersNodes = [];
     var i, level, n = levels.length, estimateOrExact;
@@ -1420,8 +1420,8 @@ var XmlaTreeView;
       }
     }
 
-    var callback = conf.callback;
-    if (callback) {
+    if (conf.callback) {
+      callback = conf.callback;
       delete conf.callback;
     }
 
@@ -1453,17 +1453,17 @@ var XmlaTreeView;
       callback();
     }
   },
-  loadLevelTreeNodeChildren: function(conf, levels){
+  loadLevelTreeNodeChildren: function(conf, levels, callback){
     var me = this;
     if (!iArr(levels)) {
       levels = [levels];
     }
     if (this.renderPropertyNodes === false) {
-      this._renderLevelMemberNodes(conf, levels);
+      this._renderLevelMemberNodes(conf, levels, callback);
     }
     else {
       this.renderLevelPropertyNodes(conf, function(){
-        me._renderLevelMemberNodes(conf, levels);
+        me._renderLevelMemberNodes(conf, levels, callback);
       });        
     }
   },
@@ -1514,8 +1514,7 @@ var XmlaTreeView;
       state: state,
       loadChildren: function(callback){
         conf.hierarchyTreeNode = this.getParentTreeNode();
-        me.loadLevelTreeNodeChildren(conf, row);
-        callback();
+        me.loadLevelTreeNodeChildren(conf, row, callback);
       }
     };
     var treeNode = new TreeNode(levelTreeNodeConf);
@@ -1569,17 +1568,17 @@ var XmlaTreeView;
       },
     });
   },
-  _renderLevelMemberNodes: function(conf, levels){
+  _renderLevelMemberNodes: function(conf, levels, callback){
     var me = this;
     switch (me.levelCardinalitiesDiscoveryMethod) {
       case Xmla.METHOD_EXECUTE:
         me.queryLevelCardinalities(levels, conf.url, conf.dataSourceInfo, function(){
-          me.renderMemberNodes(conf, levels, "exact");
+          me.renderMemberNodes(conf, levels, "exact", callback);
         }, me);
         break;
       case Xmla.METHOD_DISCOVER:
       default:
-        me.renderMemberNodes(conf, levels, "estimate");
+        me.renderMemberNodes(conf, levels, "estimate", callback);
     }
   },
   //this gets called to load levels immediately, this happens when the hierarchy nodes are initially expanded or flattened
