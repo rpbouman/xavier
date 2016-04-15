@@ -523,10 +523,10 @@ var XmlaTreeView;
     }, [
       showCatalogNodesCheckbox,
       cEl("SPAN", {
-      }, gMsg("Show catalog nodes")),
+      }, gMsg("Show catalog nodes")) /*,
       cEl("DIV", {
         "class": "tooltip"
-      }, gMsg("Check the box to display catalog nodes in the treeview. Uncheck to hide."))
+      }, gMsg("Check the box to display catalog nodes in the treeview. Uncheck to hide.")) */
     ], schemaTreePaneDom);
   },
   getShowCatalogNodesCheckbox: function(){
@@ -2504,10 +2504,10 @@ var XmlaTreeView;
     var div = cEl("DIV", {
       "class": "show-dimension-nodes" + (this.showDimensionNodesCheckboxDisplayed === false ? " hidden" : ""),
       id: "show-dimension-nodes"
-    }, [
+    }, [ /*
       cEl("DIV", {
         "class": "tooltip"
-      }, gMsg("Check to show multi-hierarchy dimension nodes. Uncheck to hide all dimension nodes.")),
+      }, gMsg("Check to show multi-hierarchy dimension nodes. Uncheck to hide all dimension nodes.")), */
       showDimensionNodesCheckbox,
       cEl("SPAN", {
       }, gMsg("Show dimension nodes"))
@@ -2530,10 +2530,10 @@ var XmlaTreeView;
     var div = cEl("DIV", {
       "class": "show-hierarchy-nodes" + (this.showHierarchyNodesCheckboxDisplayed === false ? " hidden" : ""),
       id: "show-hierarchy-nodes"
-    }, [
+    }, [ /*
       cEl("DIV", {
         "class": "tooltip"
-      }, gMsg("Check to show hierarchy nodes. Uncheck to hide all hierarchy nodes.")),
+      }, gMsg("Check to show hierarchy nodes. Uncheck to hide all hierarchy nodes.")), */
       showHierarchyNodesCheckbox,
       cEl("SPAN", {
       }, gMsg("Show hierarchy nodes"))
