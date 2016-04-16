@@ -111,6 +111,58 @@ var autoRunEnabled = iDef(xavierOptions.autoRunEnabled) ? xavierOptions.autoRunE
 *   Create toolbar buttons for visualizations
 */
 if (mainToolbar) {
+  var buttonConf;
+  //add buttons that control the treeview
+  
+  if (xavierOptions.showDimensionNodesToolbarButton === true) {
+    buttonConf = {
+      "class": "show-dimension-nodes",
+      tooltip: gMsg("Show dimensions"),
+      group: "tree",
+      toggleGroup: "showDimensions",
+      depressed: xavierOptions.initialDimensionsTreeNodeState !== TreeNode.states.flattened
+    };
+    mainToolbar.addButton(buttonConf);
+    mainToolbar.listen({
+      afterToggleGroupStateChanged: function(toolbar, event, data){
+        var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
+        switch (data.group) {
+          case "showDimensions":
+            xmlaTreeView.showDimensionNodes(Boolean(depressedButton));
+            break;
+        }
+      }
+    });
+  }
+  
+  if (xavierOptions.showHierarchyNodesToolbarButton === true) {
+    buttonConf = {
+      "class": "show-hierarchy-nodes",
+      tooltip: gMsg("Show hierarchies"),
+      group: "tree",
+      toggleGroup: "showHierarchies",
+      depressed: xavierOptions.initialHierarchyTreeNodeState !== TreeNode.states.flattened
+    };
+    mainToolbar.addButton(buttonConf);
+    mainToolbar.listen({
+      afterToggleGroupStateChanged: function(toolbar, event, data){
+        var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
+        switch (data.group) {
+          case "showHierarchies":
+            xmlaTreeView.showHierarchyNodes(Boolean(depressedButton));
+            break;
+        }
+      }
+    });
+  }
+  if (buttonConf) {
+    mainToolbar.addButton({"class": "separator"});
+    function displayTreeViewButtonGroup(display){
+      displayToolbarGroup("tree", display);
+    }
+  }
+
+  //add a button for each visualization
   var visualizationButtonClicked = function(){
     var buttonConf = this.conf;
     var className = buttonConf["class"];
@@ -261,10 +313,10 @@ var xmlaTreeView = new XmlaTreeView({
       }
     },
     loadCube: function(xmlaTreeView, event, cubeTreeNode){
-      displayVisualizationsGroup(false);
+      displayToolbarButtonGroupsForCube(false);
     },
     cubeLoaded: function(xmlaTreeView, event){
-      displayVisualizationsGroup(true);
+      displayToolbarButtonGroupsForCube(true);
 
       var currentCube = xmlaTreeView.getCurrentCube();
       workArea.setCube(currentCube);
@@ -742,12 +794,21 @@ function displayVisualizationsGroup(display){
 function displayVisualizationActionsGroup(display){
   displayToolbarGroup("visaction", display);
 }
+
+function displayToolbarButtonGroupsForCube(display){
+  if(mainToolbar) {
+    displayVisualizationsGroup(display);
+    if (displayTreeViewButtonGroup){
+      displayTreeViewButtonGroup(display);
+    }
+  }
+}
 /**
  * Init:
  */
 xmlaTreeView.init();
 
-displayVisualizationsGroup(false);
+displayToolbarButtonGroupsForCube(false);
 displayVisualizationActionsGroup(false);
 
 //toggleAutoRunEnabled();

@@ -54,6 +54,14 @@ html, body {
 /**
  *  Toolbar
  */
+.toolbar .show-dimension-nodes {
+  background-image: url('../images/dimension.png');
+} 
+
+.toolbar .show-hierarchy-nodes {
+  background-image: url('../images/hierarchy.png');
+} 
+ 
 .toolbar .refresh {
   background-image: url('../../lib/mui/images/refresh16x16.png');
 }
