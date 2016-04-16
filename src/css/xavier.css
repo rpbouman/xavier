@@ -54,6 +54,10 @@ html, body {
 /**
  *  Toolbar
  */
+.toolbar .show-catalog-nodes {
+  background-image: url('../images/schema.png');
+} 
+
 .toolbar .show-dimension-nodes {
   background-image: url('../images/dimension.png');
 } 

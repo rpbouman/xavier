@@ -838,9 +838,24 @@ var XmlaTreeView;
     }
     return null;
   },
+  _getBooleanEvent: function(event){
+    var checked;
+    if (typeof(event) === "boolean") {
+      checked = event;
+    }
+    else
+    if (event.getTarget) {
+      var target = event.getTarget();
+      checked = target.checked;
+    }
+    else {
+      checked = false;
+    }
+    return checked;
+  },
   showCatalogNodes: function(event){
-    var target = event.getTarget(), state;
-    if (target.checked) {
+    var checked = this._getBooleanEvent(event), state;
+    if (checked) {
       this.catalogNodesInitiallyFlattened = false;
       state = TreeNode.states.unflattened;
     }
@@ -874,15 +889,7 @@ var XmlaTreeView;
     return ret;
   },
   showDimensionNodes: function(event){
-    var checked;
-    if (typeof(event) === "boolean") {
-      checked = event;
-    }
-    else {
-      var target = event.getTarget();
-      checked = target.checked;
-    }
-    var state;
+    var checked = this._getBooleanEvent(event), state;
     if (checked) {
       this.dimensionNodesInitiallyFlattened = false;
       state = TreeNode.states.unflattened;
@@ -901,15 +908,7 @@ var XmlaTreeView;
     }, this)
   },
   showHierarchyNodes: function(event){
-    var checked;
-    if (typeof(event) === "boolean") {
-      checked = event;
-    }
-    else {
-      var target = event.getTarget();
-      checked = target.checked;
-    }
-    var state;
+    var checked = this._getBooleanEvent(event), state;
     if (checked) {
       state = TreeNode.states.unflattened;
     }

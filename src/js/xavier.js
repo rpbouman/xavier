@@ -113,12 +113,33 @@ var autoRunEnabled = iDef(xavierOptions.autoRunEnabled) ? xavierOptions.autoRunE
 if (mainToolbar) {
   var buttonConf;
   //add buttons that control the treeview
+
+  if (xavierOptions.showCatalogNodesToolbarButton === true) {
+    buttonConf = {
+      "class": "show-catalog-nodes",
+      tooltip: gMsg("Show catalogs"),
+      group: "tree-catalog",
+      toggleGroup: "showCatalogs",
+      depressed: !xavierOptions.catalogNodesInitiallyFlattened
+    };
+    mainToolbar.addButton(buttonConf);
+    mainToolbar.listen({
+      afterToggleGroupStateChanged: function(toolbar, event, data){
+        var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
+        switch (data.group) {
+          case "showCatalogs":
+            xmlaTreeView.showCatalogNodes(Boolean(depressedButton));
+            break;
+        }
+      }
+    });
+  }
   
   if (xavierOptions.showDimensionNodesToolbarButton === true) {
     buttonConf = {
       "class": "show-dimension-nodes",
       tooltip: gMsg("Show dimensions"),
-      group: "tree",
+      group: "tree-cube",
       toggleGroup: "showDimensions",
       depressed: xavierOptions.initialDimensionsTreeNodeState !== TreeNode.states.flattened
     };
@@ -139,7 +160,7 @@ if (mainToolbar) {
     buttonConf = {
       "class": "show-hierarchy-nodes",
       tooltip: gMsg("Show hierarchies"),
-      group: "tree",
+      group: "tree-cube",
       toggleGroup: "showHierarchies",
       depressed: xavierOptions.initialHierarchyTreeNodeState !== TreeNode.states.flattened
     };
@@ -157,8 +178,8 @@ if (mainToolbar) {
   }
   if (buttonConf) {
     mainToolbar.addButton({"class": "separator"});
-    function displayTreeViewButtonGroup(display){
-      displayToolbarGroup("tree", display);
+    function displayTreeViewCubeButtonGroup(display){
+      displayToolbarGroup("tree-cube", display);
     }
   }
 
@@ -798,8 +819,8 @@ function displayVisualizationActionsGroup(display){
 function displayToolbarButtonGroupsForCube(display){
   if(mainToolbar) {
     displayVisualizationsGroup(display);
-    if (displayTreeViewButtonGroup){
-      displayTreeViewButtonGroup(display);
+    if (displayTreeViewCubeButtonGroup){
+      displayTreeViewCubeButtonGroup(display);
     }
   }
 }
