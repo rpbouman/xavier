@@ -361,7 +361,6 @@ var XavierTimeSeriesChartTab;
         previousPeriodMember = currentPeriodMember + ".PrevMember", 
         categoriesSet = QueryDesignerAxis.prototype.braceIdentifier("Categories")
     ;
-    var mdx = "";
 
     //make a named set for the measures.
     var measureAxis = this.getColumnAxis();
@@ -511,9 +510,7 @@ var XavierTimeSeriesChartTab;
     ].join("");
     columnsMdx += measureAxis.getOnAxisClauseMdx();
     
-    mdx = withClauseMdx;
-    mdx += [
-      "",
+    var mdx = [
       "SELECT ",
       columnsMdx,
       ",",
@@ -553,12 +550,16 @@ var XavierTimeSeriesChartTab;
     var slicerAxis = this.getSlicerAxis();
     var slicerMdx = slicerAxis.getMdx();
     if (slicerMdx) {
+      withClauseMdx += [
+        slicerAxis.getCalculatedMembersMdx()
+      ].join("\n");
       mdx += [
         "",
         "WHERE", 
         slicerMdx
       ].join("\n");
     }
+    mdx = withClauseMdx + "\n" + mdx;
     
     //done.
     return mdx;
