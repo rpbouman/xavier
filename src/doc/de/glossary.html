@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html>
 <!--
 Copyright 2014, 2015 Roland Bouman (roland.bouman@gmail.com)
@@ -13,46 +13,46 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
   <head>
-    <meta http-equiv="Content-Type" content="type=text/html; charset=utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Wilkommen bei Xavier!</title>
     <link rel="stylesheet" type="text/css" href="../../css/doc.css"/>
   </head>
   <body>
     <div>
-      <span class="go-back" onclick="history.back()">Zurück</span>
+      <span class="go-back" onclick="history.back()">ZurÃ¼ck</span>
     </div>
     <h1>Begriffe und Bezeichnungen</h1>
     <dl>
       <dt><dfn class="bar-chart"><a name="bar-chart">Balkendiagramm</a></dfn></dt>
       <dd>
-        In einem Balkendiagramm stellt jeden Balken eine Kategorie (wie das Geschlecht Mann) dar, die Balkenhöhe entspricht den Wert (die Anzahl Männer).
+        In einem Balkendiagramm stellt jeden Balken eine Kategorie (wie das Geschlecht Mann) dar, die BalkenhÃ¶he entspricht den Wert (die Anzahl MÃ¤nner).
         Sie finden weitere Informationen in Wikipedia unter <a href="http://en.wikipedia.org/wiki/Bar_chart"> Balkendiagramm</a>.
       </dd>
 
       <dt><dfn class="dimension"><a name="dimension">Dimension</a></dfn></dt>
       <dd>
-      Die Ausprägungen einer Dimension sind die Schlüsseln, um Fakten differenziert zu betrachten. Das Symbol wird nur gezeigt für Dimensionen mit mehreren Hierarchien zugeordnet und wenn der entsprechende Haken gesetzt wurde.
+      Die AusprÃ¤gungen einer Dimension sind die SchlÃ¼sseln, um Fakten differenziert zu betrachten. Das Symbol wird nur gezeigt fÃ¼r Dimensionen mit mehreren Hierarchien zugeordnet und wenn der entsprechende Haken gesetzt wurde.
       </dd>
 
       <dt><dfn class="hierarchy"><a name="hierarchy">Hierarchie</a></dfn></dt>
       <dd>
-        Die Ausprägungen einer Dimension werden in der Regel streng hierarchisch in meheren Ebenen betrachtet - als Eltern/Kind-Beziehungen. 
-		Als Beispiel - wenn 'Tag' der Dimensionschlüssel ist, wird manchmal die Hierarchie in den Ebenen Jahr, Quartier, Monat usw geordnet. Zu einer Dimension können mehrere Hierarchien zugeordnett werden.
+        Die AusprÃ¤gungen einer Dimension werden in der Regel streng hierarchisch in meheren Ebenen betrachtet - als Eltern/Kind-Beziehungen. 
+		Als Beispiel - wenn 'Tag' der DimensionschlÃ¼ssel ist, wird manchmal die Hierarchie in den Ebenen Jahr, Quartier, Monat usw geordnet. Zu einer Dimension kÃ¶nnen mehrere Hierarchien zugeordnett werden.
 		Mehr lesen in: <a href="http://en.wikipedia.org/wiki/OLAP_cube#Hierarchy">Hierarchien</a> in Wikipedia (engl).
       </dd>
 
       <dt><dfn class="level"><a name="level">Ebene</a></dfn></dt>
       <dd>
-        Stellt eine Ebene der Aggregation (Granularität) in der <a href="#hierarchy">Hierarchie</a> dar.
+        Stellt eine Ebene der Aggregation (GranularitÃ¤t) in der <a href="#hierarchy">Hierarchie</a> dar.
       </dd>
-      <dt><dfn class="cube"><a name="cube">Quader, Würfel oder Cubus</a></dfn></dt>
+      <dt><dfn class="cube"><a name="cube">Quader, WÃ¼rfel oder Cubus</a></dfn></dt>
       <dd>
-        Eine Datenstruktur gut geeignet für die schnelle Analyse von mehr-dimensionale Daten. Voraussetzung ist, dass die Dimensionen der Daten ausreichend zeitlich stabil sind.
+        Eine Datenstruktur gut geeignet fÃ¼r die schnelle Analyse von mehr-dimensionale Daten. Voraussetzung ist, dass die Dimensionen der Daten ausreichend zeitlich stabil sind.
       </dd>
 
       <dt><dfn class="member"><a name="member">Element</a></dfn></dt>
       <dd>
-        Ein Element repräsentiert exakt einer der Ausprägungungen einer <a href="#level">Ebene</a> einer <a href="#hierarchy">Hierarchie</a>.
+        Ein Element reprÃ¤sentiert exakt einer der AusprÃ¤gungungen einer <a href="#level">Ebene</a> einer <a href="#hierarchy">Hierarchie</a>.
         Beispielweise kann "2015" als Element der Ebene "Jahr" in eine Zeit-Hierarchie darstellen.
       </dd>
 
@@ -64,30 +64,30 @@ limitations under the License.
         <dfn class="minimum"><a name="minimum">Minimum</a></dfn>
       </dt>
       <dd>
-        Werte oder Messungen (oft Fakten genannt) beziffern eine Quantität.
+        Werte oder Messungen (oft Fakten genannt) beziffern eine QuantitÃ¤t.
         Beispielweise ist "Anzahl Tage" ein Fakt, aber auch "Umsatz in Euro". In einem Sternschema findet man die Werte in einer Faktentabelle oder durch der Anzahl Zeilen.
         Mehr lesen in: <a href="http://en.wikipedia.org/wiki/Data_warehouse#Facts"> "measures"</a> in Wikipedia(Englisch).
       </dd>
 
       <dt><dfn class="olap"><a name="olap"><abbr>OLAP</abbr></a></dfn></dt>
       <dd>
-        <abbr>OLAP</abbr> is der Kürzel für <dfn class="olap">Online Analytical Processing</dfn>.
-        <abbr>OLAP</abbr> wird u.a. benutzt für die schnelle Analyse und Visualisierung von Geschäftsdaten und Statistiken auf einem ad-hoc Basis .
+        <abbr>OLAP</abbr> is der KÃ¼rzel fÃ¼r <dfn class="olap">Online Analytical Processing</dfn>.
+        <abbr>OLAP</abbr> wird u.a. benutzt fÃ¼r die schnelle Analyse und Visualisierung von GeschÃ¤ftsdaten und Statistiken auf einem ad-hoc Basis .
         Mehr lesen in: <a href="http://en.wikipedia.org/wiki/Online_analytical_processing"><abbr>OLAP</abbr> in Wikipedia (Englisch)</a>.
 
         Daten, die mit OLAP-Mitteln analysiert werden sollen, werden oft in einem <abbr>StarSchema(Sternschema)</abbr>-Struktur gespeichert. 
 		Mehr lesen in: <a href="http://de.wikipedia.org/wiki/Sternschema"><abbr>StarSchema/Sternschema</abbr> in Wikipedia</a> und in 
-		<a href="http://de.wikipedia.org/wiki/OLAP-W%C3%BCrfel"><abbr>OLAP-Würfel</abbr> in Wikipedia</a>.
+		<a href="http://de.wikipedia.org/wiki/OLAP-W%C3%BCrfel"><abbr>OLAP-WÃ¼rfel</abbr> in Wikipedia</a>.
       </dd>
       <dt><dfn class="pie-chart"><a name="pie-chart">Kreisdiagramm(Kuchendiagramm)</a></dfn></dt>
       <dd>
-		Ein Kreisdiagramm (auch Kuchen- oder Tortendiagramm) ist eine Darstellungsform für Teilwerte eines Ganzen als Teile (Kreissektoren) eines Kreises. 
+		Ein Kreisdiagramm (auch Kuchen- oder Tortendiagramm) ist eine Darstellungsform fÃ¼r Teilwerte eines Ganzen als Teile (Kreissektoren) eines Kreises. 
 		Jeder Kreissektor stellt einen Teilwert und der Kreis stellt somit die Summe der Teilwerte (das Ganze) dar. 
         Mehr lesen in: <a href="http://de.wikipedia.org/w/index.php?title=Kreisdiagramm&redirect=no">Kreisdiagram bei Wikipedia</a>.
       </dd>
 	  <dt><dfn class="pivot-table"><a name="pivot-table">Kreuztabelle</a></dfn></dt>
       <dd>
-        Eine Kreuztabelle( engl: pivot table) sind sowohl Zeilen- als auch Spaltenüberschriften Merkmalsausprägungen. 
+        Eine Kreuztabelle( engl: pivot table) sind sowohl Zeilen- als auch SpaltenÃ¼berschriften MerkmalsausprÃ¤gungen. 
         Mehr lesen in: <a href="http://de.wikipedia.org/wiki/Kontingenztafel"><abbr>Kreuztabelle</abbr></a> in Wikipedia.
       </dd>
  
