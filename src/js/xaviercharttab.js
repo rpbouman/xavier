@@ -426,10 +426,15 @@ var XavierChartTab;
     width -= distance;
 
     var style = visualizerDom.style;
-    style.top = 0 + "px";
+    var top = 0;
+    if (this.hasToolbar()){
+      var toolbar = this.getToolbar();
+      top = toolbar.getDom().clientHeight;
+    }
+    style.top = top + "px";
     style.width = width + "px";
     style.left = queryDesignerDom.clientWidth + distance + "px";
-    style.height = (dom.clientHeight - scrollbarHeight) + "px";
+    style.height = (dom.clientHeight - scrollbarHeight - top) + "px";
   },
   doLayout: function(){
     this.layoutChartArea();
