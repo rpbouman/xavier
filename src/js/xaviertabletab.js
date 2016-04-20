@@ -358,15 +358,10 @@ var XavierTableTab;
     dom.appendChild(dataTable.getDom());
     return dataTable;
   },
-  createDom: function(){
-    var me = this;
-    var dom = cEl("DIV", {
-      id: this.getId()
-    });
-    this.initQueryDesigner(dom);
-    this.visualizer = this.initTable(dom);
-    return dom;
-  },
+  initVisualizer: function(dom){
+    var visualizer = this.initTable(dom);
+    return this.visualizer;
+  },  
   doLayout: function(){
     var queryDesigner = this.getQueryDesigner();
     var queryDesignerDom = queryDesigner.getDom();

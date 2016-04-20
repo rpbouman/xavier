@@ -38,10 +38,24 @@ var XavierTab;
   this.generateTupleForSlicer = iDef(conf.generateTupleForSlicer) ? conf.generateTupleForSlicer : QueryDesigner.prototype.generateTupleForSlicer;
 
 }).prototype = {
+  createToolbar: true,
   clearVisualizationBeforeExecutingQuery: false,
   forCube: true,
   queryDesigner: null,
   visualizer: null,
+  getActions: function(){
+    var me = this;
+    return [
+      {"class": "run", group: "visaction", tooltip: gMsg("Run Query"),
+        pressedHandler: me.executeQuery,
+        scope: me
+      },
+      {"class": "clear", group: "visaction", tooltip: gMsg("Discard this query and start over"),
+        pressedHandler: me.clear,
+        scope: me
+      }
+    ];
+  },
   isForCube: function(cube){
     var forCube;
     //first. check if this is the kind of tab that is associated with a cube.
@@ -123,6 +137,27 @@ var XavierTab;
     }
     //throw "Unsupported operation: getDataset";
     return null;
+  },
+  initToolbar: function(dom){
+    var conf = this.conf;
+    var toolbar = this.toolbar = new Toolbar({
+      container: dom
+    });
+    var actions = this.getActions();
+    toolbar.addButton(actions);
+    return toolbar;
+  },
+  createDom: function(){
+    var me = this;
+    var dom = cEl("DIV", {
+      id: this.getId()
+    });
+    if (this.createToolbar) {
+      this.toolbar = this.initToolbar(dom);
+    }
+    this.queryDesigner = this.initQueryDesigner(dom);
+    this.visualizer = this.initVisualizer(dom);
+    return dom;
   },
   getDom: function(){
     var el = gEl(this.getId());
@@ -426,9 +461,10 @@ var XavierTab;
   },
   createQueryDesigner: function(dom, tab){
     //noop
+    return null;
   },
   initQueryDesigner: function(dom, noRender){
-    var queryDesigner = this.queryDesigner = this.createQueryDesigner(dom, this);
+    var queryDesigner = this.createQueryDesigner(dom, this);
     
     queryDesigner.generateTupleForSlicer = this.generateTupleForSlicer;
     queryDesigner.allowMultipleHierarchiesFromSameDimensionOnOneAxis = this.allowMultipleHierarchiesFromSameDimensionOnOneAxis;
@@ -453,6 +489,10 @@ var XavierTab;
     }
 
     return queryDesigner;
+  },
+  initVisualizer: function(dom) {
+    //noop
+    return null;
   }
 };
 XavierTab.id = 0;

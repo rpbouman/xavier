@@ -29,6 +29,7 @@ var XavierDocumentTab;
   }
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
+  createToolbar: false,
   forCube: false,
   text: gMsg("Welcome!"),
   createDom: function(){

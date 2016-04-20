@@ -218,12 +218,16 @@ if (mainToolbar) {
       tooltip: gMsg("Toggle Autorun Query"), 
       toggleGroup: "auto-run", 
       depressed: autoRunEnabled
-    },
+    }
+/*    
+    ,
     {"class": "run", group: "visaction", tooltip: gMsg("Run Query")},
     {"class": "separator"},
     {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel")},
     {"class": "separator"},
     {"class": "clear", group: "visaction", tooltip: gMsg("Discard this query and start over")}
+*/
+    
   ]);
 
   mainToolbar.listen({

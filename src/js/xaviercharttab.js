@@ -403,14 +403,13 @@ var XavierChartTab;
   initChart: function(dom, tab){
     //noop. Override.
   },
+  initVisualizer: function(dom){
+    var visualizer = this.visualizer = this.initChart(dom, this);
+    return visualizer;
+  },
   createDom: function(){
-    var me = this;
-    var dom = cEl("DIV", {
-      id: this.getId(),
-      "class": [XavierChartTab.prefix]
-    });
-    this.initQueryDesigner(dom);
-    this.visualizer = this.initChart(dom, this);
+    var dom = XavierTab.prototype.createDom.call(this);
+    dom.className = XavierChartTab.prefix;
     return dom;
   },
   layoutChartArea: function() {

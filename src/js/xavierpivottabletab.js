@@ -21,51 +21,47 @@ limitations under the License.
 var XavierPivotTableTab;
 (XavierPivotTableTab = function(conf){
   conf = conf || {};
+  if (iDef(conf.createToolbar)) {
+    this.createToolbar = Boolean(conf.createToolbar);
+  }
   conf.showHorizontalHierarchyHeaders = Boolean(conf.showHorizontalHierarchyHeaders);
   conf.showVerticalHierarchyHeaders = Boolean(conf.showVerticalHierarchyHeaders);
   this.classes = ["pivot-table"];
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Pivot Table"),
-  initToolbar: function(dom){
+  getActions: function(){
+    var me = this;
     var conf = this.conf;
-    var toolbar = this.toolbar = new Toolbar({
-      container: dom
-    });
-    toolbar.addButton([
+    var superActions = XavierTab.prototype.getActions.call(this);
+    var myActions = [
+      {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel"),
+        pressedHandler: me.exportToExcel,
+        scope: me
+      },
+      {"class": "separator"},
       {"class": "show-column-hierarchy-headers",
         tooltip: gMsg("Show column hierarchy headers"),
         toggleGroup: "show-column-hierarchy-headers",
-        depressed: conf.showHorizontalHierarchyHeaders
+        depressed: Boolean(conf.showHorizontalHierarchyHeaders),
+        stateChangeHandler: function(button, event, data){
+          me.visualizer.showHorizontalHierarchyHeaders(button === data.newButton);
+        }
       },
       {"class": "show-row-hierarchy-headers",
         tooltip: gMsg("Show row hierarchy headers"),
         toggleGroup: "show-row-hierarchy-headers",
-        depressed: conf.showVerticalHierarchyHeaders
-      }
-    ]);
-    toolbar.listen({
-      scope: this,
-      buttonPressed: function(toolbar, event, button){
-        var conf = button.conf;
-        var className = conf["class"];
-        switch (className) {
-          default:
-            throw "Not implemented";
-        }
-      },
-      afterToggleGroupStateChanged: function(toolbar, event, data){
-        var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
-        switch (data.group) {
-          case "show-column-hierarchy-headers":
-            this.visualizer.showHorizontalHierarchyHeaders(depressedButton ? true : false);
-            break;
-          case "show-row-hierarchy-headers":
-            this.visualizer.showVerticalHierarchyHeaders(depressedButton ? true : false);
-            break;
+        depressed: Boolean(conf.showVerticalHierarchyHeaders),
+        stateChangeHandler: function(button, event, data){
+          me.visualizer.showVerticalHierarchyHeaders(button === data.newButton);
         }
       }
-    });
+    ];
+    if (superActions.length) {
+      superActions = superActions.concat({"class": "separator"});
+    }
+    var actions = superActions.concat(myActions);
+    return actions;
   },
   createQueryDesigner: function(dom){
     var intrinsicProperties = ["PARENT_UNIQUE_NAME"];
@@ -229,16 +225,9 @@ var XavierPivotTableTab;
   expandMember: function(data) {
     this.drillMember(data, "down");
   },
-  createDom: function(){
-    var me = this;
-
-    var dom = cEl("DIV", {
-      id: this.getId()
-    });
-    this.initToolbar(dom);
-    this.initQueryDesigner(dom);
-    this.visualizer = this.initPivotTable(dom);
-    return dom;
+  initVisualizer: function(dom){
+    var visualizer = this.initPivotTable(dom);
+    return this.visualizer;
   }
 };
 XavierPivotTableTab.newInstance = function(conf){
