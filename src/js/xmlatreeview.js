@@ -2640,16 +2640,27 @@ var XmlaTreeView;
 
     tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(catalog.DESCRIPTION);
     currentCatalog.innerHTML = catalogName + tooltipAndInfoLabel.infoLabel;
-    cEl("DIV", {
-      "class": "tooltip"
-    }, tooltipAndInfoLabel.tooltip, currentCatalog);
-
+    /*
+    cEl(
+      "DIV", {
+        "class": "tooltip"
+      }, 
+      tooltipAndInfoLabel.tooltip, 
+      currentCatalog
+    );
+    */
+    
     tooltipAndInfoLabel = this.createNodeTooltipAndInfoLabel(cube.DESCRIPTION);
     currentCube.innerHTML = cubeName + tooltipAndInfoLabel.infoLabel;
-    cEl("DIV", {
-      "class": "tooltip"
-    }, tooltipAndInfoLabel.tooltip, currentCube);
-        
+    /*
+    cEl(
+      "DIV", {
+        "class": "tooltip"
+      }, 
+      tooltipAndInfoLabel.tooltip, 
+      currentCube
+    );
+    */  
     var conf = {
       url: url,
       dataSourceInfo: dataSourceInfo,
