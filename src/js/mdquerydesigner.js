@@ -721,6 +721,7 @@ var QueryDesigner;
         remove = ["axis-message-area-invalid", "axis-message-area-populated"];
       }
     }
+    
     rCls(axis.getMessageAreaId(), remove, add);
     return valid;
   },
@@ -1408,6 +1409,28 @@ var QueryDesignerAxis;
     }
     return true;
   },
+  checkCardinalityTypes: function(typesSpecs, types){
+    var typeName, type, typeStats;
+    for (typeName in typesSpecs) {
+      type = typesSpecs[typeName];
+      typeStats = types[typeName];
+      if (iUnd(typeStats)) {
+        if (type.min === 0) {
+          typeStats = 0;
+        }
+        else {
+          return false;
+        }
+      }
+      if (iDef(type.min) && typeStats < type.min) {
+        return false;
+      }
+      if (iDef(type.max) && typeStats > type.max) {
+        return false;
+      }
+    }
+    return true;
+  },
   checkValid: function(stats){
     if (iUnd(stats)) {
       stats = this.getStats();
@@ -1416,6 +1439,18 @@ var QueryDesignerAxis;
     var conf = this.conf || {};
     var cardinalities = conf.cardinalities;
     
+    if (conf.allowMultipleLevels === false) {
+      if (iDef(stats.hierarchiesStats)){
+        var hierarchy;
+        for (hierarchy in stats.hierarchiesStats) {
+          hierarchy = stats.hierarchiesStats[hierarchy];
+          if (hierarchy.minLevel !== hierarchy.maxLevel) {
+            return false;
+          }
+        }
+      }
+    }
+
     if (iUnd(cardinalities)) {
       return true;
     }
@@ -1442,28 +1477,22 @@ var QueryDesignerAxis;
       if (iDef(cardinalities.hierarchies.max) && stats.hierarchyCount > cardinalities.hierarchies.max) {
         return false;
       }
-    }
-    
-    //check types
-    if (iDef(cardinalities.types)){
-      var typeName, type, typeStats;
-      for (typeName in cardinalities.types) {
-        type = cardinalities.types[typeName];
-        typeStats = stats.types[typeName];
-        if (iUnd(typeStats)) {
-          if (type.min === 0) {
-            typeStats = 0;
-          }
-          else {
+      
+      if (iDef(cardinalities.hierarchies.types) && iDef(stats.hierarchiesStats)){
+        var hierarchy;
+        for (hierarchy in stats.hierarchiesStats) {
+          hierarchy = stats.hierarchiesStats[hierarchy];
+          if (!this.checkCardinalityTypes(cardinalities.hierarchies.types, hierarchy.types)) {
             return false;
           }
         }
-        if (iDef(type.min) && typeStats < type.min) {
-          return false;
-        }
-        if (iDef(type.max) && typeStats > type.max) {
-          return false;
-        }
+      }
+    }
+        
+    //check types
+    if (iDef(cardinalities.types)){
+      if (!this.checkCardinalityTypes(cardinalities.types, stats.types)) {
+        return false;
       }
     }
     
@@ -1502,6 +1531,16 @@ var QueryDesignerAxis;
       var hierarchyStats = hierarchiesStats[hierarchyName];
       hierarchyStats.itemCount += 1;
 
+      var levelNumber = setDef.metadata.LEVEL_NUMBER;
+      if (iDef(levelNumber)) {
+        if (iUnd(hierarchyStats.minLevel) || hierarchyStats.minLevel > levelNumber) {
+          hierarchyStats.minLevel = levelNumber;
+        }
+        if (iUnd(hierarchyStats.maxLevel) || hierarchyStats.maxLevel < levelNumber) {
+          hierarchyStats.maxLevel = levelNumber;
+        }
+      }
+      
       var hierarchyStatsTypes = hierarchyStats.types;      
       if (iUnd(hierarchyStatsTypes[setDefType])) {
         hierarchyStatsTypes[setDefType] = 0;
@@ -1630,6 +1669,17 @@ var QueryDesignerAxis;
           stats.hierarchiesStats[hierarchyName].types[requestType] = 0;
         }
         stats.hierarchiesStats[hierarchyName].types[requestType] += 1;
+        if (iDef(metadata.LEVEL_NUMBER)) {
+          if (iUnd(stats.hierarchiesStats[hierarchyName].minLevel)) {
+            stats.hierarchiesStats[hierarchyName].minLevel = stats.hierarchiesStats[hierarchyName].maxLevel = metadata.LEVEL_NUMBER;
+          }
+          if (stats.hierarchiesStats[hierarchyName].minLevel > metadata.LEVEL_NUMBER) {
+            stats.hierarchiesStats[hierarchyName].minLevel = metadata.LEVEL_NUMBER;
+          }
+          if (stats.hierarchiesStats[hierarchyName].maxLevel < metadata.LEVEL_NUMBER) {
+            stats.hierarchiesStats[hierarchyName].maxLevel = metadata.LEVEL_NUMBER;
+          }
+        }
                 
         //check if the modified stats would still consitute a valid axis.
         if (!QueryDesignerAxis.prototype.checkValid.call(this, stats)){
