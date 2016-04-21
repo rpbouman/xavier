@@ -147,6 +147,12 @@ var XavierTab;
     toolbar.addButton(actions);
     return toolbar;
   },
+  getToolbar: function(){
+    return this.toolbar;
+  },
+  hasToolbar: function(){
+    return Boolean(this.getToolbar());
+  },
   createDom: function(){
     var me = this;
     var dom = cEl("DIV", {
