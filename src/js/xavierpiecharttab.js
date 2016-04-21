@@ -169,7 +169,8 @@ var XavierPieChartTab;
           "class": "categories",
           drop: {
             include: ["level", "member"]
-          }
+          },
+          allowMultipleLevels: false
         },
         {
           id: Xmla.Dataset.AXIS_PAGES,
