@@ -19,9 +19,6 @@ var DataTable;
 (DataTable = function(){
   this.initDataGrid();
 }).prototype = {
-  destroy: function(){
-    this.dataGrid.destroy();
-  },
   initDataGrid: function(){
     this.dataGrid = new DataGrid({});
     this.dataGrid.setRowHeaders([{
@@ -129,6 +126,22 @@ var XavierTableTab;
   arguments.callee._super.apply(this, [conf]);
 }).prototype = {
   text: gMsg("Table"),
+  getActions: function(){
+    var me = this;
+    var conf = this.conf;
+    var myActions = [
+      {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel"),
+        pressedHandler: me.exportToExcel,
+        scope: me
+      }
+    ];
+    var superActions = XavierTab.prototype.getActions.call(this);
+    if (superActions.length) {
+      superActions = superActions.concat({"class": "separator"});
+    }
+    var actions = superActions.concat(myActions);
+    return actions;
+  },
   getMdx: function(cubeName) {
     //datagrid columns: this is what we will be using to render the result
     var dataGridColumns = this.dataGridColumns = [], dataGridColumn, cellIndex = 0, memberIndex = 0;
