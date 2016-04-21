@@ -33,7 +33,6 @@ var XavierPivotTableTab;
   getActions: function(){
     var me = this;
     var conf = this.conf;
-    var superActions = XavierTab.prototype.getActions.call(this);
     var myActions = [
       {"class": "excel", group: "visaction", tooltip: gMsg("Export to Microsoft Excel"),
         pressedHandler: me.exportToExcel,
@@ -57,6 +56,7 @@ var XavierPivotTableTab;
         }
       }
     ];
+    var superActions = XavierTab.prototype.getActions.call(this);
     if (superActions.length) {
       superActions = superActions.concat({"class": "separator"});
     }
