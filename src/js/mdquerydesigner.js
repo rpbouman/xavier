@@ -1633,7 +1633,7 @@ var QueryDesignerAxis;
           return false;
         }
         if (queryDesignerHasHierarchy){
-          return false;
+          //return false;
         }
       case "level":
       case "member":
