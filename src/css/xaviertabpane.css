@@ -38,17 +38,26 @@ limitations under the License.
   border-color: #bbbbbb;
 }
 
-/* table */
 .xavier-tabpane > .pentaho-tab-bar > .welcome {
   background-image: url('../images/info.png');
 }
 
+/* table */
 .xavier-tabpane > .pentaho-tab-bar > .table {
   background-image: url('../images/table.png');
 }
 
 .toolbar > .new-table {
   background-image: url('../images/new-table.png');
+}
+
+/* correlation */
+.xavier-tabpane > .pentaho-tab-bar > .correlationmatrix {
+  background-image: url('../images/correlationmatrix.png');
+}
+
+.toolbar > .new-correlationmatrix {
+  background-image: url('../images/new-correlationmatrix.png');
 }
 
 /* pivot table */

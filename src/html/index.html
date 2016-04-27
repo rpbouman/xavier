@@ -137,6 +137,7 @@ limitations under the License.
 
     <script type="text/javascript" src="../js/xaviertab.js"></script>
     <script type="text/javascript" src="../js/xavierdoctab.js"></script>
+    <script type="text/javascript" src="../js/xaviercorrelationmatrixtab.js"></script>
     <script type="text/javascript" src="../js/xaviertabletab.js"></script>
     <script type="text/javascript" src="../js/xavierpivottabletab.js"></script>
     
@@ -519,6 +520,7 @@ limitations under the License.
             //you can suppress creating a toolbar button to create the visualization tabe by setting this to false.
             createToolbarButton: true
           },
+          {id: "correlationmatrix", tooltip: "New Correlation Matrix", componentConstructor: XavierCorrelationMatrixTab},
           {id: "pivot-table", tooltip: "New Pivot table", componentConstructor: XavierPivotTableTab},
           {id: "pie-chart", tooltip: "New Pie chart", componentConstructor: XavierPieChartTab},
           {id: "bar-chart", tooltip: "New Bar chart", componentConstructor: XavierGroupedBarChartTab},
