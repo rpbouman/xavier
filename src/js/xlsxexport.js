@@ -510,6 +510,10 @@ var XlsxExporter;
     if (visualizer instanceof DataTable) {
       this.exportDataTable(visualizer, queryDesigner);
     }
+    else
+    if (visualizer instanceof CorrelationMatrix) {
+      this.exportDataTable(visualizer, queryDesigner);
+    }
     else {
       throw "Don't know how to export this type of object.";
     }
