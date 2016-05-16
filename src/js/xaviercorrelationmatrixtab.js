@@ -159,7 +159,7 @@ var XavierCorrelationMatrixTab;
     var mdx = [
       withClause,
       "SELECT " + measures + " ON 0",
-      "FROM " + cubeName
+      "FROM " + QueryDesignerAxis.prototype.braceIdentifier(cubeName)
     ].join("\n");
 
     if (slicerMdx) {
