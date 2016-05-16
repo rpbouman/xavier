@@ -24,7 +24,7 @@ limitations under the License.
         <menuitem
           id="_xavier"
           label="XML/A Visualizer"
-          command="mantleXulHandler.openUrl('XML/A Visualizer', 'XML/A Visualizer', 'content/xavier/resources/html/index.html')"
+          command="mantleXulHandler.openUrl('XML/A Visualizer', 'XML/A Visualizer', 'content/xavier/resources/html/index-pentaho.html')"
         />
       </menubar>
     </overlay>
