@@ -130,6 +130,7 @@
 
     <copy todir="${dist.all}">
       <fileset dir="${src}/plugin"/>
+      <fileset dir="${src}/chrome"/>
     </copy>
 
     <mkdir dir="${dist.all}/lib"/>
@@ -246,5 +247,6 @@
 
   <target name="clean" description="clean up" >
     <delete dir="${dist}"/>
+    <delete dir="${apache.deploy.dir}/xavier"/>
   </target>
 </project>

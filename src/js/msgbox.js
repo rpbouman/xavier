@@ -84,3 +84,68 @@ function showConfirm(message, title, onOk, onCancel, scope, acceptLabel, cancelL
     }
   });
 }
+
+var promptDialog;
+function showPrompt(message, title, onOk, onCancel, scope, acceptLabel, cancelLabel, defaultValue){
+  if (!(message)) {
+    message = "Please enter a value";
+  }
+  message = gMsg(message);
+  message += "<div><input style=\"width:100%\"/></div>"
+  if (!(scope)) {
+    scope = null;
+  }
+
+  if (!(title)) {
+    title = "Prompt";
+  }
+  title = gMsg(title);
+  if (!(cancelLabel)) {
+    cancelLabel = "Cancel";
+  }
+  cancelLabel = gMsg(cancelLabel);
+  if (!(acceptLabel)) {
+    acceptLabel = "Ok";
+  }
+  acceptLabel = gMsg(acceptLabel);
+
+  function getValue(){
+    var dom = promptDialog.getDom();
+    var input = dom.getElementsByTagName("INPUT");
+    input = input[0];
+    return input.value;
+  }
+  
+  var okHandler = function(){
+    if (onOk) {
+      onOk.call(scope, getValue());
+    }
+  };
+
+  var cancelHandler = function(){
+    if (onCancel) {
+      onCancel.call(scope, getValue());
+    }
+  };
+
+  if (!defaultValue) {
+    defaultValue = "";
+  }
+  
+  if (!promptDialog) {
+    promptDialog = new Dialog();
+  }
+  promptDialog.show({
+    title: title,
+    message: message,
+    scope: scope,
+    yes: {
+      label: acceptLabel,
+      handler: okHandler
+    },
+    cancel: {
+      label: cancelLabel,
+      handler: cancelHandler
+    }
+  });
+}

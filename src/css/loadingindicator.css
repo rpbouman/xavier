@@ -1,0 +1,9 @@
+.spinner {
+  top: 33%;
+  left: 50%;
+  z-index: 1000;
+  width: 128px;
+  height: 128px;
+  background-image: url('../images/cube_spinner.gif');
+  position:absolute;
+}

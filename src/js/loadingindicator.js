@@ -47,3 +47,5 @@ function busy(yes){
     hideLoadingIndicator();
   }
 }
+linkCss(cssDir + "loadingindicator.css");
+busy(true);

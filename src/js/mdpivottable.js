@@ -665,6 +665,22 @@ var PivotTable;
     this.renderAxis(axis, table, "vertical", queryDesignerAxis);
   },
   getPropertiesMap: function(queryDesignerAxis){
+    var propertiesMap = {};
+    queryDesignerAxis.eachHierarchy(function(hierarchy, index){
+      var hierarchyName = queryDesignerAxis.getHierarchyName(hierarchy);
+      hierarchyName = queryDesignerAxis.stripBracesFromIdentifier(hierarchyName);
+      queryDesignerAxis.eachSetDef(function(setDef, index){
+        if (setDef.type !== "property") {
+          return;
+        }
+        var hierarchyProperties = propertiesMap[hierarchyName];
+        if (!hierarchyProperties) {
+          hierarchyProperties = propertiesMap[hierarchyName] = [];
+        }
+        hierarchyProperties.push(setDef.metadata.PROPERTY_NAME);
+      }, this, hierarchy);
+    }, this);
+    return propertiesMap;
   },
   isMemberParentOf: function(parentMember, childMember) {
     var parentMemberProperty = Xmla.Dataset.Axis.MEMBER_UNIQUE_NAME;
@@ -681,7 +697,7 @@ var PivotTable;
         positionCells, positionCellsLast, span1, span2, horizontal, vertical,
         dimensionNameIncluded
     ;
-    var propertiesmap = this.getPropertiesMap(queryDesignerAxis);
+    var propertiesMap = this.getPropertiesMap(queryDesignerAxis);
     switch (direction) {
       case "horizontal":
         horizontal = true;
@@ -703,7 +719,7 @@ var PivotTable;
     }
     table.className += " " + PivotTable.prefix + "-axis-" + direction;
     //for each tuple
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++) { 
       tupleNameIndex = 0;
       tuple = tuples[i];
       members = tuple.members;
@@ -814,7 +830,14 @@ var PivotTable;
               }
             }
           }
+        } // end of hhierarchy levels loop
+        
+        //this is where we should render properties.
+        var hierarchyProperties = propertiesMap[hierarchy.name];
+        if (hierarchyProperties) {
+          debugger; 
         }
+        
         prevMembers[hierarchy.index] = member;
       }, this);
     }

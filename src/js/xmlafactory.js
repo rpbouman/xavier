@@ -101,16 +101,16 @@ var XmlaFactory;
 	      xCsrfToken = xhr.getResponseHeader(this.xCsrfTokenHeader);
 	      if (me.checkCsrfTokenRequired(xhr)) {
 	    	//we didn't get a valid token. try next url
-		    index += 1;
+          index += 1;
 	      }
 	      else {
-	    	//we got a token! configure our Xmla to use it.
-	    	var header = me.xCsrfTokenHeader;
-	    	var xCsrfToken = xhr.getResponseHeader(header), headers = {};
-	    	headers[header] = xCsrfToken;
-	    	xmla.setOptions({
-	    	  headers: headers
-	    	});
+          //we got a token! configure our Xmla to use it.
+          var header = me.xCsrfTokenHeader;
+          var xCsrfToken = xhr.getResponseHeader(header), headers = {};
+          headers[header] = xCsrfToken;
+          xmla.setOptions({
+            headers: headers
+          });
 	      }
     	  me.tryXmlaUrl(xmla, urls, index);
 	      break;

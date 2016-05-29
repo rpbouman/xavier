@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<!--
+
+Copyright 2014 - 2016 Roland Bouman (roland.bouman@gmail.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-->
+  <head>
+    <meta http-equiv="Content-Type" content="type=text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <title></title>
+    <link rel="icon" type="image/png" href="resources/images/cube.png" />
+
+    <script type="text/javascript" src="resources/js/pentaho-theming.js"></script>
+    <script type="text/javascript" src="paths.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="lib/mui/css/tooltip.css"/>
+
+  </head>
+  <body class="pentaho-page-background" >
+    <!--[if lte IE 9]><script src="lib/aight-2.1.1/aight.min.js"></script><![endif]-->
+
+    <script type="text/javascript" src="lib/d3-3.5.16/d3.js" charset="utf-8"></script>
+    <!--
+    <script type="text/javascript" src="lib/d3-3.5.16/d3.min.js" charset="utf-8"></script>
+    -->
+
+    <script type="text/javascript" src="lib/dimple-2.1.6/dimple.v2.1.6.js"></script>
+    <!--
+    <script type="text/javascript" src="lib/dimple-2.1.6/dimple.v2.1.6.min.js"></script>
+    -->
+
+    <!-- zip lib required to do excel export -->
+    <script type="text/javascript" src="lib/jszip/jszip.min.js"></script>
+    <!-- blob lib required to do downloads of excel export -->
+    <script type="text/javascript" src="lib/blob/Blob.js"></script>
+    <!-- filesaver lib required to do downloads of excel export -->
+    <script type="text/javascript" src="lib/filesaver/FileSaver.min.js"></script>
+
+    <!-- xmla4js required to talk to XML/A servers -->
+    <!-- <script type="text/javascript" src="lib/xmla4js/Xmla-compiled.js"></script> -->
+    <script type="text/javascript" src="lib/xmla4js/Xmla.js"></script>
+
+    <!-- mui required for building GUI -->
+    <script type="text/javascript" src="lib/mui/js/utilities.js"></script>
+    <script type="text/javascript" src="lib/mui/js/dateutils.js"></script>
+    <script type="text/javascript" src="lib/mui/js/dom.js"></script>
+    <script type="text/javascript" src="lib/mui/js/event.js"></script>
+    <script type="text/javascript" src="lib/mui/js/dnd.js"></script>
+    <script type="text/javascript" src="lib/mui/js/observable.js"></script>
+    <script type="text/javascript" src="lib/mui/js/displayed.js"></script>
+    <script type="text/javascript" src="lib/mui/js/disabled.js"></script>
+    <script type="text/javascript" src="lib/mui/js/timer.js"></script>
+    <script type="text/javascript" src="lib/mui/js/spinner.js"></script>
+    <script type="text/javascript" src="lib/mui/js/dialog.js"></script>
+    <script type="text/javascript" src="lib/mui/js/toolbar.js"></script>
+    <script type="text/javascript" src="lib/mui/js/treenode.js"></script>
+    <script type="text/javascript" src="lib/mui/js/treelistener.js"></script>
+    <script type="text/javascript" src="lib/mui/js/treeselection.js"></script>
+    <script type="text/javascript" src="lib/mui/js/highlighter.js"></script>
+    <script type="text/javascript" src="lib/mui/js/contentarea.js"></script>
+    <script type="text/javascript" src="lib/mui/js/contentpane.js"></script>
+    <script type="text/javascript" src="lib/mui/js/splitpane.js"></script>
+    <script type="text/javascript" src="lib/mui/js/tabpane.js"></script>
+    <script type="text/javascript" src="lib/mui/js/datagrid.js"></script>
+    <!--
+    <script type="text/javascript" src="lib/mui/mui-compiled.js"></script>
+    -->
+
+    <!--[if IE 9]>
+    <script type="text/javascript">
+      var useTransitions = false;
+    </script>
+    <![endif]-->
+    <script type="text/javascript" src="resources/js/loadingindicator.js"></script>
+
+    <!-- xavier specific stuff -->
+    <script type="text/javascript" src="resources/messages/messages.js"></script>
+    <!--
+    <script type="text/javascript" src="resources/messages/messages-de.js"></script>
+    <script type="text/javascript" src="resources/messages/messages-nl.js"></script>
+    -->
+
+    <script type="text/javascript" src="resources/js/xlsxexport.js"></script>
+    <script type="text/javascript" src="resources/js/msgbox.js"></script>
+    <script type="text/javascript" src="resources/js/xmlatreeview.js"></script>
+    <script type="text/javascript" src="resources/js/mdquerydesigner.js"></script>
+    <script type="text/javascript" src="resources/js/mdpivottable.js"></script>
+
+    <script type="text/javascript" src="resources/js/xaviertab.js"></script>
+    <script type="text/javascript" src="resources/js/xavierdoctab.js"></script>
+    <script type="text/javascript" src="resources/js/xaviercorrelationmatrixtab.js"></script>
+    <script type="text/javascript" src="resources/js/xaviertabletab.js"></script>
+    <script type="text/javascript" src="resources/js/xavierpivottabletab.js"></script>
+    
+    <script type="text/javascript" src="resources/js/xaviercharttab.js"></script>
+    <script type="text/javascript" src="resources/js/xavierpiecharttab.js"></script>
+    <script type="text/javascript" src="resources/js/xaviergroupedbarcharttab.js"></script>
+    <script type="text/javascript" src="resources/js/xaviertimeseriescharttab.js"></script>
+    <script type="text/javascript" src="resources/js/xaviercombicharttab.js"></script>
+    <script type="text/javascript" src="resources/js/xaviertabpane.js"></script>
+
+    <script type="text/javascript" src="resources/js/xmlafactory.js"></script>
+    <script type="text/javascript" src="resources/js/xmlametadatafilter.js"></script>
+
+    <script type="text/javascript" src="resources/js/xavierderivedmeasurefactory.js"></script>
+
+    <script type="text/javascript" src="resources/js/xavieroptions.js"></script>
+    <script type="text/javascript" src="resources/js/xavier.js"></script>
+
+    <script type="text/javascript" src="resources/js/xavierbootstrap.js"></script>
+  </body>
+</html>
