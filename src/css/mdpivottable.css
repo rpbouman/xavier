@@ -159,7 +159,6 @@ span.toggle {
 }
 
 span.toggle:before {
-  font-family: monospace
 }
 
 table.pivot-table td.not-drilled-down-has-children span.toggle:before {
