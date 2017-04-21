@@ -143,10 +143,17 @@ var XavierTimeSeriesChart;
       var measure = d.xField[1];
       var measureNumber = measureOrder.indexOf(measure);
       var datum = data[measureNumber * categoryOrder.length + categoryNumber];
-      return [
-        measure + ": " + (datum.fmtValue || datum.value),
-        timeAxisLabel + ": " + datum.label
-      ];
+      var tooltip;
+      if (datum) {
+        tooltip = [
+          measure + ": " + (datum.fmtValue || datum.value),
+          timeAxisLabel + ": " + datum.label
+        ];
+      }
+      else {
+        tooltip = null;
+      }
+      return tooltip;
     };
 
     this.addLegend(chart);
