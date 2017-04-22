@@ -1,6 +1,6 @@
 /*
 
-Copyright 2014 - 2016 Roland Bouman (roland.bouman@gmail.com)
+Copyright 2014 - 2017 Roland Bouman (roland.bouman@gmail.com)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -152,15 +152,16 @@ var XavierGroupedBarChart;
     }
 
     //make the axis titles bold.
-    categoryAxis.titleShape[0][0].style.fontWeight = "bold";
-    measureAxis.titleShape[0][0].style.fontWeight = "bold";
+    categoryAxis.titleShape._groups[0][0].style.fontWeight = "bold";
+    measureAxis.titleShape._groups[0][0].style.fontWeight = "bold";
 
     //position the category axis title left of the axis
-    var titleShape = categoryAxis.titleShape[0][0];
+    var titleShape = categoryAxis.titleShape._groups[0][0];
     var titleShapeBBox = titleShape.getBBox();
-    var categoryAxisShape = categoryAxis.shapes[0][0];
+    var categoryAxisShape = categoryAxis.shapes._groups[0][0];
     var y = categoryAxisShape.transform.baseVal[0].matrix.f;
-    var x = categoryAxisShape.children[0].transform.baseVal[0].matrix.e;
+    //var x = categoryAxisShape.children[0].transform.baseVal[0].matrix.e;
+    var x = categoryAxisShape.transform.baseVal[0].matrix.e;
     x = x - titleShapeBBox.width;
     y = y + 2*titleShapeBBox.height;
     if (x < 70) {
