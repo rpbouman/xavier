@@ -170,7 +170,9 @@ if (mainToolbar) {
         var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
         switch (data.group) {
           case "showHierarchies":
-            xmlaTreeView.showHierarchyNodes(Boolean(depressedButton));
+            var show = Boolean(depressedButton);
+            xmlaTreeView.initialHierarchyTreeNodeState = show ? TreeNode.states.expanded : TreeNode.states.flattened;
+            xmlaTreeView.showHierarchyNodes(show);
             break;
         }
       }
