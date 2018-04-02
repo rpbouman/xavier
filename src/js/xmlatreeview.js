@@ -642,6 +642,40 @@ var XmlaTreeView;
     );
     this.getDataSources();
   },
+  /**
+  * Issue #25, ability to specify catalog via url. With this we can specify things like this in the query string to xavier.html:
+  * metadataRestrictions={"datasources":[{"catalogs":[{"restriction":{"CATALOG_NAME":"system-local.public.rbouman.hxmla.models"}}]}]}
+  * like so:
+  *
+  * http://localhost/xavier/src/html/index.html?xmlaUrl=/hana/xmla/xsxmla.xsxmla&metadataRestrictions={%22datasources%22:[{%22catalogs%22:[{%22restriction%22:{%22CATALOG_NAME%22:%22system-local.public.rbouman.hxmla.models%22}}]}]}
+  */
+  getMetadataRestrictionsFromUrl: function(){
+    var search = document.location.search;
+    if (!search) {
+      return null;
+    }
+    var metadataRestrictions;
+    search.substr(1).split("&").some(function(element, index){
+      element = decodeURIComponent(element);
+      var nameValue = element.split("=");
+      if (nameValue[0] === "metadataRestrictions") {
+        metadataRestrictions = nameValue[1];
+        return true;
+      }
+    });
+    if (!metadataRestrictions) {
+      return null;
+    }
+    try {
+      metadataRestrictions = JSON.parse(metadataRestrictions);
+    }
+    catch (ex){
+      console.error(ex);
+      console.error("Metadatarestrictions passed through URL is not valid JSON. Ignoring.")
+      return null;
+    }
+    return metadataRestrictions;
+  },
   getDataSources: function(){
     var me = this;
     var xmla = me.xmla;
@@ -649,7 +683,10 @@ var XmlaTreeView;
 
     var metadataRestrictions = this.metadataRestrictions;
     if (!metadataRestrictions) {
-      metadataRestrictions = {};
+      metadataRestrictions = this.getMetadataRestrictionsFromUrl();
+      if (!metadataRestrictions) {
+        metadataRestrictions = {};
+      }
     }
 
     var datasourcesQueue = metadataRestrictions.datasources;
