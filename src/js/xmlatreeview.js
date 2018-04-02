@@ -2103,7 +2103,7 @@ var XmlaTreeView;
       statement: mdx,
       success: function(xmla, req, resp){
         resp.getSlicerAxis().eachTuple(function(tuple){
-          var members = tuple.members, i, n = members.length,
+          var members = tuple.members, i, n = hierarchyTreeNodes.length,
               member, hierarchyTreeNode, defaultMember
           ;
           for (i = 0; i < n; i++) {
