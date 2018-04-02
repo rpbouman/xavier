@@ -1630,7 +1630,9 @@ var QueryDesignerAxis;
       case "measures":
         //if this axis already has this hierarchy then we can't drop it again.
         if (thisAxisHasHierarchy) {
-          return false;
+          //actually, rule above is too strict - what if we want to move the hierarchy within the axis?
+          //allow for now.
+          //return false;
         }
         if (queryDesignerHasHierarchy){
           //return false;
