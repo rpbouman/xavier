@@ -567,7 +567,8 @@ function whileDrag(event, dndHandler){
         var row, rowPos, cell, cellPos;
         var el;
         if (hierarchyIndex === -1 || dragInfo.className === "hierarchy" || dragInfo.className === "measures") {
-          //hierarchy does not exists yet.
+           console.log("not exists higlighing position")
+         //hierarchy does not exists yet.
           //Highlight the place where the new hierarchy would appear if dropped.
           proxyClassName += layout;
           switch (layout) {
@@ -579,6 +580,7 @@ function whileDrag(event, dndHandler){
               proxyStyle.width = row.clientWidth + "px";
               proxyStyle.left = rowPos.left + "px";
               proxyStyle.top = (rowPos.top + row.clientHeight) + "px";
+          console.log("not exists row: "+ row.rowIndex + "; " + hierarchyIndex);
               break;
             case QueryDesignerAxis.layouts.vertical:
               cell = target;
@@ -592,11 +594,13 @@ function whileDrag(event, dndHandler){
           }
         }
         else {
+          console.log("exists higlighing position")
           //hierarchy exists.
           //Highlight the place where the new member would appear if dropped.
           cell = target;
           cell = gAnc(cell, "TD");
           row = cell.parentNode;
+          console.log("exists row: "+ row.rowIndex + "; " + hierarchyIndex);
           proxyStyle.width = "4px";
           switch (layout) {
             case QueryDesignerAxis.layouts.horizontal:
@@ -664,6 +668,10 @@ function endDrag(event, dndHandler) {
   queryDesigner.unHighlightDropTargets();
 
   var target = event.getTarget();
+  console.log("End drag on: " + target.tagName + "; " + target.className);
+  if (target.tagName === "DIV"){
+    debugger;
+  }
   var queryDesignerAxis = QueryDesignerAxis.lookup(target);
 
   var dragInfo = dndHandler.dragInfo;
