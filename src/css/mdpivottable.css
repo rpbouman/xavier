@@ -156,6 +156,7 @@ table.pivot-table td.ancestor {
 span.toggle {
   margin-right: 2px;
   cursor: pointer;
+  font-family: monospace;
 }
 
 span.toggle:before {
