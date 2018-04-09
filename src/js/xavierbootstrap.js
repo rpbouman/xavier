@@ -15,6 +15,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
+(function(){
+
+function configureXavierForHANA(){
+  xavierOptions.levelMembersDiscoveryMethod = Xmla.METHOD_EXECUTE;
+  xavierOptions.levelCardinalitiesDiscoveryMethod = Xmla.METHOD_EXECUTE;
+  xavierOptions.defaultMemberDiscoveryMethod = Xmla.METHOD_EXECUTE;
+  xavierOptions.catalogNodesInitiallyFlattened = false;
+  xavierOptions.useDescriptionAsCubeCaption = true;
+  xavierOptions.derivedMeasuresGenerateFormatStringMdx = false;
+  xavierOptions.derivedMeasuresGenerateCaptionMdx = false;
+}
+
+//this gets called after a XML/A datasource was discovered and we got the data source info.
+//this allows for some last minute xavier configuration depending on the datasource.
+//use this to override those xavier options that don't jive well with particular XML/A providers.
+function configureXavierForDataSource(dataSourceInfo){
+  if (dataSourceInfo.URL && dataSourceInfo.URL.length && dataSourceInfo.URL.endsWith(".xsxmla")) {
+    //HANA
+    configureXavierForHANA();
+  }
+}
+
+//discover a XML/A datasource and create a Xmla instance to work with it.
 var xmlaFactory = new XmlaFactory({
   xmlaUrl: xavierOptions.xmlaUrl,
   listeners: {
@@ -27,8 +50,13 @@ var xmlaFactory = new XmlaFactory({
       }
       showAlert("Unexpected Error", message);
     },
-    found: function(xmlaFactory, event, xmla){
+    found: function(xmlaFactory, event, info){
       busy(false);
+      var xmla = info.xmla;
+      var dataSourcesRowSet = info.dataSources;
+      dataSourcesRowSet.eachRow(function(dataSourceInfo){
+        configureXavierForDataSource(dataSourceInfo);
+      });
       xavierOptions.xmla = xmla;
       var xavierApplication = new XavierApplication(xavierOptions);
     },
@@ -52,3 +80,6 @@ var xmlaFactory = new XmlaFactory({
   }
 });
 xmlaFactory.createXmla();
+
+})();
+

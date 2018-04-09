@@ -87,36 +87,36 @@ var XmlaFactory;
     return xmla;
   },
   xCsrfTokenHeader: "x-csrf-token",
-  checkCsrfTokenRequired: function(xhr){
-  	var xCsrfToken = xhr.getResponseHeader(this.xCsrfTokenHeader);
-	return (xCsrfToken.toLowerCase() === "required");
+    checkCsrfTokenRequired: function(xhr){
+    var xCsrfToken = xhr.getResponseHeader(this.xCsrfTokenHeader);
+    return (xCsrfToken.toLowerCase() === "required");
   },
   fetchCsrfToken: function(xmla, urls, index){
-	var me = this, xhr = new XMLHttpRequest();
-	xhr.open("GET", urls[index], true);
-	xhr.setRequestHeader(this.xCsrfTokenHeader, "Fetch");
-	xhr.onreadystatechange = function(){
-	  switch(xhr.readyState) {
-		case 4:
-	      xCsrfToken = xhr.getResponseHeader(this.xCsrfTokenHeader);
-	      if (me.checkCsrfTokenRequired(xhr)) {
-	    	//we didn't get a valid token. try next url
-          index += 1;
-	      }
-	      else {
-          //we got a token! configure our Xmla to use it.
-          var header = me.xCsrfTokenHeader;
-          var xCsrfToken = xhr.getResponseHeader(header), headers = {};
-          headers[header] = xCsrfToken;
-          xmla.setOptions({
-            headers: headers
-          });
-	      }
-    	  me.tryXmlaUrl(xmla, urls, index);
-	      break;
-	  };
-	}
-	xhr.send(null);
+    var me = this, xhr = new XMLHttpRequest();
+    xhr.open("GET", urls[index], true);
+    xhr.setRequestHeader(this.xCsrfTokenHeader, "Fetch");
+    xhr.onreadystatechange = function(){
+      switch(xhr.readyState) {
+        case 4:
+          xCsrfToken = xhr.getResponseHeader(this.xCsrfTokenHeader);
+          if (me.checkCsrfTokenRequired(xhr)) {
+          //we didn't get a valid token. try next url
+            index += 1;
+          }
+          else {
+            //we got a token! configure our Xmla to use it.
+            var header = me.xCsrfTokenHeader;
+            var xCsrfToken = xhr.getResponseHeader(header), headers = {};
+            headers[header] = xCsrfToken;
+            xmla.setOptions({
+              headers: headers
+            });
+          }
+          me.tryXmlaUrl(xmla, urls, index);
+          break;
+      }
+    };
+    xhr.send(null);
   },
   tryXmlaUrl: function(xmla, urls, index){
     var me = this;
@@ -128,7 +128,10 @@ var XmlaFactory;
           xmla.setOptions({
             url: url
           });
-          me.fireEvent("found", xmla);
+          me.fireEvent("found", {
+            xmla: xmla,
+            dataSources: rowset
+          });
         },
         error: function(xmla, request, exception) {
           var exception = request.exception;

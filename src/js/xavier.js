@@ -329,6 +329,8 @@ var xmlaTreeView = new XmlaTreeView({
   checkIfDescriptionIsAnUrl: getXmlaTreeOption("checkIfDescriptionIsAnUrl"),
   useDescriptionAsCubeCaption: getXmlaTreeOption("useDescriptionAsCubeCaption"),
   useAsDatasourceCaption: getXmlaTreeOption("useAsDatasourceCaption"),
+  derivedMeasuresGenerateCaptionMdx: getXmlaTreeOption("derivedMeasuresGenerateCaptionMdx"),
+  derivedMeasuresGenerateFormatStringMdx: getXmlaTreeOption("derivedMeasuresGenerateFormatStringMdx"),
   listeners: {
     busy: function(){
       busy(true);
@@ -674,7 +676,7 @@ function endDrag(event, dndHandler) {
   var target = event.getTarget();
   console.log("End drag on: " + target.tagName + "; " + target.className);
   if (target.tagName === "DIV"){
-    debugger;
+    //debugger;
   }
   var queryDesignerAxis = QueryDesignerAxis.lookup(target);
 

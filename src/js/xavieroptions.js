@@ -107,6 +107,9 @@ var xavierOptions = {
   //Configure what is considered "low cardinality" for a level.
   // If the level has this or less members, they are automatically expanded in the treeview.
   maxLowCardinalityLevelMembers: 5,
+  //
+  derivedMeasuresGenerateFormatStringMdx: true,
+  derivedMeasuresGenerateCaptionMdx: true,
   //MetadataRestrictions is a means to lock down the datasources, catalogs and cubes
   // that xavier will serve to the user up front.
   // You can also use this to set which cube is "autoSelected" - this one will be automatically selected and loaded.
