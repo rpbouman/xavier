@@ -19,7 +19,24 @@ var XavierDerivedMeasureFactory;
 
 (XavierDerivedMeasureFactory = function(conf){
   this.conf = conf;
+  this.initSettings(conf);
 }).prototype = {
+  settings: {
+    derivedMeasuresGenerateCaptionMdx: true,
+    derivedMeasuresGenerateFormatStringMdx: true
+  },
+  initSettings: function(conf){
+    var staticSettings = XavierDerivedMeasureFactory.prototype.settings;
+    conf = conf || this.conf;
+    var settings = this.settings = {};
+    var p, v;
+    for (p in staticSettings) {
+      settings[p] = (typeof(conf[p]) === "undefined") ? staticSettings[p] : conf[p];
+    }
+  },
+  getSetting: function(name){
+    return this.settings[name];
+  },
   getTupleMdxForCurrent: function(queryDesigner, filterAxis) {
     var mdx = "";
     queryDesigner.eachAxis(function(id, axis, i){
@@ -290,6 +307,10 @@ var XavierDerivedMeasureFactory;
     }
     else
     if (derivedMeasure.formula) {
+      
+      var generateFormatStringMdx = this.getSetting("derivedMeasuresGenerateFormatStringMdx");
+      var generateCaptionMdx = this.getSetting("derivedMeasuresGenerateCaptionMdx")
+      
       derivedMeasure.calculation = function(metadata, queryDesigner){
 
         var calculatedMeasure = metadata.formula;
@@ -299,10 +320,12 @@ var XavierDerivedMeasureFactory;
 
         calculatedMeasure = "MEMBER " + metadata.MEASURE_UNIQUE_NAME + "\nAS\n" + calculatedMeasure;
 
-        if (derivedMeasure.formatString) {
+        if (generateFormatStringMdx && derivedMeasure.formatString) {
           calculatedMeasure += ",\nFORMAT_STRING = '" + derivedMeasure.formatString + "'";
         }
-        calculatedMeasure += ",\nCAPTION = \"" + metadata.MEASURE_CAPTION + "\"";
+        if (generateCaptionMdx && metadata.MEASURE_CAPTION) {
+          calculatedMeasure += ",\nCAPTION = \"" + metadata.MEASURE_CAPTION + "\"";
+        }
 
         return calculatedMeasure;
       }

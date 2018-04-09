@@ -21,6 +21,7 @@ var XmlaTreeView;
 (XmlaTreeView = function(conf){
   this.initConfig(conf);
   this.initDom();
+  this.derivedMeasureFactory = new XavierDerivedMeasureFactory(conf);
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
   //urlRegExp is checked against descriptions of discovered metadata. If there is a match, we consider it a url and the tree will render in info icon that an be used to link to the resource.
@@ -2349,7 +2350,7 @@ var XmlaTreeView;
     return 0;
   },
   createDerivedMeasureTreeNode: function(derivedMeasureConf, measureMetadata, measureCaption) {
-    var derivedMeasure = XavierDerivedMeasureFactory.prototype.createDerivedMeasure(
+    var derivedMeasure = this.derivedMeasureFactory.createDerivedMeasure(
       derivedMeasureConf, measureMetadata, measureCaption
     );
     var derivedMeasureTreeNode = new TreeNode({
