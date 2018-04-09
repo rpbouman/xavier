@@ -67,7 +67,10 @@ var xavierOptions = {
   //whether to show the current cube in the cube pane
   showCurrentCube: true,
   //showCatalogNodesToolbarButton whether to show a toolbar button to toggle display of catalog nodes.
-  showCatalogNodesToolbarButton: true,
+  // - false: don't show it anywhere
+  // - true: show it on the main toolbar
+  // - treeview: show it on a toolbar in the catalog pane in the treeview
+  //showCatalogNodesToolbarButton: "treeview",
   //configure whether the tree has a checkbox to toggle display of catalog nodes.
   showCatalogNodesCheckboxDisplayed: false,
   //configure whether catalog nodes are flattened (hidden) or not
@@ -75,13 +78,21 @@ var xavierOptions = {
   //whether to prefix cube names with the catalog name. The prefix is shown only if the catalog nodes are flattened, but this option can be used to suppress prefixes alltogether.
   useCatalogPrefixForCubes: true,
   //showDimensionNodesToolbarButton whether to show a toolbar button to toggle display of dimension nodes.
-  showDimensionNodesToolbarButton: true,
+  //showDimensionNodesToolbarButton:
+  // - true show the button in the main toolbar
+  // - false don't show it at all
+  // - treeview show it in the treeview
+  //showDimensionNodesToolbarButton: "treeview",
   //configure whether the tree has a checkbox to toggle display of dimension nodes
   showDimensionNodesCheckboxDisplayed: false,
   //whether labels of hierarchy nodes are prefixed by dimension caption. Prefix only shown if the dimension node is flattened. This option can be used to suppress the prefix alltogether.
   useDimensionPrefixForHierarchies: true,
   //showHierarchyNodesToolbarButton whether to show a toolbar button to toggle display of hierarchy nodes.
-  showHierarchyNodesToolbarButton: true,
+  //showHierarchyNodesToolbarButton:
+  // - true show the button in the main toolbar
+  // - false don't show it at all
+  // - treeview show it in the treeview
+  //showHierarchyNodesToolbarButton: "treeview",
   //configure whether the tree has a checkbox to toggle display of hierarchy nodes
   showHierarchyNodesCheckboxDisplayed: false,
   //whether labels of hierarchy nodes are prefixed by dimension caption. Prefix only shown if the dimension node is flattened. This option can be used to suppress the prefix alltogether.

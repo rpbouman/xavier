@@ -19,125 +19,8 @@ var XmlaTreeView;
 (function(){
 
 (XmlaTreeView = function(conf){
-  this.xmla = conf.xmla;
-  this.schemaTreePane = new ContentPane({
-    classes: ["tree", "schemas"]
-  });
-  this.cubeTreePane = new ContentPane({
-    classes: ["tree", "cube-contents"]
-  });
-  var splitterRatio;
-  this.splitPane = new SplitPane({
-    classes: "xmlatreeview",
-    firstComponent: this.schemaTreePane,
-    secondComponent: this.cubeTreePane,
-    orientation: SplitPane.orientations.horizontal,
-    listeners: {
-      beforeSplitterPositionChange: function(){
-        var measuresAndDimensionsSplitPane = this.getMeasuresAndDimensionsSplitPane();
-        if (!measuresAndDimensionsSplitPane) {
-          return;
-        }
-        var splitterRatio = measuresAndDimensionsSplitPane.getSplitterRatio();
-      },
-      splitterPositionChanged: function(){
-        var measuresAndDimensionsSplitPane = this.getMeasuresAndDimensionsSplitPane();
-        if (!measuresAndDimensionsSplitPane) {
-          return;
-        }
-        measuresAndDimensionsSplitPane.setSplitterPosition((100 * splitterRatio) + "%");
-      },
-      scope: this
-    }
-  });
-  if (iDef(conf.datasourceNodesInitiallyFlattened)) {
-    this.datasourceNodesInitiallyFlattened = conf.datasourceNodesInitiallyFlattened;
-  }
-  if (iDef(conf.catalogNodesInitiallyFlattened)) {
-    this.catalogNodesInitiallyFlattened = conf.catalogNodesInitiallyFlattened;
-  }
-  if (iDef(conf.showCatalogNodesCheckboxDisplayed)) {
-    this.showCatalogNodesCheckboxDisplayed = conf.showCatalogNodesCheckboxDisplayed;
-  }
-  
-  if (iDef(conf.initialMeasuresTreeNodeState)){
-    this.initialMeasuresTreeNodeState = conf.initialMeasuresTreeNodeState;
-  }
-  if (iDef(conf.initialDimensionsTreeNodeState)){
-    this.initialDimensionsTreeNodeState = conf.initialDimensionsTreeNodeState;
-  }
-  if (iDef(conf.initialHierarchyTreeNodeState)){
-    this.initialHierarchyTreeNodeState = conf.initialHierarchyTreeNodeState;
-  }
-  if (iDef(conf.loadLevelsImmediately)){
-    this.loadLevelsImmediately = conf.loadLevelsImmediately;
-  }
-
-  if (iDef(conf.useCatalogPrefixForCubes)) {
-    this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
-  }
-  
-  if (iDef(conf.useDimensionPrefixForHierarchies)) {
-    this.useDimensionPrefixForHierarchies = conf.useDimensionPrefixForHierarchies;
-  }
-
-  if (iDef(conf.useHierarchyPrefixForLevels)) {
-    this.useHierarchyPrefixForLevels = conf.useHierarchyPrefixForLevels;
-  }  
-  
-  if (iDef(conf.showCurrentCube)) {
-    this.showCurrentCube = conf.showCurrentCube;
-  }
-  if (iDef(conf.showCurrentCatalog)) {
-    this.showCurrentCatalog = conf.showCurrentCatalog;
-  }
-
-  if (iDef(conf.dimensionNodesInitiallyFlattened)) {
-    this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
-  }
-  if (iDef(conf.showDimensionNodesCheckboxDisplayed)) {
-    this.showDimensionNodesCheckboxDisplayed = conf.showDimensionNodesCheckboxDisplayed;
-  }
-  if (iDef(conf.showHierarchyNodesCheckboxDisplayed)) {
-    this.showHierarchyNodesCheckboxDisplayed = conf.showHierarchyNodesCheckboxDisplayed;
-  }
-
-  if (iDef(conf.xmlaMetadataFilter)) {
-    this.xmlaMetadataFilter = conf.xmlaMetadataFilter;
-  }
-  if (iDef(conf.maxLowCardinalityLevelMembers)) {
-    this.maxLowCardinalityLevelMembers = conf.maxLowCardinalityLevelMembers;
-  }
-  if (iDef(conf.metadataRestrictions)) {
-    this.metadataRestrictions = conf.metadataRestrictions;
-  }
-  if (iDef(conf.defaultMemberDiscoveryMethod)) {
-    this.defaultMemberDiscoveryMethod = conf.defaultMemberDiscoveryMethod;
-  }
-  if (iDef(conf.levelMembersDiscoveryMethod)) {
-    this.levelMembersDiscoveryMethod = conf.levelMembersDiscoveryMethod;
-  }
-  if (iDef(conf.levelCardinalitiesDiscoveryMethod)) {
-    this.levelCardinalitiesDiscoveryMethod = conf.levelCardinalitiesDiscoveryMethod;
-  }
-  if (iDef(conf.useDescriptionAsCubeCaption)) {
-    this.useDescriptionAsCubeCaption = conf.useDescriptionAsCubeCaption;
-  }
-  if (iDef(conf.useAsDatasourceCaption)) {
-    this.useAsDatasourceCaption = conf.useAsDatasourceCaption;
-  }
-  if (iDef(conf.renderPropertyNodes)) {
-    this.renderPropertyNodes = conf.renderPropertyNodes;
-  }
-  if (iRxp(conf.urlRegExp)){
-    this.urlRegExp = conf.urlRegExp;
-  }
-  if (iFun(conf.checkIfDescriptionIsAnUrl)){
-    this.checkIfDescriptionIsAnUrl = conf.checkIfDescriptionIsAnUrl;
-  }
-  if (iDef(conf.splitterBetweenMeasuresAndDimensions)) {
-    this.splitterBetweenMeasuresAndDimensions = conf.splitterBetweenMeasuresAndDimensions;
-  }
+  this.initConfig(conf);
+  this.initDom();
   arguments.callee._super.apply(this, arguments);
 }).prototype = {
   //urlRegExp is checked against descriptions of discovered metadata. If there is a match, we consider it a url and the tree will render in info icon that an be used to link to the resource.
@@ -174,12 +57,19 @@ var XmlaTreeView;
   maxLowCardinalityLevelMembers: 10,
   //whether datasource nodes should initially be hidden
   datasourceNodesInitiallyFlattened: true,
+  //
+  showCatalogNodesToolbarButton: "treeview",
   //whether catalog nodes should initially be hidden
   catalogNodesInitiallyFlattened: true,
   //whether or not display of flattened catalog nodes can be toggled by the user.
+  showCatalogNodesToolbarButton: "treeview",
   showCatalogNodesCheckboxDisplayed: false,
+  //
+  showHierarchyNodesToolbarButton: "treeview",
   //whether or not display of flattened hierarchy nodes can be toggled by the user.
   showHierarchyNodesCheckboxDisplayed: false,
+  //
+  showDimensionNodesToolbarButton: "treeview",
   //whether or not display of flattened dimension nodes can be toggled by the user.
   showDimensionNodesCheckboxDisplayed: false,
   //whether labels of cube nodes are prefixed by catalog name. Prefix only shown if the catalog node is flattened. This option can be used to suppress the prefix alltogether.
@@ -202,6 +92,206 @@ var XmlaTreeView;
   renderPropertyNodes: true,
   //splitterBetweenMeasuresAndDimensions: divide the cube pane with a horizontal splitter into a measures and a dimensions section.
   splitterBetweenMeasuresAndDimensions: true,
+  initConfig: function(conf){
+    this.xmla = conf.xmla;
+    if (iDef(conf.datasourceNodesInitiallyFlattened)) {
+      this.datasourceNodesInitiallyFlattened = conf.datasourceNodesInitiallyFlattened;
+    }
+    if (iDef(conf.catalogNodesInitiallyFlattened)) {
+      this.catalogNodesInitiallyFlattened = conf.catalogNodesInitiallyFlattened;
+    }
+    if (iDef(conf.showCatalogNodesCheckboxDisplayed)) {
+      this.showCatalogNodesCheckboxDisplayed = conf.showCatalogNodesCheckboxDisplayed;
+    }
+    
+    if (iDef(conf.initialMeasuresTreeNodeState)){
+      this.initialMeasuresTreeNodeState = conf.initialMeasuresTreeNodeState;
+    }
+    if (iDef(conf.initialDimensionsTreeNodeState)){
+      this.initialDimensionsTreeNodeState = conf.initialDimensionsTreeNodeState;
+    }
+    if (iDef(conf.initialHierarchyTreeNodeState)){
+      this.initialHierarchyTreeNodeState = conf.initialHierarchyTreeNodeState;
+    }
+    if (iDef(conf.loadLevelsImmediately)){
+      this.loadLevelsImmediately = conf.loadLevelsImmediately;
+    }
+
+    if (iDef(conf.useCatalogPrefixForCubes)) {
+      this.useCatalogPrefixForCubes = conf.useCatalogPrefixForCubes;
+    }
+    
+    if (iDef(conf.useDimensionPrefixForHierarchies)) {
+      this.useDimensionPrefixForHierarchies = conf.useDimensionPrefixForHierarchies;
+    }
+
+    if (iDef(conf.useHierarchyPrefixForLevels)) {
+      this.useHierarchyPrefixForLevels = conf.useHierarchyPrefixForLevels;
+    }  
+    
+    if (iDef(conf.showCurrentCube)) {
+      this.showCurrentCube = conf.showCurrentCube;
+    }
+    if (iDef(conf.showCurrentCatalog)) {
+      this.showCurrentCatalog = conf.showCurrentCatalog;
+    }
+
+    if (iDef(conf.dimensionNodesInitiallyFlattened)) {
+      this.dimensionNodesInitiallyFlattened = conf.dimensionNodesInitiallyFlattened;
+    }
+    if (iDef(conf.showDimensionNodesCheckboxDisplayed)) {
+      this.showDimensionNodesCheckboxDisplayed = conf.showDimensionNodesCheckboxDisplayed;
+    }
+    if (iDef(conf.showHierarchyNodesCheckboxDisplayed)) {
+      this.showHierarchyNodesCheckboxDisplayed = conf.showHierarchyNodesCheckboxDisplayed;
+    }
+
+    if (iDef(conf.xmlaMetadataFilter)) {
+      this.xmlaMetadataFilter = conf.xmlaMetadataFilter;
+    }
+    if (iDef(conf.maxLowCardinalityLevelMembers)) {
+      this.maxLowCardinalityLevelMembers = conf.maxLowCardinalityLevelMembers;
+    }
+    if (iDef(conf.metadataRestrictions)) {
+      this.metadataRestrictions = conf.metadataRestrictions;
+    }
+    if (iDef(conf.defaultMemberDiscoveryMethod)) {
+      this.defaultMemberDiscoveryMethod = conf.defaultMemberDiscoveryMethod;
+    }
+    if (iDef(conf.levelMembersDiscoveryMethod)) {
+      this.levelMembersDiscoveryMethod = conf.levelMembersDiscoveryMethod;
+    }
+    if (iDef(conf.levelCardinalitiesDiscoveryMethod)) {
+      this.levelCardinalitiesDiscoveryMethod = conf.levelCardinalitiesDiscoveryMethod;
+    }
+    if (iDef(conf.useDescriptionAsCubeCaption)) {
+      this.useDescriptionAsCubeCaption = conf.useDescriptionAsCubeCaption;
+    }
+    if (iDef(conf.useAsDatasourceCaption)) {
+      this.useAsDatasourceCaption = conf.useAsDatasourceCaption;
+    }
+    if (iDef(conf.renderPropertyNodes)) {
+      this.renderPropertyNodes = conf.renderPropertyNodes;
+    }
+    if (iRxp(conf.urlRegExp)){
+      this.urlRegExp = conf.urlRegExp;
+    }
+    if (iFun(conf.checkIfDescriptionIsAnUrl)){
+      this.checkIfDescriptionIsAnUrl = conf.checkIfDescriptionIsAnUrl;
+    }
+    if (iDef(conf.splitterBetweenMeasuresAndDimensions)) {
+      this.splitterBetweenMeasuresAndDimensions = conf.splitterBetweenMeasuresAndDimensions;
+    }
+    if (iDef(conf.showCatalogNodesToolbarButton)) {
+      this.showCatalogNodesToolbarButton = conf.showCatalogNodesToolbarButton;
+    }
+    if (iDef(conf.showDimensionNodesToolbarButton)) {
+      this.showDimensionNodesToolbarButton = conf.showDimensionNodesToolbarButton;
+    }
+    if (iDef(conf.showHierarchyNodesToolbarButton)) {
+      this.showHierarchyNodesToolbarButton = conf.showHierarchyNodesToolbarButton;
+    }
+  },
+  initCatalogPane: function(){
+    var catalogPaneConfig = {
+      classes: ["tree", "schemas"]
+    };
+    if (this.showCatalogNodesToolbarButton === "treeview") {
+      var catalogPaneToolbar = catalogPaneConfig.toolbar = new Toolbar({
+        buttons: [{
+          "class": "show-catalog-nodes",
+          tooltip: gMsg("Show catalogs"),
+          group: "tree-catalog",
+          toggleGroup: "showCatalogs",
+          depressed: !this.catalogNodesInitiallyFlattened
+        }]
+      });
+      catalogPaneToolbar.listen({
+        afterToggleGroupStateChanged: function(toolbar, event, data){
+          var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
+          switch (data.group) {
+            case "showCatalogs":
+              this.showCatalogNodes(Boolean(depressedButton));
+              break;
+          }
+        }.bind(this)
+      });
+    }
+    this.schemaTreePane = new ContentPane(catalogPaneConfig);
+  },
+  initCubePane: function(){
+    var cubePaneConfig = {
+      classes: ["tree", "cube-contents"]
+    };
+    if (this.showDimensionNodesToolbarButton === "treeview" || this.showHierarchyNodesToolbarButton === "treeview") {
+      var buttons = [];
+      if (this.showDimensionNodesToolbarButton === "treeview") {
+        buttons.push({
+          "class": "show-dimension-nodes",
+          tooltip: gMsg("Show dimensions"),
+          group: "tree-cube",
+          toggleGroup: "showDimensions",
+          depressed: xavierOptions.initialDimensionsTreeNodeState !== TreeNode.states.flattened
+        });
+      }
+      if (this.showHierarchyNodesToolbarButton === "treeview") {
+        buttons.push({
+          "class": "show-hierarchy-nodes",
+          tooltip: gMsg("Show hierarchies"),
+          group: "tree-cube",
+          toggleGroup: "showHierarchies",
+          depressed: xavierOptions.initialHierarchyTreeNodeState !== TreeNode.states.flattened
+        });
+      }
+      var cubePaneToolbar = cubePaneConfig.toolbar = new Toolbar({
+        buttons: buttons
+      });
+      cubePaneToolbar.listen({
+        afterToggleGroupStateChanged: function(toolbar, event, data){
+          var depressedButton = toolbar.getDepressedButtonInToggleGroup(data.group);
+          switch (data.group) {
+            case "showDimensions":
+              this.showDimensionNodes(Boolean(depressedButton));
+              break;
+            case "showHierarchies":
+              var show = Boolean(depressedButton);
+              this.initialHierarchyTreeNodeState = show ? TreeNode.states.expanded : TreeNode.states.flattened;
+              this.showHierarchyNodes(show);
+              break;
+          }
+        }.bind(this)
+      });
+    }
+    this.cubeTreePane = new ContentPane(cubePaneConfig);
+  },
+  initDom: function(){
+    this.initCatalogPane();
+    this.initCubePane();
+    var splitterRatio;
+    this.splitPane = new SplitPane({
+      classes: "xmlatreeview",
+      firstComponent: this.schemaTreePane,
+      secondComponent: this.cubeTreePane,
+      orientation: SplitPane.orientations.horizontal,
+      listeners: {
+        beforeSplitterPositionChange: function(){
+          var measuresAndDimensionsSplitPane = this.getMeasuresAndDimensionsSplitPane();
+          if (!measuresAndDimensionsSplitPane) {
+            return;
+          }
+          var splitterRatio = measuresAndDimensionsSplitPane.getSplitterRatio();
+        },
+        splitterPositionChanged: function(){
+          var measuresAndDimensionsSplitPane = this.getMeasuresAndDimensionsSplitPane();
+          if (!measuresAndDimensionsSplitPane) {
+            return;
+          }
+          measuresAndDimensionsSplitPane.setSplitterPosition((100 * splitterRatio) + "%");
+        },
+        scope: this
+      }
+    });
+  },
   checkIsExcluded: function(request, row){
     var xmlaMetadataFilter = this.xmlaMetadataFilter;
     if (!xmlaMetadataFilter) {
@@ -223,24 +313,27 @@ var XmlaTreeView;
       treeNode = TreeNode.getInstance(childNode.id);
       treeNode.removeFromParent();
     }
-    treePane.clearAll();
+    //treePane.clearAll();
   },
   clearSchemaTreePane: function(){
     this.clearTreePane(this.getSchemaTreePane());
   },
   clearCubeTreePane: function(){
     var cubeTreePane = this.getCubeTreePane();
-    if (this.measuresAndDimensionsSplitPane) {
+    var measuresAndDimensionsSplitPane = this.measuresAndDimensionsSplitPane;
+    if (measuresAndDimensionsSplitPane) {
       var measuresNode = this.getMeasuresTreeNode();
       measuresNode.removeFromParent(false);
       var dimensionsNode = this.getDimensionsTreeNode();
       dimensionsNode.removeFromParent(false);
-      this.measuresAndDimensionsSplitPane = null;
+      //this.measuresAndDimensionsSplitPane = null;
+      this.clearTreePane(measuresAndDimensionsSplitPane.conf.firstComponent);
+      this.clearTreePane(measuresAndDimensionsSplitPane.conf.secondComponent);
     }
     else {
       this.clearTreePane(cubeTreePane);
     }
-    cubeTreePane.clearAll();
+    //cubeTreePane.clearAll();
   },
   checkIfDescriptionIsAnUrl: function(description){
     var urlRegExp = this.urlRegExp;
@@ -2656,6 +2749,9 @@ var XmlaTreeView;
       "class": "current-cube" + (this.showCurrentCube === false ? " hidden" : ""),
       "data-objectName": cubeCaption
     });
+    if (this.currentCatalogAndCube) {
+      dEl(this.currentCatalogAndCube);
+    }
     var currentCatalogAndCube = this.currentCatalogAndCube = cEl("DIV", {
       "class": "current-catalog-and-cube" + ((
         this.showCurrentCatalog === false &&
@@ -2719,21 +2815,35 @@ var XmlaTreeView;
       return;
     }
     
-    var cubeTreePane = this.cubeTreePane;
-    var currentCatalogAndCube = this.currentCatalogAndCube;
+    var measuresTreeNode, measuresContentPane;
+    var dimensionsTreeNode, dimensionsContentPane;
+    if (!this.measuresAndDimensionsSplitPane) {
+      var currentCatalogAndCube = this.currentCatalogAndCube;
+      var cubeTreePane = this.cubeTreePane;
+      this.measuresContentPane = new ContentPane({});
+      this.dimensionsContentPane = new ContentPane({});
+      var measuresAndDimensionsSplitPane = this.measuresAndDimensionsSplitPane = new SplitPane({
+        container: cubeTreePane,
+        firstComponent: this.measuresContentPane,
+        secondComponent: this.dimensionsContentPane,
+        orientation: SplitPane.orientations.horizontal,
+        style: {
+          top: (currentCatalogAndCube.offsetTop + currentCatalogAndCube.offsetHeight) + "px"
+        }
+      });
+      measuresAndDimensionsSplitPane.getDom();
+    }
+    var measuresContentPane = this.measuresContentPane;
+    var dimensionsContentPane = this.dimensionsContentPane 
+    
     
     var measuresTreeNode = this.getMeasuresTreeNode();
+    this.clearTreePane(measuresContentPane);
+    aCh(measuresContentPane.getDom(), measuresTreeNode.getDom());
+
     var dimensionsTreeNode = this.getDimensionsTreeNode();
-    var measuresAndDimensionsSplitPane = this.measuresAndDimensionsSplitPane = new SplitPane({
-      container: cubeTreePane,
-      firstComponent: measuresTreeNode,
-      secondComponent: dimensionsTreeNode,
-      orientation: SplitPane.orientations.horizontal,
-      style: {
-        top: (currentCatalogAndCube.offsetTop + currentCatalogAndCube.offsetHeight) + "px"
-      }
-    });
-    measuresAndDimensionsSplitPane.getDom();
+    this.clearTreePane(dimensionsTreeNode);
+    aCh(dimensionsContentPane.getDom(), dimensionsTreeNode.getDom());
   },
   getDom: function(){
     return this.splitPane.getDom();

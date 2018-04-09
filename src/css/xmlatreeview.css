@@ -160,8 +160,8 @@ limitations under the License.
 }
 
 .node > .head > .toggle:before {
-  font-family: monospace;
-  font-size: 11pt;
+  font-family: courier, monospace;
+  font-size: 12pt;
   padding-left: 5px;
 }
 
@@ -189,6 +189,24 @@ limitations under the License.
 }
 .info-icon:after {
   content: "\00A0\00A0\00A0\00A0"
+}
+
+.xmlatreeview .pentaho-titled-toolbar {
+  height: 30px;
+  margin-bottom:2px;
+  padding-left: 0px;
+}
+
+.xmlatreeview .splitpane-horizontal .node{
+  margin-top: 2px;
+}
+
+.xmlatreeview .cube-contents {
+  overflow: hidden;
+}
+
+.xmlatreeview .cube-contents .pentaho-titled-toolbar {
+  top: -2px;
 }
 
 .xmlatreeview {
